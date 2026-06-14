@@ -65,5 +65,5 @@ export function useLang() {
 export const LANG_OPTIONS = [
   { code: "en", label: "English",     flag: "🇬🇧", short: "EN" },
   { code: "rw", label: "Kinyarwanda", flag: "🇷🇼", short: "RW" },
-  { code: "sw", label: "Swahili",     flag: "🌍",  short: "SW" },
+  { code: "sw", label: "Swahili",     flag: "sw",  short: "SW" },
 ];

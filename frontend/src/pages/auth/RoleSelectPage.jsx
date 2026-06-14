@@ -1,8 +1,10 @@
 // src/pages/auth/RoleSelectPage.jsx
-// Shown immediately after signup — user picks: Service Provider or Customer
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+// Shown immediately after signup — user picks: Service Provider or Customer.
+// This is where the account is actually created (role is needed at registration).
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useLang } from "../../i18n/LangContext";
+import { useAuth } from "../../context/AuthContext";
 import LanguageSwitcher from "../../components/shared/LanguageSwitcher";
 
 const ROLES = [
@@ -79,21 +81,34 @@ const ROLES = [
 export default function RoleSelectPage() {
   const { t, lang } = useLang();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { register } = useAuth();
+
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [apiError, setApiError] = useState("");
+
+  // The signup details were passed via navigation state.
+  const signupData = location.state?.signup;
+
+  // If someone navigates here directly (no signup data), send them to signup.
+  useEffect(() => {
+    if (!signupData) navigate("/signup", { replace: true });
+  }, [signupData, navigate]);
 
   const getTitle = (role) => lang === "rw" ? role.titleRw : lang === "sw" ? role.titleSw : role.title;
   const getDesc = (role) => lang === "rw" ? role.descRw : lang === "sw" ? role.descSw : role.desc;
   const getPerks = (role) => lang === "rw" ? role.perksRw : lang === "sw" ? role.perksSw : role.perks;
 
   const handleContinue = async () => {
-    if (!selected) return;
+    if (!selected || !signupData) return;
     setLoading(true);
+    setApiError("");
     try {
-      // TODO: save role to backend
-      // await authService.setRole(selected);
-      await new Promise((r) => setTimeout(r, 800));
-      navigate(selected === "provider" ? "/provider/dashboard" : "/customer/dashboard");
+      const user = await register({ ...signupData, role: selected });
+      navigate(user.role === "provider" ? "/provider/dashboard" : "/customer/dashboard");
+    } catch (err) {
+      setApiError(err.message || "Could not create your account. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -157,6 +172,13 @@ export default function RoleSelectPage() {
               Choose your role — you can always change this later in settings.
             </p>
           </div>
+
+          {/* API error banner */}
+          {apiError && (
+            <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl text-center">
+              {apiError}
+            </div>
+          )}
 
           {/* Role cards */}
           <div className="grid sm:grid-cols-2 gap-4">
