@@ -1,5 +1,9 @@
+// src/App.jsx
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { LangProvider } from "./i18n/LangContext";
+import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute from "./components/shared/ProtectedRoute";
+
 import HomePage from "./pages/public/HomePage";
 import LoginPage from "./pages/auth/LoginPage";
 import SignupPage from "./pages/auth/SignupPage";
@@ -13,25 +17,41 @@ import ContactPage from "./pages/public/ContactPage";
 import ProviderProfilePage from "./pages/public/ProviderProfilePage";
 
 const router = createBrowserRouter([
-  { path: "/",               element: <HomePage /> },
-  { path: "/login",          element: <LoginPage /> },
-  { path: "/signup",         element: <SignupPage /> },
-  { path: "/role-select",    element: <RoleSelectPage /> },
+  { path: "/", element: <HomePage /> },
+  { path: "/login", element: <LoginPage /> },
+  { path: "/signup", element: <SignupPage /> },
+  { path: "/role-select", element: <RoleSelectPage /> },
   { path: "/forgot-password", element: <ForgotPasswordPage /> },
-  { path: "/provider/dashboard", element: <ProviderDashboard /> },
-  { path: "/customer/dashboard", element: <CustomerDashboard /> },
+
+  {
+    path: "/provider/dashboard",
+    element: (
+      <ProtectedRoute role="provider">
+        <ProviderDashboard />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/customer/dashboard",
+    element: (
+      <ProtectedRoute role="customer">
+        <CustomerDashboard />
+      </ProtectedRoute>
+    ),
+  },
+
   { path: "/providers", element: <ProviderDirectory /> },
-  { path: "/about",   element: <AboutPage /> },
+  { path: "/about", element: <AboutPage /> },
   { path: "/contact", element: <ContactPage /> },
   { path: "/providers/:id", element: <ProviderProfilePage /> },
-  
-  
 ]);
 
 export default function App() {
   return (
     <LangProvider>
-      <RouterProvider router={router} />
+      <AuthProvider>
+        <RouterProvider router={router} />
+      </AuthProvider>
     </LangProvider>
   );
 }

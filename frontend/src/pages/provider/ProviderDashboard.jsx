@@ -5,8 +5,25 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useLang } from "../../i18n/LangContext";
+import { useAuth } from "../../context/AuthContext";
 import LanguageSwitcher from "../../components/shared/LanguageSwitcher";
 
+// Build initials from a full name, e.g. "Uwase Clarisse" → "UC"
+function initialsFromName(name = "") {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 0 || parts[0] === "") return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+// First name for greetings, e.g. "Uwase Clarisse" → "Uwase"
+function firstName(name = "") {
+  return name.trim().split(/\s+/)[0] || "there";
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MOCK DATA
+// ─────────────────────────────────────────────────────────────────────────────
 const PROVIDER = {
   name: "Uwase Clarisse",
   role: "Tailor & Fashion Designer",
@@ -222,7 +239,7 @@ function OverviewSection() {
       >
         <div className="flex flex-col gap-1">
           <p style={{ color: "#F97316" }} className="text-xs font-bold uppercase tracking-widest">Good morning</p>
-          <h2 className="text-white text-xl font-black">Welcome back, Clarisse! 👋</h2>
+          <h2 className="text-white text-xl font-black">Welcome back, {firstName(PROVIDER.name)}! 👋</h2>
           <p className="text-slate-400 text-sm">You have <span style={{ color: "#F97316" }} className="font-semibold">{pending} pending booking{pending !== 1 ? "s" : ""}</span> waiting for your response.</p>
         </div>
         <div
@@ -796,6 +813,17 @@ function MobileNav({ active, setActive }) {
 // DASHBOARD ROOT
 // ─────────────────────────────────────────────────────────────────────────────
 export default function ProviderDashboard() {
+  const { user } = useAuth();
+
+  // Overlay the real logged-in provider's identity onto the display object.
+  // (Stats like trust score, ratings, and bookings are still mock for now —
+  //  those get wired to live data in a later step.)
+  if (user) {
+    PROVIDER.name = user.full_name;
+    PROVIDER.initials = initialsFromName(user.full_name);
+    if (user.district) PROVIDER.district = user.district;
+  }
+
   const [active, setActive] = useState("overview");
   const [collapsed, setCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);

@@ -5,7 +5,21 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useLang } from "../../i18n/LangContext";
+import { useAuth } from "../../context/AuthContext";
 import LanguageSwitcher from "../../components/shared/LanguageSwitcher";
+
+// Build initials from a full name, e.g. "Niyomugaba Jean" → "NJ"
+function initialsFromName(name = "") {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 0 || parts[0] === "") return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+// First name for greetings, e.g. "Niyomugaba Jean" → "Niyomugaba"
+function firstName(name = "") {
+  return name.trim().split(/\s+/)[0] || "there";
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MOCK DATA
@@ -265,7 +279,7 @@ function OverviewSection({ savedIds, toggleSave, setActive }) {
       >
         <div className="flex flex-col gap-1">
           <p style={{ color: "#F97316" }} className="text-xs font-bold uppercase tracking-widest">Good morning</p>
-          <h2 className="text-white text-xl font-black">Welcome back, Jean! 👋</h2>
+          <h2 className="text-white text-xl font-black">Welcome back, {firstName(CUSTOMER.name)}! 👋</h2>
           <p className="text-slate-400 text-sm">
             You have <span style={{ color: "#F97316" }} className="font-semibold">{upcoming.length} upcoming booking{upcoming.length !== 1 ? "s" : ""}</span>.
           </p>
@@ -781,6 +795,18 @@ function MobileNav({ active, setActive }) {
 // DASHBOARD ROOT
 // ─────────────────────────────────────────────────────────────────────────────
 export default function CustomerDashboard() {
+  const { user } = useAuth();
+
+  // Overlay the real logged-in user's identity onto the display object,
+  // so the greeting, sidebar, and settings show who is actually signed in.
+  if (user) {
+    CUSTOMER.name = user.full_name;
+    CUSTOMER.initials = initialsFromName(user.full_name);
+    CUSTOMER.email = user.email;
+    if (user.phone) CUSTOMER.phone = user.phone;
+    if (user.district) CUSTOMER.district = user.district;
+  }
+
   const [active, setActive] = useState("overview");
   const [collapsed, setCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);

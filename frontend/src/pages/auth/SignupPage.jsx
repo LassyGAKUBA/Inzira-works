@@ -112,7 +112,7 @@ export default function SignupPage() {
     else if (!/\S+@\S+\.\S+/.test(form.email)) errs.email = "Enter a valid email.";
 
     if (!form.phone) errs.phone = "Phone number is required.";
-    else if (!/^(\+?25)?(07[2-9]\d{7})$/.test(form.phone.replace(/\s/g, "")))
+    else if (!/^(\+?250)?0?7[2-9]\d{7}$/.test(form.phone.replace(/\s/g, "")))
       errs.phone = "Enter a valid Rwandan phone number (e.g. 0781234567).";
 
     if (!form.password) errs.password = "Password is required.";
@@ -133,10 +133,11 @@ export default function SignupPage() {
 
     setLoading(true);
     try {
-      // TODO: replace with real API call
-      // const res = await authService.register(form);
-      await new Promise((r) => setTimeout(r, 1200));
-      navigate("/role-select"); // go to role selection after signup
+      // We don't create the account yet — the role is chosen on the next
+      // screen, and the backend needs the role at registration time.
+      // Carry the validated details to RoleSelectPage via router state.
+      const { confirmPassword, agreeTerms, ...details } = form;
+      navigate("/role-select", { state: { signup: details } });
     } catch (err) {
       setApiError("Something went wrong. Please try again.");
     } finally {
@@ -299,7 +300,7 @@ export default function SignupPage() {
                 className="w-full text-white font-semibold py-3 rounded-xl transition-opacity hover:opacity-90 flex items-center justify-center gap-2 mt-1"
               >
                 {loading && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
-                {loading ? "Creating account..." : t("auth_signup_btn")}
+                {loading ? "Continuing..." : t("auth_signup_btn")}
               </button>
             </form>
 

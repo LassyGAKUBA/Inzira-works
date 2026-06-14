@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useLang } from "../../i18n/LangContext";
+import { useAuth } from "../../context/AuthContext";
 import LanguageSwitcher from "../../components/shared/LanguageSwitcher";
 
 // ── Reusable Input ────────────────────────────────────────────────────────────
@@ -47,6 +48,7 @@ function FormInput({ label, type = "text", value, onChange, placeholder, error, 
 export default function LoginPage() {
   const { t } = useLang();
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const [form, setForm] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
@@ -75,12 +77,13 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      // TODO: replace with real API call
-      // const res = await authService.login(form);
-      await new Promise((r) => setTimeout(r, 1000)); // simulate network
-      navigate("/dashboard"); // redirect after login
+      const user = await login(form);
+      // Redirect based on the user's role.
+      if (user.role === "provider") navigate("/provider/dashboard");
+      else if (user.role === "admin") navigate("/admin/dashboard");
+      else navigate("/customer/dashboard");
     } catch (err) {
-      setApiError("Invalid email or password. Please try again.");
+      setApiError(err.message || "Invalid email or password. Please try again.");
     } finally {
       setLoading(false);
     }
