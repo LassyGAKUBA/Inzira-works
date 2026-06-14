@@ -1,7 +1,7 @@
 Inzira Works
 
 
-A web platform that helps skilled women in Rwanda — tailors, hairdressers, handcraft producers, TVET graduates, and cooperative members — showcase their services, build professional visibility, and connect with customers.
+A Web-Based platform for Enhacing Market Access and Professional Visibility of Skilled Women in Kigali City, Rwanda
 
 
 
