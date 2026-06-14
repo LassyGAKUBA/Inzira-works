@@ -1,0 +1,645 @@
+// src/pages/public/ProviderDirectory.jsx
+// Public Provider Directory — browse & search page (no login required)
+// Includes: Navbar, hero search header, filters sidebar, provider grid, pagination, footer
+
+import { useState, useEffect, useMemo } from "react";
+import { Link } from "react-router-dom";
+import { useLang } from "../../i18n/LangContext";
+import LanguageSwitcher from "../../components/shared/LanguageSwitcher";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MOCK DATA
+// ─────────────────────────────────────────────────────────────────────────────
+const CATEGORIES = [
+  { label: "Tailoring & Fashion", icon: "✂️", count: 142 },
+  { label: "Hair & Beauty", icon: "💇‍♀️", count: 98 },
+  { label: "Handcraft & Weaving", icon: "🧺", count: 76 },
+  { label: "Cooperative Products", icon: "🤝", count: 53 },
+  { label: "Catering & Food", icon: "🍽️", count: 61 },
+  { label: "Cleaning Services", icon: "🧹", count: 44 },
+  { label: "Childcare", icon: "👶", count: 37 },
+  { label: "Event Decoration", icon: "🎀", count: 29 },
+];
+
+const DISTRICTS = ["Gasabo", "Kicukiro", "Nyarugenge"];
+
+const PROVIDERS = [
+  { id: 1, name: "Uwase Clarisse", role: "Tailor & Fashion Designer", category: "Tailoring & Fashion", district: "Gasabo", trustScore: 94, rating: 4.9, reviews: 38, completedJobs: 112, badge: "Top Rated", skills: ["Dresses", "Uniforms", "Alterations"], initials: "UC", color: "#F97316", verified: true },
+  { id: 2, name: "Mukamana Diane", role: "Professional Hairdresser", category: "Hair & Beauty", district: "Kicukiro", trustScore: 88, rating: 4.7, reviews: 55, completedJobs: 203, badge: "Verified", skills: ["Braiding", "Natural Hair", "Styling"], initials: "MD", color: "#8B5CF6", verified: true },
+  { id: 3, name: "Ingabire Alice", role: "Handcraft & Basket Weaving", category: "Handcraft & Weaving", district: "Nyarugenge", trustScore: 91, rating: 4.8, reviews: 27, completedJobs: 89, badge: "Verified", skills: ["Agaseke", "Sisal Crafts", "Export Quality"], initials: "IA", color: "#10B981", verified: true },
+  { id: 4, name: "Mukashyaka Rose", role: "Caterer & Event Chef", category: "Catering & Food", district: "Gasabo", trustScore: 86, rating: 4.6, reviews: 41, completedJobs: 78, badge: "Verified", skills: ["Local Cuisine", "Event Catering", "Buffet"], initials: "MR", color: "#3B82F6", verified: true },
+  { id: 5, name: "Uwimana Grace", role: "Event Decorator", category: "Event Decoration", district: "Kicukiro", trustScore: 90, rating: 4.8, reviews: 33, completedJobs: 65, badge: "Top Rated", skills: ["Weddings", "Balloon Decor", "Venue Styling"], initials: "UG", color: "#F59E0B", verified: true },
+  { id: 6, name: "Nyirahabimana Anne", role: "House Cleaning Specialist", category: "Cleaning Services", district: "Nyarugenge", trustScore: 82, rating: 4.5, reviews: 22, completedJobs: 54, badge: "Verified", skills: ["Deep Cleaning", "Laundry", "Organizing"], initials: "NA", color: "#EC4899", verified: true },
+  { id: 7, name: "Mutoni Sandrine", role: "Childcare Provider", category: "Childcare", district: "Gasabo", trustScore: 79, rating: 4.4, reviews: 18, completedJobs: 31, badge: "Verified", skills: ["Daycare", "Tutoring", "First Aid Trained"], initials: "MS", color: "#06B6D4", verified: true },
+  { id: 8, name: "Niyonsenga Diane", role: "Cooperative Producer", category: "Cooperative Products", district: "Kicukiro", trustScore: 85, rating: 4.6, reviews: 29, completedJobs: 47, badge: "Verified", skills: ["Honey", "Dried Fruits", "Organic Produce"], initials: "ND", color: "#84CC16", verified: true },
+  { id: 9, name: "Mukandayisenga Joy", role: "Bridal Makeup Artist", category: "Hair & Beauty", district: "Nyarugenge", trustScore: 92, rating: 4.9, reviews: 47, completedJobs: 96, badge: "Top Rated", skills: ["Bridal Makeup", "Special Events", "Skincare"], initials: "MJ", color: "#EC4899", verified: true },
+  { id: 10, name: "Akimana Vestine", role: "Seamstress", category: "Tailoring & Fashion", district: "Kicukiro", trustScore: 76, rating: 4.3, reviews: 14, completedJobs: 26, badge: "Verified", skills: ["Children's Wear", "Repairs", "Custom Orders"], initials: "AV", color: "#A855F7", verified: false },
+  { id: 11, name: "Mukamurenzi Esther", role: "Pastry Chef", category: "Catering & Food", district: "Nyarugenge", trustScore: 88, rating: 4.7, reviews: 36, completedJobs: 71, badge: "Verified", skills: ["Cakes", "Pastries", "Custom Orders"], initials: "ME", color: "#F97316", verified: true },
+  { id: 12, name: "Uwizeyimana Bea", role: "Basket Weaver", category: "Handcraft & Weaving", district: "Gasabo", trustScore: 81, rating: 4.5, reviews: 19, completedJobs: 38, badge: "Verified", skills: ["Traditional Baskets", "Home Decor", "Custom Designs"], initials: "UB", color: "#10B981", verified: true },
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PRIMITIVES
+// ─────────────────────────────────────────────────────────────────────────────
+function StarRating({ rating, size = "sm" }) {
+  const px = size === "sm" ? "text-xs" : "text-sm";
+  return (
+    <span className={`flex items-center gap-0.5 ${px}`}>
+      {[1,2,3,4,5].map((s) => (
+        <span key={s} style={{ color: s <= Math.round(rating) ? "#F97316" : "#CBD5E1" }}>★</span>
+      ))}
+    </span>
+  );
+}
+
+function TrustScoreBadge({ score }) {
+  const color = score >= 90 ? "#10B981" : score >= 75 ? "#F97316" : "#64748B";
+  return (
+    <div style={{ border: `2px solid ${color}`, color }} className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold bg-white">
+      <span>✦</span> {score}
+    </div>
+  );
+}
+
+function Avatar({ initials, color, size = 48 }) {
+  return (
+    <div style={{ width: size, height: size, backgroundColor: color + "20", border: `2px solid ${color}`, color, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: size * 0.35, flexShrink: 0 }}>
+      {initials}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PROVIDER CARD
+// ─────────────────────────────────────────────────────────────────────────────
+function ProviderCard({ provider }) {
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 hover:shadow-md transition-shadow duration-200 flex flex-col gap-3">
+      <div className="flex items-start justify-between">
+        <div className="flex items-center gap-3">
+          <Avatar initials={provider.initials} color={provider.color} size={48} />
+          <div>
+            <p className="font-semibold text-slate-800 text-sm leading-tight">{provider.name}</p>
+            <p className="text-xs text-slate-500 mt-0.5">{provider.role}</p>
+          </div>
+        </div>
+        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 flex-shrink-0">
+          {provider.badge}
+        </span>
+      </div>
+
+      <div className="flex items-center gap-3 flex-wrap">
+        <TrustScoreBadge score={provider.trustScore} />
+        <div className="flex items-center gap-1">
+          <StarRating rating={provider.rating} />
+          <span className="text-xs text-slate-500">{provider.rating} ({provider.reviews})</span>
+        </div>
+        {provider.verified && (
+          <span className="text-xs text-green-600 flex items-center gap-0.5">✓ Verified</span>
+        )}
+      </div>
+
+      <div className="flex flex-wrap gap-1.5">
+        {provider.skills.map((s) => (
+          <span key={s} className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">{s}</span>
+        ))}
+      </div>
+
+      <div className="flex items-center justify-between pt-1 border-t border-slate-100">
+        <span className="text-xs text-slate-500">📍 {provider.district} · {provider.completedJobs} jobs</span>
+        <Link
+          to={`/providers/${provider.id}`}
+          style={{ backgroundColor: "#F97316" }}
+          className="text-white text-xs font-medium px-3 py-1.5 rounded-lg hover:opacity-90 transition-opacity"
+        >
+          View Profile
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SKELETON CARD (loading state)
+// ─────────────────────────────────────────────────────────────────────────────
+function SkeletonCard() {
+  return (
+    <div className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col gap-3 animate-pulse">
+      <div className="flex items-center gap-3">
+        <div className="w-12 h-12 rounded-full bg-slate-100" />
+        <div className="flex-1 flex flex-col gap-2">
+          <div className="h-3 bg-slate-100 rounded w-2/3" />
+          <div className="h-2.5 bg-slate-100 rounded w-1/2" />
+        </div>
+      </div>
+      <div className="h-2.5 bg-slate-100 rounded w-1/3" />
+      <div className="flex gap-1.5">
+        <div className="h-5 bg-slate-100 rounded-full w-16" />
+        <div className="h-5 bg-slate-100 rounded-full w-20" />
+      </div>
+      <div className="h-8 bg-slate-100 rounded-lg" />
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NAVBAR (shared, simplified for directory page)
+// ─────────────────────────────────────────────────────────────────────────────
+function Navbar() {
+  const { t } = useLang();
+  const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handler = () => setScrolled(window.scrollY > 10);
+    window.addEventListener("scroll", handler);
+    return () => window.removeEventListener("scroll", handler);
+  }, []);
+
+  return (
+    <nav className={`sticky top-0 z-50 transition-all duration-200 bg-white ${scrolled ? "shadow-sm" : "border-b border-slate-100"}`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+        <Link to="/" className="flex items-center gap-2">
+          <div style={{ backgroundColor: "#F97316" }} className="w-8 h-8 rounded-lg flex items-center justify-center">
+            <span className="text-white font-black text-sm">IW</span>
+          </div>
+          <span style={{ color: "#1E293B" }} className="font-bold text-lg tracking-tight">Inzira Works</span>
+        </Link>
+
+        <div className="hidden md:flex items-center gap-8">
+          <Link to="/providers" style={{ color: "#F97316" }} className="text-sm font-semibold">{t("nav_browse")}</Link>
+          <a href="#" className="text-sm font-medium text-slate-600 hover:text-orange-500 transition-colors">{t("nav_how")}</a>
+          <a href="#" className="text-sm font-medium text-slate-600 hover:text-orange-500 transition-colors">{t("nav_about")}</a>
+          <a href="#" className="text-sm font-medium text-slate-600 hover:text-orange-500 transition-colors">{t("nav_contact")}</a>
+        </div>
+
+        <div className="hidden md:flex items-center gap-3">
+          <LanguageSwitcher compact />
+          <div className="w-px h-5 bg-slate-200" />
+          <Link to="/login" style={{ color: "#1E293B" }} className="text-sm font-medium hover:text-orange-500 transition-colors">{t("nav_login")}</Link>
+          <Link to="/signup" style={{ backgroundColor: "#F97316" }} className="text-sm font-semibold text-white px-4 py-2 rounded-xl hover:opacity-90 transition-opacity">{t("nav_getstarted")}</Link>
+        </div>
+
+        <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden p-2 rounded-lg text-slate-600" aria-label="Toggle menu">
+          {menuOpen ? "✕" : "☰"}
+        </button>
+      </div>
+
+      {menuOpen && (
+        <div className="md:hidden bg-white border-t border-slate-100 px-4 py-4 flex flex-col gap-4">
+          <Link to="/providers" style={{ color: "#F97316" }} className="text-sm font-semibold">{t("nav_browse")}</Link>
+          <a href="#" className="text-sm font-medium text-slate-700">{t("nav_how")}</a>
+          <a href="#" className="text-sm font-medium text-slate-700">{t("nav_about")}</a>
+          <a href="#" className="text-sm font-medium text-slate-700">{t("nav_contact")}</a>
+          <LanguageSwitcher />
+          <div className="flex gap-3 pt-1">
+            <Link to="/login" className="text-sm font-medium text-slate-700 border border-slate-200 px-4 py-2 rounded-xl flex-1 text-center">{t("nav_login")}</Link>
+            <Link to="/signup" style={{ backgroundColor: "#F97316" }} className="text-sm font-semibold text-white px-4 py-2 rounded-xl flex-1 text-center">{t("nav_getstarted")}</Link>
+          </div>
+        </div>
+      )}
+    </nav>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FOOTER (compact)
+// ─────────────────────────────────────────────────────────────────────────────
+function Footer() {
+  const { t } = useLang();
+  return (
+    <footer style={{ backgroundColor: "#0F172A" }} className="py-10 mt-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          <div style={{ backgroundColor: "#F97316" }} className="w-7 h-7 rounded-lg flex items-center justify-center">
+            <span className="text-white font-black text-xs">IW</span>
+          </div>
+          <span className="text-white font-bold text-sm">Inzira Works</span>
+        </div>
+        <p className="text-slate-500 text-xs">© {new Date().getFullYear()} {t("foot_copy")}</p>
+        <p className="text-slate-700 text-xs">{t("foot_capstone")}</p>
+      </div>
+    </footer>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FILTERS SIDEBAR
+// ─────────────────────────────────────────────────────────────────────────────
+function FiltersSidebar({ filters, setFilters, onClose }) {
+  const setFilter = (key, value) => setFilters((prev) => ({ ...prev, [key]: value }));
+
+  const toggleCategory = (cat) => {
+    setFilters((prev) => ({
+      ...prev,
+      categories: prev.categories.includes(cat)
+        ? prev.categories.filter((c) => c !== cat)
+        : [...prev.categories, cat],
+    }));
+  };
+
+  const clearAll = () => setFilters({
+    categories: [],
+    district: "all",
+    minRating: 0,
+    minTrust: 0,
+    verifiedOnly: false,
+  });
+
+  const activeCount = filters.categories.length
+    + (filters.district !== "all" ? 1 : 0)
+    + (filters.minRating > 0 ? 1 : 0)
+    + (filters.minTrust > 0 ? 1 : 0)
+    + (filters.verifiedOnly ? 1 : 0);
+
+  return (
+    <div className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col gap-6 sticky top-20">
+      <div className="flex items-center justify-between">
+        <h3 style={{ color: "#1E293B" }} className="font-bold">Filters</h3>
+        <div className="flex items-center gap-2">
+          {activeCount > 0 && (
+            <button onClick={clearAll} style={{ color: "#F97316" }} className="text-xs font-semibold hover:underline">
+              Clear ({activeCount})
+            </button>
+          )}
+          {onClose && (
+            <button onClick={onClose} className="text-slate-400 lg:hidden">✕</button>
+          )}
+        </div>
+      </div>
+
+      {/* District */}
+      <div className="flex flex-col gap-2">
+        <p className="text-xs font-bold text-slate-700 uppercase tracking-wide">District</p>
+        <div className="flex flex-col gap-1.5">
+          {["all", ...DISTRICTS].map((d) => (
+            <label key={d} className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="district"
+                checked={filters.district === d}
+                onChange={() => setFilter("district", d)}
+                className="accent-orange-500"
+              />
+              <span className="text-sm text-slate-600">{d === "all" ? "All Districts" : d}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* Category */}
+      <div className="flex flex-col gap-2">
+        <p className="text-xs font-bold text-slate-700 uppercase tracking-wide">Category</p>
+        <div className="flex flex-col gap-1.5 max-h-48 overflow-y-auto pr-1">
+          {CATEGORIES.map((cat) => (
+            <label key={cat.label} className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={filters.categories.includes(cat.label)}
+                onChange={() => toggleCategory(cat.label)}
+                className="accent-orange-500"
+              />
+              <span className="text-sm text-slate-600 flex-1">{cat.icon} {cat.label}</span>
+              <span className="text-xs text-slate-400">{cat.count}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* Minimum rating */}
+      <div className="flex flex-col gap-2">
+        <p className="text-xs font-bold text-slate-700 uppercase tracking-wide">Minimum Rating</p>
+        <div className="flex gap-2">
+          {[0, 4, 4.5].map((r) => (
+            <button
+              key={r}
+              onClick={() => setFilter("minRating", r)}
+              className="flex-1 text-xs font-semibold py-1.5 rounded-lg transition-all"
+              style={{
+                backgroundColor: filters.minRating === r ? "#F97316" : "#F1F5F9",
+                color: filters.minRating === r ? "white" : "#64748B",
+              }}
+            >
+              {r === 0 ? "Any" : `${r}+ ★`}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Trust score */}
+      <div className="flex flex-col gap-2">
+        <p className="text-xs font-bold text-slate-700 uppercase tracking-wide">Minimum Trust Score</p>
+        <div className="flex flex-col gap-2">
+          <input
+            type="range"
+            min="0"
+            max="95"
+            step="5"
+            value={filters.minTrust}
+            onChange={(e) => setFilter("minTrust", Number(e.target.value))}
+            className="w-full accent-orange-500"
+          />
+          <div className="flex justify-between text-xs text-slate-400">
+            <span>Any</span>
+            <span style={{ color: "#F97316" }} className="font-bold">{filters.minTrust}+</span>
+            <span>95</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Verified only */}
+      <label className="flex items-center gap-2 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={filters.verifiedOnly}
+          onChange={(e) => setFilter("verifiedOnly", e.target.checked)}
+          className="accent-orange-500"
+        />
+        <span className="text-sm text-slate-600">✓ Verified providers only</span>
+      </label>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MAIN PAGE
+// ─────────────────────────────────────────────────────────────────────────────
+export default function ProviderDirectory() {
+  const { t } = useLang();
+  const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState("trust");
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const PER_PAGE = 6;
+
+  const [filters, setFilters] = useState({
+    categories: [],
+    district: "all",
+    minRating: 0,
+    minTrust: 0,
+    verifiedOnly: false,
+  });
+
+  // Simulate initial load
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 600);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Reset to page 1 whenever filters/search/sort change
+  useEffect(() => {
+    setPage(1);
+  }, [search, sortBy, filters]);
+
+  const filtered = useMemo(() => {
+    let result = PROVIDERS.filter((p) => {
+      const matchesSearch = search === "" ||
+        p.name.toLowerCase().includes(search.toLowerCase()) ||
+        p.role.toLowerCase().includes(search.toLowerCase()) ||
+        p.skills.some((s) => s.toLowerCase().includes(search.toLowerCase()));
+
+      const matchesDistrict = filters.district === "all" || p.district === filters.district;
+      const matchesCategory = filters.categories.length === 0 || filters.categories.includes(p.category);
+      const matchesRating = p.rating >= filters.minRating;
+      const matchesTrust = p.trustScore >= filters.minTrust;
+      const matchesVerified = !filters.verifiedOnly || p.verified;
+
+      return matchesSearch && matchesDistrict && matchesCategory && matchesRating && matchesTrust && matchesVerified;
+    });
+
+    result = [...result].sort((a, b) => {
+      if (sortBy === "trust") return b.trustScore - a.trustScore;
+      if (sortBy === "rating") return b.rating - a.rating;
+      if (sortBy === "jobs") return b.completedJobs - a.completedJobs;
+      if (sortBy === "reviews") return b.reviews - a.reviews;
+      return 0;
+    });
+
+    return result;
+  }, [search, sortBy, filters]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+  const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+
+  const activeFilterCount = filters.categories.length
+    + (filters.district !== "all" ? 1 : 0)
+    + (filters.minRating > 0 ? 1 : 0)
+    + (filters.minTrust > 0 ? 1 : 0)
+    + (filters.verifiedOnly ? 1 : 0);
+
+  return (
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#F8FAFC" }}>
+      <Navbar />
+
+      {/* Header / Search */}
+      <section
+        style={{ background: "linear-gradient(135deg, #FFF7ED 0%, #FFECD2 60%, #FFF7ED 100%)" }}
+        className="py-10"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col gap-5">
+          <div>
+            <h1 style={{ color: "#1E293B" }} className="text-2xl sm:text-3xl font-black tracking-tight">
+              Browse Skilled Women in Kigali
+            </h1>
+            <p className="text-slate-500 text-sm mt-1">
+              {filtered.length} verified provider{filtered.length !== 1 ? "s" : ""} ready to help with your project
+            </p>
+          </div>
+
+          {/* Search bar */}
+          <div className="flex gap-2 bg-white rounded-2xl shadow-md p-2 border border-slate-100 max-w-2xl">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by name, skill, or service (e.g. Tailor, Braiding)..."
+              className="flex-1 px-4 py-2 text-sm text-slate-700 outline-none bg-transparent placeholder-slate-400"
+            />
+            <button style={{ backgroundColor: "#F97316" }} className="text-white font-semibold text-sm px-5 py-2 rounded-xl hover:opacity-90 transition-opacity whitespace-nowrap">
+              Search
+            </button>
+          </div>
+
+          {/* Category quick pills */}
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {CATEGORIES.map((cat) => {
+              const isActive = filters.categories.includes(cat.label);
+              return (
+                <button
+                  key={cat.label}
+                  onClick={() => setFilters((prev) => ({
+                    ...prev,
+                    categories: isActive ? prev.categories.filter((c) => c !== cat.label) : [...prev.categories, cat.label],
+                  }))}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors flex-shrink-0"
+                  style={{
+                    backgroundColor: isActive ? "#F97316" : "white",
+                    color: isActive ? "white" : "#64748B",
+                    border: isActive ? "1px solid #F97316" : "1px solid #E2E8F0",
+                  }}
+                >
+                  <span>{cat.icon}</span> {cat.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Body */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 flex-1 w-full">
+        <div className="grid lg:grid-cols-[280px_1fr] gap-6">
+          {/* Desktop filters sidebar */}
+          <div className="hidden lg:block">
+            <FiltersSidebar filters={filters} setFilters={setFilters} />
+          </div>
+
+          {/* Results */}
+          <div className="flex flex-col gap-5">
+            {/* Toolbar */}
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <button
+                onClick={() => setMobileFiltersOpen(true)}
+                className="lg:hidden flex items-center gap-2 text-sm font-semibold text-slate-600 border border-slate-200 bg-white px-4 py-2 rounded-xl"
+              >
+                ⚙️ Filters {activeFilterCount > 0 && <span style={{ backgroundColor: "#F97316" }} className="text-white text-xs rounded-full px-1.5">{activeFilterCount}</span>}
+              </button>
+
+              <p className="text-sm text-slate-500 hidden sm:block">
+                Showing {paginated.length === 0 ? 0 : (page - 1) * PER_PAGE + 1}–{Math.min(page * PER_PAGE, filtered.length)} of {filtered.length}
+              </p>
+
+              <div className="flex items-center gap-2 ml-auto">
+                <span className="text-xs text-slate-400">Sort by:</span>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="text-sm font-medium text-slate-600 border border-slate-200 rounded-xl px-3 py-2 outline-none bg-white"
+                >
+                  <option value="trust">Trust Score</option>
+                  <option value="rating">Highest Rated</option>
+                  <option value="jobs">Most Jobs Completed</option>
+                  <option value="reviews">Most Reviews</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Active filter chips */}
+            {activeFilterCount > 0 && (
+              <div className="flex items-center gap-2 flex-wrap">
+                {filters.categories.map((cat) => (
+                  <span key={cat} className="flex items-center gap-1.5 text-xs font-medium bg-orange-50 text-orange-600 px-3 py-1 rounded-full">
+                    {cat}
+                    <button onClick={() => setFilters((p) => ({ ...p, categories: p.categories.filter((c) => c !== cat) }))}>✕</button>
+                  </span>
+                ))}
+                {filters.district !== "all" && (
+                  <span className="flex items-center gap-1.5 text-xs font-medium bg-orange-50 text-orange-600 px-3 py-1 rounded-full">
+                    📍 {filters.district}
+                    <button onClick={() => setFilters((p) => ({ ...p, district: "all" }))}>✕</button>
+                  </span>
+                )}
+                {filters.minRating > 0 && (
+                  <span className="flex items-center gap-1.5 text-xs font-medium bg-orange-50 text-orange-600 px-3 py-1 rounded-full">
+                    {filters.minRating}+ ★
+                    <button onClick={() => setFilters((p) => ({ ...p, minRating: 0 }))}>✕</button>
+                  </span>
+                )}
+                {filters.minTrust > 0 && (
+                  <span className="flex items-center gap-1.5 text-xs font-medium bg-orange-50 text-orange-600 px-3 py-1 rounded-full">
+                    Trust {filters.minTrust}+
+                    <button onClick={() => setFilters((p) => ({ ...p, minTrust: 0 }))}>✕</button>
+                  </span>
+                )}
+                {filters.verifiedOnly && (
+                  <span className="flex items-center gap-1.5 text-xs font-medium bg-orange-50 text-orange-600 px-3 py-1 rounded-full">
+                    ✓ Verified only
+                    <button onClick={() => setFilters((p) => ({ ...p, verifiedOnly: false }))}>✕</button>
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Grid */}
+            {loading ? (
+              <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
+              </div>
+            ) : paginated.length > 0 ? (
+              <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                {paginated.map((p) => <ProviderCard key={p.id} provider={p} />)}
+              </div>
+            ) : (
+              <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center flex flex-col items-center gap-3">
+                <p className="text-3xl">🔍</p>
+                <p className="font-semibold text-slate-700">No providers match your filters</p>
+                <p className="text-sm text-slate-400">Try removing some filters or searching a different term.</p>
+                <button
+                  onClick={() => { setSearch(""); setFilters({ categories: [], district: "all", minRating: 0, minTrust: 0, verifiedOnly: false }); }}
+                  style={{ backgroundColor: "#F97316" }}
+                  className="text-white text-sm font-semibold px-5 py-2 rounded-xl hover:opacity-90 transition-opacity mt-1"
+                >
+                  Reset Filters
+                </button>
+              </div>
+            )}
+
+            {/* Pagination */}
+            {!loading && filtered.length > PER_PAGE && (
+              <div className="flex items-center justify-center gap-2 pt-4">
+                <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="px-3 py-2 rounded-lg text-sm font-medium border border-slate-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors"
+                >
+                  ← Prev
+                </button>
+                {Array.from({ length: totalPages }).map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setPage(i + 1)}
+                    className="w-9 h-9 rounded-lg text-sm font-semibold transition-colors"
+                    style={{
+                      backgroundColor: page === i + 1 ? "#F97316" : "white",
+                      color: page === i + 1 ? "white" : "#64748B",
+                      border: page === i + 1 ? "none" : "1px solid #E2E8F0",
+                    }}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="px-3 py-2 rounded-lg text-sm font-medium border border-slate-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors"
+                >
+                  Next →
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile filters drawer */}
+      {mobileFiltersOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden flex">
+          <div className="fixed inset-0 bg-black/40" onClick={() => setMobileFiltersOpen(false)} />
+          <div className="relative bg-white w-full max-w-sm h-full ml-auto overflow-y-auto p-4">
+            <FiltersSidebar filters={filters} setFilters={setFilters} onClose={() => setMobileFiltersOpen(false)} />
+            <button
+              onClick={() => setMobileFiltersOpen(false)}
+              style={{ backgroundColor: "#F97316" }}
+              className="w-full text-white font-semibold py-3 rounded-xl mt-4 hover:opacity-90 transition-opacity"
+            >
+              Show {filtered.length} Results
+            </button>
+          </div>
+        </div>
+      )}
+
+      <Footer />
+    </div>
+  );
+}
