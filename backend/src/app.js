@@ -3,6 +3,7 @@ import cors from "cors";
 import morgan from "morgan";
 import { env } from "./config/env.js";
 import authRoutes from "./routes/auth.routes.js";
+import providerRoutes from "./routes/providers.routes.js";
 
 const app = express();
 
@@ -21,8 +22,8 @@ app.get("/api/health", (req, res) => {
 
 // ── Routes ──────────────────────────────────────────────────
 app.use("/api/auth", authRoutes);
-// app.use("/api/providers", providerRoutes);  // (next steps)
-// ...
+app.use("/api/providers", providerRoutes);
+
 
 // ── 404 ─────────────────────────────────────────────────────
 app.use((req, res) => {
