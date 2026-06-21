@@ -1,6 +1,9 @@
 // src/pages/public/ProviderDirectory.jsx
 // Public Provider Directory — browse & search page (no login required)
 // Includes: Navbar, hero search header, filters sidebar, provider grid, pagination, footer
+//
+// NOTE: This page currently uses MOCK data (the PROVIDERS array below).
+// Next step is to replace it with a live call to GET /api/providers.
 
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
@@ -8,39 +11,53 @@ import { useLang } from "../../i18n/LangContext";
 import LanguageSwitcher from "../../components/shared/LanguageSwitcher";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MOCK DATA
+// CATEGORIES  (focused on the four core services)
+// Each category has an `image` (shown as a thumbnail) and an `emoji` fallback
+// that displays automatically if the image file is missing.
+// Put the image files in:  frontend/public/categories/
 // ─────────────────────────────────────────────────────────────────────────────
 const CATEGORIES = [
-  { label: "Tailoring & Fashion", icon: "✂️", count: 142 },
-  { label: "Hair & Beauty", icon: "💇‍♀️", count: 98 },
-  { label: "Handcraft & Weaving", icon: "🧺", count: 76 },
-  { label: "Cooperative Products", icon: "🤝", count: 53 },
-  { label: "Catering & Food", icon: "🍽️", count: 61 },
-  { label: "Cleaning Services", icon: "🧹", count: 44 },
-  { label: "Childcare", icon: "👶", count: 37 },
-  { label: "Event Decoration", icon: "🎀", count: 29 },
+  { label: "Tailoring & Fashion", image: "/categories/tailoring.jpg", emoji: "", count: 142 },
+  { label: "Hair & Beauty",       image: "/categories/hair.jpg",      emoji: "", count: 98 },
+  { label: "Handcraft & Weaving", image: "/categories/handcraft.jpg", emoji: "", count: 76 },
+  { label: "Catering & Food",     image: "/categories/catering.jpg",  emoji: "", count: 61 },
 ];
 
 const DISTRICTS = ["Gasabo", "Kicukiro", "Nyarugenge"];
 
 const PROVIDERS = [
   { id: 1, name: "Uwase Clarisse", role: "Tailor & Fashion Designer", category: "Tailoring & Fashion", district: "Gasabo", trustScore: 94, rating: 4.9, reviews: 38, completedJobs: 112, badge: "Top Rated", skills: ["Dresses", "Uniforms", "Alterations"], initials: "UC", color: "#F97316", verified: true },
-  { id: 2, name: "Mukamana Diane", role: "Professional Hairdresser", category: "Hair & Beauty", district: "Kicukiro", trustScore: 88, rating: 4.7, reviews: 55, completedJobs: 203, badge: "Verified", skills: ["Braiding", "Natural Hair", "Styling"], initials: "MD", color: "#8B5CF6", verified: true },
-  { id: 3, name: "Ingabire Alice", role: "Handcraft & Basket Weaving", category: "Handcraft & Weaving", district: "Nyarugenge", trustScore: 91, rating: 4.8, reviews: 27, completedJobs: 89, badge: "Verified", skills: ["Agaseke", "Sisal Crafts", "Export Quality"], initials: "IA", color: "#10B981", verified: true },
-  { id: 4, name: "Mukashyaka Rose", role: "Caterer & Event Chef", category: "Catering & Food", district: "Gasabo", trustScore: 86, rating: 4.6, reviews: 41, completedJobs: 78, badge: "Verified", skills: ["Local Cuisine", "Event Catering", "Buffet"], initials: "MR", color: "#3B82F6", verified: true },
-  { id: 5, name: "Uwimana Grace", role: "Event Decorator", category: "Event Decoration", district: "Kicukiro", trustScore: 90, rating: 4.8, reviews: 33, completedJobs: 65, badge: "Top Rated", skills: ["Weddings", "Balloon Decor", "Venue Styling"], initials: "UG", color: "#F59E0B", verified: true },
-  { id: 6, name: "Nyirahabimana Anne", role: "House Cleaning Specialist", category: "Cleaning Services", district: "Nyarugenge", trustScore: 82, rating: 4.5, reviews: 22, completedJobs: 54, badge: "Verified", skills: ["Deep Cleaning", "Laundry", "Organizing"], initials: "NA", color: "#EC4899", verified: true },
-  { id: 7, name: "Mutoni Sandrine", role: "Childcare Provider", category: "Childcare", district: "Gasabo", trustScore: 79, rating: 4.4, reviews: 18, completedJobs: 31, badge: "Verified", skills: ["Daycare", "Tutoring", "First Aid Trained"], initials: "MS", color: "#06B6D4", verified: true },
-  { id: 8, name: "Niyonsenga Diane", role: "Cooperative Producer", category: "Cooperative Products", district: "Kicukiro", trustScore: 85, rating: 4.6, reviews: 29, completedJobs: 47, badge: "Verified", skills: ["Honey", "Dried Fruits", "Organic Produce"], initials: "ND", color: "#84CC16", verified: true },
-  { id: 9, name: "Mukandayisenga Joy", role: "Bridal Makeup Artist", category: "Hair & Beauty", district: "Nyarugenge", trustScore: 92, rating: 4.9, reviews: 47, completedJobs: 96, badge: "Top Rated", skills: ["Bridal Makeup", "Special Events", "Skincare"], initials: "MJ", color: "#EC4899", verified: true },
-  { id: 10, name: "Akimana Vestine", role: "Seamstress", category: "Tailoring & Fashion", district: "Kicukiro", trustScore: 76, rating: 4.3, reviews: 14, completedJobs: 26, badge: "Verified", skills: ["Children's Wear", "Repairs", "Custom Orders"], initials: "AV", color: "#A855F7", verified: false },
-  { id: 11, name: "Mukamurenzi Esther", role: "Pastry Chef", category: "Catering & Food", district: "Nyarugenge", trustScore: 88, rating: 4.7, reviews: 36, completedJobs: 71, badge: "Verified", skills: ["Cakes", "Pastries", "Custom Orders"], initials: "ME", color: "#F97316", verified: true },
-  { id: 12, name: "Uwizeyimana Bea", role: "Basket Weaver", category: "Handcraft & Weaving", district: "Gasabo", trustScore: 81, rating: 4.5, reviews: 19, completedJobs: 38, badge: "Verified", skills: ["Traditional Baskets", "Home Decor", "Custom Designs"], initials: "UB", color: "#10B981", verified: true },
+  { id: 2, name: "Akimana Vestine", role: "Seamstress", category: "Tailoring & Fashion", district: "Kicukiro", trustScore: 76, rating: 4.3, reviews: 14, completedJobs: 26, badge: "Verified", skills: ["Children's Wear", "Repairs", "Custom Orders"], initials: "AV", color: "#A855F7", verified: false },
+  { id: 3, name: "Mukamana Diane", role: "Professional Hairdresser", category: "Hair & Beauty", district: "Kicukiro", trustScore: 88, rating: 4.7, reviews: 55, completedJobs: 203, badge: "Verified", skills: ["Braiding", "Natural Hair", "Styling"], initials: "MD", color: "#8B5CF6", verified: true },
+  { id: 4, name: "Mukandayisenga Joy", role: "Bridal Makeup Artist", category: "Hair & Beauty", district: "Nyarugenge", trustScore: 92, rating: 4.9, reviews: 47, completedJobs: 96, badge: "Top Rated", skills: ["Bridal Makeup", "Special Events", "Skincare"], initials: "MJ", color: "#EC4899", verified: true },
+  { id: 5, name: "Ingabire Alice", role: "Handcraft & Basket Weaving", category: "Handcraft & Weaving", district: "Nyarugenge", trustScore: 91, rating: 4.8, reviews: 27, completedJobs: 89, badge: "Verified", skills: ["Agaseke", "Sisal Crafts", "Export Quality"], initials: "IA", color: "#10B981", verified: true },
+  { id: 6, name: "Uwizeyimana Bea", role: "Basket Weaver", category: "Handcraft & Weaving", district: "Gasabo", trustScore: 81, rating: 4.5, reviews: 19, completedJobs: 38, badge: "Verified", skills: ["Traditional Baskets", "Home Decor", "Custom Designs"], initials: "UB", color: "#10B981", verified: true },
+  { id: 7, name: "Mukashyaka Rose", role: "Caterer & Event Chef", category: "Catering & Food", district: "Gasabo", trustScore: 86, rating: 4.6, reviews: 41, completedJobs: 78, badge: "Verified", skills: ["Local Cuisine", "Event Catering", "Buffet"], initials: "MR", color: "#3B82F6", verified: true },
+  { id: 8, name: "Mukamurenzi Esther", role: "Pastry Chef", category: "Catering & Food", district: "Nyarugenge", trustScore: 88, rating: 4.7, reviews: 36, completedJobs: 71, badge: "Verified", skills: ["Cakes", "Pastries", "Custom Orders"], initials: "ME", color: "#F97316", verified: true },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PRIMITIVES
 // ─────────────────────────────────────────────────────────────────────────────
+
+// Category thumbnail: shows the image, falls back to the emoji if it fails to load.
+function CategoryIcon({ category, size = 20, rounded = 6 }) {
+  const [failed, setFailed] = useState(false);
+
+  if (failed || !category.image) {
+    return <span style={{ fontSize: size * 0.9, lineHeight: 1 }}>{category.emoji}</span>;
+  }
+
+  return (
+    <img
+      src={category.image}
+      alt={category.label}
+      onError={() => setFailed(true)}
+      style={{ width: size, height: size, objectFit: "cover", borderRadius: rounded, flexShrink: 0 }}
+    />
+  );
+}
+
 function StarRating({ rating, size = "sm" }) {
   const px = size === "sm" ? "text-xs" : "text-sm";
   return (
@@ -299,7 +316,8 @@ function FiltersSidebar({ filters, setFilters, onClose }) {
                 onChange={() => toggleCategory(cat.label)}
                 className="accent-orange-500"
               />
-              <span className="text-sm text-slate-600 flex-1">{cat.icon} {cat.label}</span>
+              <CategoryIcon category={cat} size={18} />
+              <span className="text-sm text-slate-600 flex-1">{cat.label}</span>
               <span className="text-xs text-slate-400">{cat.count}</span>
             </label>
           ))}
@@ -479,7 +497,7 @@ export default function ProviderDirectory() {
                     border: isActive ? "1px solid #F97316" : "1px solid #E2E8F0",
                   }}
                 >
-                  <span>{cat.icon}</span> {cat.label}
+                  <CategoryIcon category={cat} size={16} rounded={4} /> {cat.label}
                 </button>
               );
             })}
