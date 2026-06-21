@@ -1,14 +1,13 @@
 // src/pages/public/ProviderDirectory.jsx
 // Public Provider Directory — browse & search page (no login required)
 // Includes: Navbar, hero search header, filters sidebar, provider grid, pagination, footer
-//
-// NOTE: This page currently uses MOCK data (the PROVIDERS array below).
-// Next step is to replace it with a live call to GET /api/providers.
+// Fetches live providers from the backend (GET /api/providers).
 
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useLang } from "../../i18n/LangContext";
 import LanguageSwitcher from "../../components/shared/LanguageSwitcher";
+import { api } from "../../api/client";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CATEGORIES  (focused on the four core services)
@@ -25,16 +24,45 @@ const CATEGORIES = [
 
 const DISTRICTS = ["Gasabo", "Kicukiro", "Nyarugenge"];
 
-const PROVIDERS = [
-  { id: 1, name: "Uwase Clarisse", role: "Tailor & Fashion Designer", category: "Tailoring & Fashion", district: "Gasabo", trustScore: 94, rating: 4.9, reviews: 38, completedJobs: 112, badge: "Top Rated", skills: ["Dresses", "Uniforms", "Alterations"], initials: "UC", color: "#F97316", verified: true },
-  { id: 2, name: "Akimana Vestine", role: "Seamstress", category: "Tailoring & Fashion", district: "Kicukiro", trustScore: 76, rating: 4.3, reviews: 14, completedJobs: 26, badge: "Verified", skills: ["Children's Wear", "Repairs", "Custom Orders"], initials: "AV", color: "#A855F7", verified: false },
-  { id: 3, name: "Mukamana Diane", role: "Professional Hairdresser", category: "Hair & Beauty", district: "Kicukiro", trustScore: 88, rating: 4.7, reviews: 55, completedJobs: 203, badge: "Verified", skills: ["Braiding", "Natural Hair", "Styling"], initials: "MD", color: "#8B5CF6", verified: true },
-  { id: 4, name: "Mukandayisenga Joy", role: "Bridal Makeup Artist", category: "Hair & Beauty", district: "Nyarugenge", trustScore: 92, rating: 4.9, reviews: 47, completedJobs: 96, badge: "Top Rated", skills: ["Bridal Makeup", "Special Events", "Skincare"], initials: "MJ", color: "#EC4899", verified: true },
-  { id: 5, name: "Ingabire Alice", role: "Handcraft & Basket Weaving", category: "Handcraft & Weaving", district: "Nyarugenge", trustScore: 91, rating: 4.8, reviews: 27, completedJobs: 89, badge: "Verified", skills: ["Agaseke", "Sisal Crafts", "Export Quality"], initials: "IA", color: "#10B981", verified: true },
-  { id: 6, name: "Uwizeyimana Bea", role: "Basket Weaver", category: "Handcraft & Weaving", district: "Gasabo", trustScore: 81, rating: 4.5, reviews: 19, completedJobs: 38, badge: "Verified", skills: ["Traditional Baskets", "Home Decor", "Custom Designs"], initials: "UB", color: "#10B981", verified: true },
-  { id: 7, name: "Mukashyaka Rose", role: "Caterer & Event Chef", category: "Catering & Food", district: "Gasabo", trustScore: 86, rating: 4.6, reviews: 41, completedJobs: 78, badge: "Verified", skills: ["Local Cuisine", "Event Catering", "Buffet"], initials: "MR", color: "#3B82F6", verified: true },
-  { id: 8, name: "Mukamurenzi Esther", role: "Pastry Chef", category: "Catering & Food", district: "Nyarugenge", trustScore: 88, rating: 4.7, reviews: 36, completedJobs: 71, badge: "Verified", skills: ["Cakes", "Pastries", "Custom Orders"], initials: "ME", color: "#F97316", verified: true },
-];
+// ─────────────────────────────────────────────────────────────────────────────
+// API → CARD MAPPING
+// The backend (GET /api/providers) returns snake_case rows with numbers as
+// strings. These helpers turn one row into the shape ProviderCard expects.
+// ─────────────────────────────────────────────────────────────────────────────
+const AVATAR_PALETTE = ["#F97316", "#8B5CF6", "#10B981", "#3B82F6", "#EC4899", "#A855F7", "#06B6D4", "#F59E0B"];
+
+function initialsFrom(name = "") {
+  return name.trim().split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+}
+
+// Deterministic avatar color so the same provider always gets the same colour.
+function colorFromId(id = "") {
+  let sum = 0;
+  for (let i = 0; i < id.length; i++) sum += id.charCodeAt(i);
+  return AVATAR_PALETTE[sum % AVATAR_PALETTE.length];
+}
+
+function mapProvider(row) {
+  const trustScore = Math.round(Number(row.trust_score) || 0);
+  const rating = Number(row.avg_rating) || 0;
+  const reviews = Number(row.review_count) || 0;
+  const verified = row.verification_status === "verified";
+  return {
+    id: row.provider_id,
+    name: row.full_name,
+    role: row.headline || "Service Provider",
+    district: row.district || "—",
+    trustScore,
+    rating,
+    reviews,
+    verified,
+    skills: Array.isArray(row.specialties) ? row.specialties : [],
+    initials: initialsFrom(row.full_name),
+    color: colorFromId(row.provider_id),
+    badge: trustScore >= 90 ? "Top Rated" : verified ? "Verified" : "New",
+    category: null, // backend doesn't return category yet — see filtered()
+  };
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PRIMITIVES
@@ -107,10 +135,14 @@ function ProviderCard({ provider }) {
 
       <div className="flex items-center gap-3 flex-wrap">
         <TrustScoreBadge score={provider.trustScore} />
-        <div className="flex items-center gap-1">
-          <StarRating rating={provider.rating} />
-          <span className="text-xs text-slate-500">{provider.rating} ({provider.reviews})</span>
-        </div>
+        {provider.reviews > 0 ? (
+          <div className="flex items-center gap-1">
+            <StarRating rating={provider.rating} />
+            <span className="text-xs text-slate-500">{provider.rating.toFixed(1)} ({provider.reviews})</span>
+          </div>
+        ) : (
+          <span className="text-xs text-slate-400">New provider</span>
+        )}
         {provider.verified && (
           <span className="text-xs text-green-600 flex items-center gap-0.5">✓ Verified</span>
         )}
@@ -123,7 +155,7 @@ function ProviderCard({ provider }) {
       </div>
 
       <div className="flex items-center justify-between pt-1 border-t border-slate-100">
-        <span className="text-xs text-slate-500">📍 {provider.district} · {provider.completedJobs} jobs</span>
+        <span className="text-xs text-slate-500">📍 {provider.district}</span>
         <Link
           to={`/providers/${provider.id}`}
           style={{ backgroundColor: "#F97316" }}
@@ -388,6 +420,8 @@ export default function ProviderDirectory() {
   const [sortBy, setSortBy] = useState("trust");
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [providers, setProviders] = useState([]);
   const [page, setPage] = useState(1);
   const PER_PAGE = 6;
 
@@ -399,10 +433,22 @@ export default function ProviderDirectory() {
     verifiedOnly: false,
   });
 
-  // Simulate initial load
+  // Fetch real providers from the backend: GET /api/providers
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 600);
-    return () => clearTimeout(timer);
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const { providers: rows } = await api.get("/api/providers");
+        if (!cancelled) setProviders(rows.map(mapProvider));
+      } catch (err) {
+        if (!cancelled) setError(err.message || "Could not load providers.");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   // Reset to page 1 whenever filters/search/sort change
@@ -411,14 +457,19 @@ export default function ProviderDirectory() {
   }, [search, sortBy, filters]);
 
   const filtered = useMemo(() => {
-    let result = PROVIDERS.filter((p) => {
+    let result = providers.filter((p) => {
       const matchesSearch = search === "" ||
         p.name.toLowerCase().includes(search.toLowerCase()) ||
         p.role.toLowerCase().includes(search.toLowerCase()) ||
         p.skills.some((s) => s.toLowerCase().includes(search.toLowerCase()));
 
       const matchesDistrict = filters.district === "all" || p.district === filters.district;
-      const matchesCategory = filters.categories.length === 0 || filters.categories.includes(p.category);
+      // Category filtering activates once the backend returns each provider's
+      // category. Until then category is null, so providers are not excluded.
+      const matchesCategory =
+        filters.categories.length === 0 ||
+        p.category == null ||
+        filters.categories.includes(p.category);
       const matchesRating = p.rating >= filters.minRating;
       const matchesTrust = p.trustScore >= filters.minTrust;
       const matchesVerified = !filters.verifiedOnly || p.verified;
@@ -429,13 +480,12 @@ export default function ProviderDirectory() {
     result = [...result].sort((a, b) => {
       if (sortBy === "trust") return b.trustScore - a.trustScore;
       if (sortBy === "rating") return b.rating - a.rating;
-      if (sortBy === "jobs") return b.completedJobs - a.completedJobs;
       if (sortBy === "reviews") return b.reviews - a.reviews;
       return 0;
     });
 
     return result;
-  }, [search, sortBy, filters]);
+  }, [providers, search, sortBy, filters]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
   const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
@@ -537,7 +587,6 @@ export default function ProviderDirectory() {
                 >
                   <option value="trust">Trust Score</option>
                   <option value="rating">Highest Rated</option>
-                  <option value="jobs">Most Jobs Completed</option>
                   <option value="reviews">Most Reviews</option>
                 </select>
               </div>
@@ -580,7 +629,13 @@ export default function ProviderDirectory() {
             )}
 
             {/* Grid */}
-            {loading ? (
+            {error ? (
+              <div className="bg-white rounded-2xl border border-red-100 p-12 text-center flex flex-col items-center gap-3">
+                <p className="text-3xl">⚠️</p>
+                <p className="font-semibold text-slate-700">Couldn't load providers</p>
+                <p className="text-sm text-slate-400">{error}</p>
+              </div>
+            ) : loading ? (
               <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
                 {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
               </div>
