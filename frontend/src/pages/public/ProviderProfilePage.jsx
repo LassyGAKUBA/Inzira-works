@@ -1,114 +1,137 @@
 // src/pages/public/ProviderProfilePage.jsx
-// Public Provider Profile — full detail view linked from the Directory
+// Public Provider Profile — full detail view linked from the Directory.
+// Fetches live data from GET /api/providers/:id.
 // Includes: Navbar, profile header, Trust Score breakdown, portfolio gallery,
-// reviews, booking modal, similar providers, Footer
+// reviews, booking modal, similar providers, Footer.
 
 import { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useLang } from "../../i18n/LangContext";
 import LanguageSwitcher from "../../components/shared/LanguageSwitcher";
+import { api } from "../../api/client";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MOCK DATA
-// In a real app this would come from an API call using the :id param
+// API → VIEW MAPPING
+// The backend returns snake_case with numbers as strings. These helpers turn
+// the GET /api/providers/:id response into the shape this page renders.
 // ─────────────────────────────────────────────────────────────────────────────
-const PROVIDERS_DB = {
-  1: {
-    id: 1,
-    name: "Uwase Clarisse",
-    role: "Tailor & Fashion Designer",
-    district: "Gasabo",
-    sector: "Kimironko",
-    trustScore: 94,
-    rating: 4.9,
-    reviews: 38,
-    completedJobs: 112,
-    responseRate: 97,
-    responseTime: "~1 hour",
-    memberSince: "January 2024",
-    badge: "Top Rated",
-    verified: true,
-    initials: "UC",
-    color: "#F97316",
-    skills: ["Dresses", "Uniforms", "Alterations", "Traditional Imishanana", "Wedding Wear"],
-    bio: "I am a professional tailor based in Gasabo with over 7 years of experience in fashion design and alterations. I specialize in wedding dresses, traditional Rwandan attire, and office wear. I take pride in attention to detail and always deliver on time. Let's bring your vision to life!",
-    services: [
-      { name: "Dress Alteration", price: "RWF 5,000 – 15,000", duration: "1-2 days" },
-      { name: "Custom Wedding Dress", price: "RWF 80,000 – 200,000", duration: "2-3 weeks" },
-      { name: "School Uniform (per set)", price: "RWF 8,000", duration: "3-5 days" },
-      { name: "Traditional Imishanana", price: "RWF 40,000 – 70,000", duration: "1 week" },
-    ],
-    portfolio: [
-      { id: 1, title: "Wedding Dress Collection", category: "Formal Wear", emoji: "👗" },
-      { id: 2, title: "School Uniforms Batch", category: "Uniforms", emoji: "👔" },
-      { id: 3, title: "Traditional Imishanana", category: "Traditional", emoji: "🪡" },
-      { id: 4, title: "Office Suit Series", category: "Formal Wear", emoji: "🧥" },
-      { id: 5, title: "Children's Clothing Set", category: "Kids Wear", emoji: "🧒" },
-      { id: 6, title: "Casual Dress Line", category: "Casual", emoji: "👘" },
-    ],
-    trustFactors: [
-      { label: "Customer Ratings", pct: 40, score: 38, max: 40, color: "#F97316" },
-      { label: "Completed Jobs", pct: 25, score: 24, max: 25, color: "#8B5CF6" },
-      { label: "Profile Completeness", pct: 15, score: 13, max: 15, color: "#10B981" },
-      { label: "Response Rate", pct: 10, score: 10, max: 10, color: "#3B82F6" },
-      { label: "Verification Status", pct: 10, score: 9, max: 10, color: "#F59E0B" },
-    ],
-  },
-  2: {
-    id: 2,
-    name: "Mukamana Diane",
-    role: "Professional Hairdresser",
-    district: "Kicukiro",
-    sector: "Niboye",
-    trustScore: 88,
-    rating: 4.7,
-    reviews: 55,
-    completedJobs: 203,
-    responseRate: 91,
-    responseTime: "~2 hours",
-    memberSince: "August 2023",
-    badge: "Verified",
-    verified: true,
-    initials: "MD",
-    color: "#8B5CF6",
-    skills: ["Braiding", "Natural Hair", "Styling", "Hair Treatment", "Extensions"],
-    bio: "Hairdresser with 5+ years of experience specializing in braiding and natural hair care. I work from my home salon in Niboye and also offer mobile services for special occasions like weddings and events.",
-    services: [
-      { name: "Box Braids", price: "RWF 8,000 – 15,000", duration: "3-5 hours" },
-      { name: "Natural Hair Treatment", price: "RWF 5,000", duration: "1-2 hours" },
-      { name: "Bridal Hair Styling", price: "RWF 25,000 – 40,000", duration: "2-3 hours" },
-      { name: "Hair Extensions Install", price: "RWF 12,000 – 20,000", duration: "2-4 hours" },
-    ],
-    portfolio: [
-      { id: 1, title: "Box Braids Styles", category: "Braiding", emoji: "💇‍♀️" },
-      { id: 2, title: "Bridal Hair", category: "Bridal", emoji: "👰" },
-      { id: 3, title: "Natural Hair Care", category: "Treatment", emoji: "🌿" },
-      { id: 4, title: "Event Styling", category: "Styling", emoji: "✨" },
-    ],
-    trustFactors: [
-      { label: "Customer Ratings", pct: 40, score: 35, max: 40, color: "#F97316" },
-      { label: "Completed Jobs", pct: 25, score: 25, max: 25, color: "#8B5CF6" },
-      { label: "Profile Completeness", pct: 15, score: 11, max: 15, color: "#10B981" },
-      { label: "Response Rate", pct: 10, score: 9, max: 10, color: "#3B82F6" },
-      { label: "Verification Status", pct: 10, score: 8, max: 10, color: "#F59E0B" },
-    ],
-  },
-};
+const AVATAR_PALETTE = ["#F97316", "#8B5CF6", "#10B981", "#3B82F6", "#EC4899", "#A855F7", "#06B6D4", "#F59E0B"];
 
-const DEFAULT_PROVIDER = PROVIDERS_DB[1];
+function initialsFrom(name = "") {
+  return name.trim().split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+}
 
-const REVIEWS = [
-  { id: 1, customer: "Niyomugaba Jean", rating: 5, date: "Jun 10, 2026", text: "Clarisse is incredibly talented. The dress she made for my wife was perfect — exactly as described and delivered on time.", initials: "NJ", color: "#3B82F6" },
-  { id: 2, customer: "Uwimana Grace", rating: 5, date: "Jun 3, 2026", text: "Professional, punctual, and great attention to detail. I've already recommended her to three friends.", initials: "UG", color: "#F59E0B" },
-  { id: 3, customer: "Mukashyaka Rose", rating: 4, date: "May 28, 2026", text: "The uniforms came out beautifully. Slight delay on delivery but the quality made up for it.", initials: "MR", color: "#8B5CF6" },
-  { id: 4, customer: "Habimana Eric", rating: 5, date: "May 20, 2026", text: "Best tailor I've found in Kigali. The suit fits perfectly and she understood exactly what I wanted.", initials: "HE", color: "#10B981" },
-];
+function colorFromId(id = "") {
+  let sum = 0;
+  for (let i = 0; i < id.length; i++) sum += id.charCodeAt(i);
+  return AVATAR_PALETTE[sum % AVATAR_PALETTE.length];
+}
 
-const SIMILAR_PROVIDERS = [
-  { id: 10, name: "Akimana Vestine", role: "Seamstress", district: "Kicukiro", trustScore: 76, rating: 4.3, initials: "AV", color: "#A855F7" },
-  { id: 11, name: "Mukamurenzi Esther", role: "Pastry Chef", district: "Nyarugenge", trustScore: 88, rating: 4.7, initials: "ME", color: "#F97316" },
-  { id: 9, name: "Mukandayisenga Joy", role: "Bridal Makeup Artist", district: "Nyarugenge", trustScore: 92, rating: 4.9, initials: "MJ", color: "#EC4899" },
-];
+function formatMonthYear(iso) {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+}
+
+function formatDate(iso) {
+  if (!iso) return "";
+  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+function formatResponseTime(minutes) {
+  const m = Number(minutes);
+  if (!m) return "—";
+  if (m < 60) return `~${m} min`;
+  const h = Math.round(m / 60);
+  return `~${h} hour${h > 1 ? "s" : ""}`;
+}
+
+function formatPrice(price, type) {
+  const n = Number(price);
+  if (!n) return "Contact for price";
+  const amount = `RWF ${n.toLocaleString("en-US")}`;
+  if (type === "starting") return `From ${amount}`;
+  if (type === "hourly") return `${amount}/hr`;
+  return amount;
+}
+
+function mapReview(r) {
+  return {
+    id: r.id,
+    customer: r.customer_name,
+    rating: r.rating,
+    date: formatDate(r.created_at),
+    text: r.comment || "",
+    initials: initialsFrom(r.customer_name),
+    color: colorFromId(r.id),
+  };
+}
+
+function mapProvider(d) {
+  const rating = Number(d.avg_rating) || 0;
+  const trustScore = Math.round(Number(d.trust_score) || 0);
+  const verified = d.verification_status === "verified";
+  return {
+    id: d.provider_id,
+    userId: d.user_id,
+    name: d.full_name,
+    role: d.headline || "Service Provider",
+    district: d.district || "—",
+    trustScore,
+    rating,
+    reviews: Number(d.review_count) || 0,
+    completedJobs: Number(d.completed_jobs) || 0,
+    responseRate: Math.round(Number(d.response_rate) || 0),
+    responseTime: formatResponseTime(d.avg_response_minutes),
+    profileCompleteness: Number(d.profile_completeness) || 0,
+    memberSince: formatMonthYear(d.member_since),
+    verified,
+    badge: trustScore >= 90 ? "Top Rated" : verified ? "Verified" : "New",
+    initials: initialsFrom(d.full_name),
+    color: colorFromId(d.provider_id),
+    bio: d.bio || "",
+    skills: Array.isArray(d.specialties) ? d.specialties : [],
+    services: (d.services || []).map((s) => ({
+      name: s.title,
+      description: s.description || "",
+      price: formatPrice(s.price, s.price_type),
+    })),
+    portfolio: (d.portfolio || []).map((it) => ({
+      id: it.id,
+      imageUrl: it.image_url,
+      caption: it.caption || "",
+    })),
+    reviewList: (d.reviews || []).map(mapReview),
+  };
+}
+
+function mapSimilar(rows = [], currentId) {
+  return rows
+    .filter((row) => row.provider_id !== currentId)
+    .slice(0, 3)
+    .map((row) => ({
+      id: row.provider_id,
+      name: row.full_name,
+      role: row.headline || "Service Provider",
+      district: row.district || "—",
+      trustScore: Math.round(Number(row.trust_score) || 0),
+      initials: initialsFrom(row.full_name),
+      color: colorFromId(row.provider_id),
+    }));
+}
+
+// Trust score breakdown computed from the provider's real stored signals.
+// Each factor's max points mirror the platform's weighting (sums to 100).
+function computeTrustFactors(p) {
+  const pct = (v, cap = 100) => Math.min(Math.max(v, 0) / cap, 1);
+  const verifiedPct = p.verified ? 1 : 0.4;
+  return [
+    { label: "Customer Ratings",     max: 40, score: Math.round(pct(p.rating, 5) * 40), color: "#F97316" },
+    { label: "Completed Jobs",       max: 25, score: Math.round(pct(p.completedJobs, 20) * 25), color: "#8B5CF6" },
+    { label: "Profile Completeness", max: 15, score: Math.round(pct(p.profileCompleteness) * 15), color: "#10B981" },
+    { label: "Response Rate",        max: 10, score: Math.round(pct(p.responseRate) * 10), color: "#3B82F6" },
+    { label: "Verification Status",  max: 10, score: Math.round(verifiedPct * 10), color: "#F59E0B" },
+  ];
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PRIMITIVES
@@ -139,6 +162,24 @@ function TrustScoreBadge({ score, size = "md" }) {
     <div style={{ border: `2px solid ${color}`, color }} className={`inline-flex items-center gap-1 rounded-full font-bold bg-white ${px}`}>
       <span>✦</span> {score}
     </div>
+  );
+}
+
+// Portfolio image with a graceful fallback if the file isn't present yet.
+function PortfolioImage({ item }) {
+  const [failed, setFailed] = useState(false);
+  if (failed || !item.imageUrl) {
+    return (
+      <div style={{ backgroundColor: "#F1F5F9" }} className="h-32 flex items-center justify-center text-3xl text-slate-300">🖼️</div>
+    );
+  }
+  return (
+    <img
+      src={item.imageUrl}
+      alt={item.caption}
+      onError={() => setFailed(true)}
+      className="h-32 w-full object-cover"
+    />
   );
 }
 
@@ -261,7 +302,7 @@ function BookingModal({ provider, onClose }) {
 
     setLoading(true);
     try {
-      // TODO: replace with real API call
+      // TODO: replace with real API call when the booking feature is built
       // await bookingService.create({ providerId: provider.id, ...form });
       await new Promise((r) => setTimeout(r, 1000));
       setSent(true);
@@ -270,7 +311,6 @@ function BookingModal({ provider, onClose }) {
     }
   };
 
-  // Close on Escape key
   useEffect(() => {
     const handler = (e) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", handler);
@@ -282,7 +322,6 @@ function BookingModal({ provider, onClose }) {
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
         {sent ? (
-          /* Success state */
           <div className="p-8 flex flex-col items-center text-center gap-4">
             <div style={{ backgroundColor: "#F0FDF4", border: "2px solid #10B981" }} className="w-16 h-16 rounded-full flex items-center justify-center text-3xl">✓</div>
             <div>
@@ -292,17 +331,12 @@ function BookingModal({ provider, onClose }) {
                 You'll be notified once it's accepted.
               </p>
             </div>
-            <button
-              onClick={onClose}
-              style={{ backgroundColor: "#F97316" }}
-              className="text-white font-semibold text-sm px-6 py-2.5 rounded-xl hover:opacity-90 transition-opacity"
-            >
+            <button onClick={onClose} style={{ backgroundColor: "#F97316" }} className="text-white font-semibold text-sm px-6 py-2.5 rounded-xl hover:opacity-90 transition-opacity">
               Done
             </button>
           </div>
         ) : (
           <>
-            {/* Header */}
             <div className="flex items-center justify-between p-5 border-b border-slate-100">
               <div className="flex items-center gap-3">
                 <Avatar initials={provider.initials} color={provider.color} size={40} />
@@ -314,7 +348,6 @@ function BookingModal({ provider, onClose }) {
               <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-lg">✕</button>
             </div>
 
-            {/* Form */}
             <form onSubmit={handleSubmit} className="p-5 flex flex-col gap-4" noValidate>
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-medium text-slate-700">Service</label>
@@ -324,6 +357,7 @@ function BookingModal({ provider, onClose }) {
                   className={`w-full px-4 py-3 rounded-xl border text-sm text-slate-800 outline-none transition-all bg-white
                     ${errors.service ? "border-red-400" : "border-slate-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100"}`}
                 >
+                  {provider.services.length === 0 && <option value="">No services listed</option>}
                   {provider.services.map((s) => (
                     <option key={s.name} value={s.name}>{s.name} — {s.price}</option>
                   ))}
@@ -368,7 +402,6 @@ function BookingModal({ provider, onClose }) {
                 />
               </div>
 
-              {/* Selected service price preview */}
               {form.service && (
                 <div className="bg-orange-50 border border-orange-100 rounded-xl p-3 flex items-center justify-between">
                   <span className="text-sm text-orange-700 font-medium">Estimated price</span>
@@ -399,11 +432,11 @@ function BookingModal({ provider, onClose }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SHARE MODAL (simple)
+// SHARE MODAL
 // ─────────────────────────────────────────────────────────────────────────────
 function ShareModal({ provider, onClose }) {
   const [copied, setCopied] = useState(false);
-  const url = `https://inziraworks.rw/providers/${provider.id}`;
+  const url = `${window.location.origin}/providers/${provider.id}`;
 
   const handleCopy = () => {
     navigator.clipboard?.writeText(url);
@@ -435,23 +468,99 @@ function ShareModal({ provider, onClose }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// LOADING & NOT-FOUND STATES
+// ─────────────────────────────────────────────────────────────────────────────
+function PageShell({ children }) {
+  return (
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#F8FAFC" }}>
+      <Navbar />
+      <div className="flex-1">{children}</div>
+      <Footer />
+    </div>
+  );
+}
+
+function LoadingState() {
+  return (
+    <PageShell>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-20 flex flex-col items-center gap-4">
+        <span className="w-10 h-10 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin" />
+        <p className="text-slate-400 text-sm">Loading provider…</p>
+      </div>
+    </PageShell>
+  );
+}
+
+function NotFoundState() {
+  return (
+    <PageShell>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-20">
+        <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center flex flex-col items-center gap-3">
+          <p className="text-4xl">🔍</p>
+          <p className="font-bold text-slate-700 text-lg">Provider not found</p>
+          <p className="text-sm text-slate-400">This provider may have been removed or the link is incorrect.</p>
+          <Link to="/providers" style={{ backgroundColor: "#F97316" }} className="text-white text-sm font-semibold px-5 py-2 rounded-xl hover:opacity-90 transition-opacity mt-1">
+            Back to all providers
+          </Link>
+        </div>
+      </div>
+    </PageShell>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // PAGE
 // ─────────────────────────────────────────────────────────────────────────────
 export default function ProviderProfilePage() {
   const { id } = useParams();
-  const provider = PROVIDERS_DB[id] || DEFAULT_PROVIDER;
+
+  const [provider, setProvider] = useState(null);
+  const [similar, setSimilar] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
   const [activeTab, setActiveTab] = useState("about");
   const [showBooking, setShowBooking] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  const total = provider.trustFactors.reduce((a, f) => a + f.score, 0);
-  const reviewDist = [5,4,3,2,1].map((r) => ({
-    r,
-    count: REVIEWS.filter((rv) => rv.rating === r).length,
-    pct: (REVIEWS.filter((rv) => rv.rating === r).length / REVIEWS.length) * 100,
-  }));
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setNotFound(false);
+    setActiveTab("about");
+    window.scrollTo(0, 0);
+
+    (async () => {
+      try {
+        const { provider: data } = await api.get(`/api/providers/${id}`);
+        if (!cancelled) setProvider(mapProvider(data));
+      } catch {
+        if (!cancelled) setNotFound(true);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+
+      // Similar providers — best effort, ignore failures.
+      try {
+        const { providers } = await api.get("/api/providers");
+        if (!cancelled) setSimilar(mapSimilar(providers, id));
+      } catch { /* non-critical */ }
+    })();
+
+    return () => { cancelled = true; };
+  }, [id]);
+
+  if (loading) return <LoadingState />;
+  if (notFound || !provider) return <NotFoundState />;
+
+  const total = provider.trustScore;
+  const trustFactors = computeTrustFactors(provider);
+  const reviewList = provider.reviewList;
+  const reviewDist = [5,4,3,2,1].map((r) => {
+    const count = reviewList.filter((rv) => rv.rating === r).length;
+    return { r, count, pct: reviewList.length ? (count / reviewList.length) * 100 : 0 };
+  });
 
   const TABS = [
     { id: "about",     label: "About" },
@@ -492,10 +601,9 @@ export default function ProviderProfilePage() {
                     )}
                   </div>
                   <p className="text-slate-500 text-base mt-0.5">{provider.role}</p>
-                  <p className="text-slate-400 text-sm mt-1">📍 {provider.sector}, {provider.district} · Member since {provider.memberSince}</p>
+                  <p className="text-slate-400 text-sm mt-1">📍 {provider.district} · Member since {provider.memberSince}</p>
                 </div>
 
-                {/* Action buttons */}
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setSaved(!saved)}
@@ -518,11 +626,15 @@ export default function ProviderProfilePage() {
               {/* Stats row */}
               <div className="flex items-center gap-3 flex-wrap">
                 <TrustScoreBadge score={provider.trustScore} size="lg" />
-                <div className="flex items-center gap-1.5">
-                  <StarRating rating={provider.rating} size="md" />
-                  <span className="text-sm text-slate-600 font-medium">{provider.rating}</span>
-                  <span className="text-sm text-slate-400">({provider.reviews} reviews)</span>
-                </div>
+                {provider.reviews > 0 ? (
+                  <div className="flex items-center gap-1.5">
+                    <StarRating rating={provider.rating} size="md" />
+                    <span className="text-sm text-slate-600 font-medium">{provider.rating.toFixed(1)}</span>
+                    <span className="text-sm text-slate-400">({provider.reviews} reviews)</span>
+                  </div>
+                ) : (
+                  <span className="text-sm text-slate-400">New provider</span>
+                )}
                 <span className="text-sm font-medium px-2.5 py-1 rounded-full bg-orange-50 text-orange-600">{provider.badge}</span>
               </div>
 
@@ -543,11 +655,13 @@ export default function ProviderProfilePage() {
           </div>
 
           {/* Skills */}
-          <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100">
-            {provider.skills.map((s) => (
-              <span key={s} className="text-xs bg-slate-100 text-slate-600 px-3 py-1 rounded-full">{s}</span>
-            ))}
-          </div>
+          {provider.skills.length > 0 && (
+            <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100">
+              {provider.skills.map((s) => (
+                <span key={s} className="text-xs bg-slate-100 text-slate-600 px-3 py-1 rounded-full">{s}</span>
+              ))}
+            </div>
+          )}
 
           {/* CTA buttons */}
           <div className="flex flex-col sm:flex-row gap-3 pt-1">
@@ -568,7 +682,6 @@ export default function ProviderProfilePage() {
       {/* Tabs + content */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
         <div className="grid lg:grid-cols-[1fr_320px] gap-6">
-          {/* Main column */}
           <div className="flex flex-col gap-4">
             {/* Tab bar */}
             <div className="bg-white rounded-2xl border border-slate-100 p-1.5 flex gap-1 overflow-x-auto">
@@ -587,18 +700,17 @@ export default function ProviderProfilePage() {
               ))}
             </div>
 
-            {/* Tab content */}
             <div className="bg-white rounded-2xl border border-slate-100 p-6">
               {/* ABOUT */}
               {activeTab === "about" && (
                 <div className="flex flex-col gap-4">
                   <h3 style={{ color: "#1E293B" }} className="font-bold text-lg">About {provider.name.split(" ")[0]}</h3>
-                  <p className="text-slate-600 text-sm leading-relaxed">{provider.bio}</p>
+                  <p className="text-slate-600 text-sm leading-relaxed">{provider.bio || "No bio provided yet."}</p>
 
                   <div className="grid sm:grid-cols-2 gap-4 pt-2">
                     <div className="bg-slate-50 rounded-xl p-4">
                       <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-1">Location</p>
-                      <p className="text-sm text-slate-700">{provider.sector}, {provider.district} District</p>
+                      <p className="text-sm text-slate-700">{provider.district} District</p>
                     </div>
                     <div className="bg-slate-50 rounded-xl p-4">
                       <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-1">Member Since</p>
@@ -612,15 +724,19 @@ export default function ProviderProfilePage() {
               {activeTab === "services" && (
                 <div className="flex flex-col gap-3">
                   <h3 style={{ color: "#1E293B" }} className="font-bold text-lg mb-1">Services & Pricing</h3>
-                  {provider.services.map((s) => (
-                    <div key={s.name} className="flex items-center justify-between gap-3 p-4 bg-slate-50 rounded-xl">
-                      <div>
-                        <p className="font-semibold text-slate-800 text-sm">{s.name}</p>
-                        <p className="text-xs text-slate-400 mt-0.5">⏱ {s.duration}</p>
+                  {provider.services.length === 0 ? (
+                    <p className="text-sm text-slate-400">No services listed yet.</p>
+                  ) : (
+                    provider.services.map((s) => (
+                      <div key={s.name} className="flex items-center justify-between gap-3 p-4 bg-slate-50 rounded-xl">
+                        <div>
+                          <p className="font-semibold text-slate-800 text-sm">{s.name}</p>
+                          {s.description && <p className="text-xs text-slate-400 mt-0.5">{s.description}</p>}
+                        </div>
+                        <p style={{ color: "#F97316" }} className="font-bold text-sm whitespace-nowrap">{s.price}</p>
                       </div>
-                      <p style={{ color: "#F97316" }} className="font-bold text-sm whitespace-nowrap">{s.price}</p>
-                    </div>
-                  ))}
+                    ))
+                  )}
                   <p className="text-xs text-slate-400 pt-1">* Prices are estimates and may vary based on materials and complexity.</p>
                 </div>
               )}
@@ -629,19 +745,20 @@ export default function ProviderProfilePage() {
               {activeTab === "portfolio" && (
                 <div className="flex flex-col gap-4">
                   <h3 style={{ color: "#1E293B" }} className="font-bold text-lg">Portfolio</h3>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    {provider.portfolio.map((item) => (
-                      <div key={item.id} className="rounded-2xl border border-slate-100 overflow-hidden">
-                        <div style={{ backgroundColor: "#F8FAFC" }} className="h-32 flex items-center justify-center text-4xl">
-                          {item.emoji}
+                  {provider.portfolio.length === 0 ? (
+                    <p className="text-sm text-slate-400">No portfolio items yet.</p>
+                  ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                      {provider.portfolio.map((item) => (
+                        <div key={item.id} className="rounded-2xl border border-slate-100 overflow-hidden">
+                          <PortfolioImage item={item} />
+                          <div className="p-3">
+                            <p className="text-sm font-semibold text-slate-800 leading-tight">{item.caption}</p>
+                          </div>
                         </div>
-                        <div className="p-3">
-                          <p className="text-sm font-semibold text-slate-800 leading-tight">{item.title}</p>
-                          <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full mt-1.5 inline-block">{item.category}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -650,45 +767,49 @@ export default function ProviderProfilePage() {
                 <div className="flex flex-col gap-5">
                   <h3 style={{ color: "#1E293B" }} className="font-bold text-lg">Customer Reviews</h3>
 
-                  {/* Summary */}
-                  <div className="grid sm:grid-cols-2 gap-6 pb-4 border-b border-slate-100">
-                    <div className="flex flex-col items-center justify-center gap-2 text-center">
-                      <p style={{ color: "#1E293B" }} className="text-5xl font-black">{provider.rating}</p>
-                      <StarRating rating={provider.rating} size="md" />
-                      <p className="text-slate-500 text-sm">Based on {provider.reviews} reviews</p>
-                    </div>
-                    <div className="flex flex-col gap-2 justify-center">
-                      {reviewDist.map((d) => (
-                        <div key={d.r} className="flex items-center gap-3">
-                          <span className="text-xs text-slate-500 w-4">{d.r}</span>
-                          <span style={{ color: "#F97316" }} className="text-xs">★</span>
-                          <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
-                            <div style={{ width: `${d.pct}%`, backgroundColor: "#F97316" }} className="h-full rounded-full" />
-                          </div>
-                          <span className="text-xs text-slate-400 w-4">{d.count}</span>
+                  {reviewList.length === 0 ? (
+                    <p className="text-sm text-slate-400">No reviews yet — be the first to book and review.</p>
+                  ) : (
+                    <>
+                      <div className="grid sm:grid-cols-2 gap-6 pb-4 border-b border-slate-100">
+                        <div className="flex flex-col items-center justify-center gap-2 text-center">
+                          <p style={{ color: "#1E293B" }} className="text-5xl font-black">{provider.rating.toFixed(1)}</p>
+                          <StarRating rating={provider.rating} size="md" />
+                          <p className="text-slate-500 text-sm">Based on {provider.reviews} reviews</p>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* List */}
-                  <div className="flex flex-col gap-4">
-                    {REVIEWS.map((r) => (
-                      <div key={r.id} className="flex flex-col gap-2">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-center gap-3">
-                            <Avatar initials={r.initials} color={r.color} size={38} />
-                            <div>
-                              <p className="font-semibold text-slate-800 text-sm">{r.customer}</p>
-                              <p className="text-xs text-slate-400">{r.date}</p>
+                        <div className="flex flex-col gap-2 justify-center">
+                          {reviewDist.map((d) => (
+                            <div key={d.r} className="flex items-center gap-3">
+                              <span className="text-xs text-slate-500 w-4">{d.r}</span>
+                              <span style={{ color: "#F97316" }} className="text-xs">★</span>
+                              <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                                <div style={{ width: `${d.pct}%`, backgroundColor: "#F97316" }} className="h-full rounded-full" />
+                              </div>
+                              <span className="text-xs text-slate-400 w-4">{d.count}</span>
                             </div>
-                          </div>
-                          <StarRating rating={r.rating} />
+                          ))}
                         </div>
-                        <p className="text-sm text-slate-600 leading-relaxed">{r.text}</p>
                       </div>
-                    ))}
-                  </div>
+
+                      <div className="flex flex-col gap-4">
+                        {reviewList.map((r) => (
+                          <div key={r.id} className="flex flex-col gap-2">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex items-center gap-3">
+                                <Avatar initials={r.initials} color={r.color} size={38} />
+                                <div>
+                                  <p className="font-semibold text-slate-800 text-sm">{r.customer}</p>
+                                  <p className="text-xs text-slate-400">{r.date}</p>
+                                </div>
+                              </div>
+                              <StarRating rating={r.rating} />
+                            </div>
+                            <p className="text-sm text-slate-600 leading-relaxed">{r.text}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
 
@@ -697,7 +818,6 @@ export default function ProviderProfilePage() {
                 <div className="flex flex-col gap-5">
                   <h3 style={{ color: "#1E293B" }} className="font-bold text-lg">Trust Score Breakdown</h3>
 
-                  {/* Score hero */}
                   <div
                     className="rounded-2xl p-6 flex flex-col sm:flex-row items-center gap-6"
                     style={{ background: "linear-gradient(135deg, #1E293B 0%, #0F172A 100%)" }}
@@ -726,9 +846,8 @@ export default function ProviderProfilePage() {
                     </div>
                   </div>
 
-                  {/* Factors */}
                   <div className="flex flex-col gap-4">
-                    {provider.trustFactors.map((f) => (
+                    {trustFactors.map((f) => (
                       <div key={f.label} className="flex flex-col gap-2">
                         <div className="flex items-center justify-between text-sm">
                           <span className="font-medium text-slate-700">{f.label}</span>
@@ -751,7 +870,6 @@ export default function ProviderProfilePage() {
 
           {/* Sidebar */}
           <div className="flex flex-col gap-4">
-            {/* Booking card */}
             <div className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col gap-3 sticky top-20">
               <p style={{ color: "#1E293B" }} className="font-bold">Ready to book?</p>
               <p className="text-sm text-slate-500">
@@ -773,19 +891,21 @@ export default function ProviderProfilePage() {
             </div>
 
             {/* Similar providers */}
-            <div className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col gap-3">
-              <p style={{ color: "#1E293B" }} className="font-bold text-sm">Similar Providers</p>
-              {SIMILAR_PROVIDERS.map((p) => (
-                <Link key={p.id} to={`/providers/${p.id}`} className="flex items-center gap-3 group">
-                  <Avatar initials={p.initials} color={p.color} size={40} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-800 group-hover:text-orange-500 transition-colors truncate">{p.name}</p>
-                    <p className="text-xs text-slate-400 truncate">{p.role} · {p.district}</p>
-                  </div>
-                  <TrustScoreBadge score={p.trustScore} />
-                </Link>
-              ))}
-            </div>
+            {similar.length > 0 && (
+              <div className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col gap-3">
+                <p style={{ color: "#1E293B" }} className="font-bold text-sm">Similar Providers</p>
+                {similar.map((p) => (
+                  <Link key={p.id} to={`/providers/${p.id}`} className="flex items-center gap-3 group">
+                    <Avatar initials={p.initials} color={p.color} size={40} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-slate-800 group-hover:text-orange-500 transition-colors truncate">{p.name}</p>
+                      <p className="text-xs text-slate-400 truncate">{p.role} · {p.district}</p>
+                    </div>
+                    <TrustScoreBadge score={p.trustScore} />
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </section>
