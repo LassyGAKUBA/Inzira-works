@@ -113,7 +113,14 @@ export default function RoleSelectPage() {
         navigate(user.role === "provider" ? "/provider/dashboard" : "/customer/dashboard");
       }
     } catch (err) {
-      setApiError(err.message || "Could not create your account. Please try again.");
+      const msg = err.message || "";
+      if (msg.includes("500") || msg.toLowerCase().includes("unexpected") || msg.toLowerCase().includes("server")) {
+        setApiError("Our email service is temporarily unavailable. Please try again in a few minutes, or contact support.");
+      } else if (msg.toLowerCase().includes("already registered") || msg.toLowerCase().includes("already exists")) {
+        setApiError("An account with this email already exists. Try logging in instead.");
+      } else {
+        setApiError(msg || "Could not create your account. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
