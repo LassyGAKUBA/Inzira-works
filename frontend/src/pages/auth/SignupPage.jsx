@@ -89,6 +89,7 @@ export default function SignupPage() {
     fullName: "",
     email: "",
     phone: "",
+    district: "",
     password: "",
     confirmPassword: "",
     agreeTerms: false,
@@ -115,6 +116,8 @@ export default function SignupPage() {
     if (!form.phone) errs.phone = "Phone number is required.";
     else if (!/^(\+?250)?0?7[2-9]\d{7}$/.test(form.phone.replace(/\s/g, "")))
       errs.phone = "Enter a valid Rwandan phone number (e.g. 0781234567).";
+
+    if (!form.district) errs.district = "Please select your district.";
 
     if (!form.password) errs.password = "Password is required.";
     else if (form.password.length < 8) errs.password = "Password must be at least 8 characters.";
@@ -253,6 +256,25 @@ export default function SignupPage() {
                 error={errors.phone}
                 hint="Rwandan number — used for mobile money and notifications"
               />
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-slate-700">District</label>
+                <select
+                  value={form.district}
+                  onChange={set("district")}
+                  className={`w-full px-4 py-3 rounded-xl border text-sm text-slate-800 outline-none transition-all bg-white
+                    ${errors.district
+                      ? "border-red-400 focus:border-red-400 focus:ring-2 focus:ring-red-100"
+                      : "border-slate-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                    }`}
+                >
+                  <option value="">Select your district…</option>
+                  <option value="Gasabo">Gasabo</option>
+                  <option value="Kicukiro">Kicukiro</option>
+                  <option value="Nyarugenge">Nyarugenge</option>
+                </select>
+                {errors.district && <p className="text-xs text-red-500">{errors.district}</p>}
+              </div>
 
               <div className="flex flex-col gap-1.5">
                 <FormInput
