@@ -326,7 +326,7 @@ BEGIN
   ) r ON r.provider_id = u.id
   LEFT JOIN (
     SELECT provider_specialties.provider_id,
-           ARRAY_AGG(provider_specialties.label) AS specialties
+           ARRAY_AGG(provider_specialties.label::TEXT) AS specialties
     FROM provider_specialties
     GROUP BY provider_specialties.provider_id
   ) s ON s.provider_id = pp.id
