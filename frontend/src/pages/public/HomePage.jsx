@@ -463,7 +463,7 @@ function Navbar() {
         scrolled || menuOpen ? "bg-white shadow-sm" : "bg-transparent"
       }`}
     >
-      <div className="max-w-6xl mx-auto px-1 sm:px-2 h-16 flex items-center justify-between">
+      <div className="px-6 sm:px-10 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
           <div
             style={{ backgroundColor: "#F97316" }}
@@ -580,7 +580,7 @@ function HeroSection() {
         }}
       />
 
-      <div className="relative max-w-6xl mx-auto px-1 sm:px-2 py-20 w-full grid md:grid-cols-2 gap-12 items-center">
+      <div className="relative px-6 sm:px-12 py-20 w-full grid md:grid-cols-2 gap-12 items-center">
         {/* Left */}
         <div className="flex flex-col gap-6">
           <div
@@ -711,7 +711,7 @@ function PlatformBar() {
   ];
   return (
     <div style={{ backgroundColor: "#0F172A", borderTop: "1px solid #1E293B" }} className="py-3">
-      <div className="max-w-6xl mx-auto px-1 sm:px-2 flex items-center justify-center flex-wrap gap-x-6 gap-y-1">
+      <div className="px-4 sm:px-8 flex items-center justify-center flex-wrap gap-x-6 gap-y-1">
         {items.map((item, i) => (
           <span key={i} className="flex items-center gap-6">
             <span className="text-slate-500 text-xs">{item}</span>
@@ -730,7 +730,7 @@ function CategoriesSection() {
   const { t } = useLang();
   return (
     <section style={{ backgroundColor: "#F8FAFC" }} className="py-20">
-      <div className="max-w-6xl mx-auto px-1 sm:px-2">
+      <div className="px-4 sm:px-8">
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10">
           <div>
             <h2
@@ -851,7 +851,7 @@ function FeaturedProviders() {
   const { t } = useLang();
   return (
     <section className="py-20 bg-white">
-      <div className="max-w-6xl mx-auto px-1 sm:px-2">
+      <div className="px-4 sm:px-8">
         <div className="flex items-end justify-between mb-10">
           <div>
             <h2
@@ -900,7 +900,7 @@ function HowItWorks() {
   const { t } = useLang();
   return (
     <section style={{ backgroundColor: "#F8FAFC" }} className="py-20">
-      <div className="max-w-6xl mx-auto px-1 sm:px-2 grid md:grid-cols-2 gap-16 items-start">
+      <div className="px-4 sm:px-8 grid md:grid-cols-2 gap-16 items-start">
         {/* Left — sticky heading */}
         <div className="md:sticky md:top-24">
           <h2 style={{ color: "#0F172A" }} className="text-3xl sm:text-4xl font-black tracking-tight leading-tight">
@@ -956,7 +956,7 @@ function TrustScoreSection() {
   const { t } = useLang();
   return (
     <section style={{ backgroundColor: "#0F172A" }} className="py-20">
-      <div className="max-w-6xl mx-auto px-1 sm:px-2 grid md:grid-cols-2 gap-16 items-center">
+      <div className="px-4 sm:px-8 grid md:grid-cols-2 gap-16 items-center">
         <div className="flex flex-col gap-6">
           <p className="text-xs font-bold uppercase tracking-widest" style={{ color: "#F97316" }}>
             {t("ts_label")}
@@ -1013,7 +1013,7 @@ function Testimonials() {
   const [featured, ...rest] = TESTIMONIALS;
   return (
     <section className="py-20 bg-white">
-      <div className="max-w-6xl mx-auto px-1 sm:px-2">
+      <div className="px-4 sm:px-8">
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 mb-10">
           <h2 style={{ color: "#0F172A" }} className="text-3xl sm:text-4xl font-black tracking-tight">
             {t("test_h2")}
@@ -1073,7 +1073,7 @@ function CTASection() {
   const { t } = useLang();
   return (
     <section style={{ backgroundColor: "#0F172A" }} className="py-20">
-      <div className="max-w-6xl mx-auto px-1 sm:px-2 grid md:grid-cols-2 gap-12 items-center">
+      <div className="px-4 sm:px-8 grid md:grid-cols-2 gap-12 items-center">
         <div className="flex flex-col gap-4">
           <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-tight">
             {t("cta_h2")}
@@ -1115,7 +1115,7 @@ function Footer() {
   ];
   return (
     <footer style={{ backgroundColor: "#0A0F1A" }} className="py-12">
-      <div className="max-w-6xl mx-auto px-1 sm:px-2">
+      <div className="px-4 sm:px-8">
         <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-8 mb-10">
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-2">
