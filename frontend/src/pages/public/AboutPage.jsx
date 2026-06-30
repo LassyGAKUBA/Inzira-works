@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useLang } from "../../i18n/LangContext";
 import LanguageSwitcher from "../../components/shared/LanguageSwitcher";
+import { Menu, X, MapPin, Handshake, TrendingUp, Eye } from "lucide-react";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // NAVBAR (shared pattern)
@@ -45,7 +46,7 @@ function Navbar() {
         </div>
 
         <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden p-2 rounded-lg text-slate-600" aria-label="Toggle menu">
-          {menuOpen ? "✕" : "☰"}
+          {menuOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
       </div>
 
@@ -91,10 +92,10 @@ function Footer() {
 // DATA
 // ─────────────────────────────────────────────────────────────────────────────
 const VALUES = [
-  { icon: "🤝", title: "Trust First", desc: "Every feature we build starts with one question: does this help customers and providers trust each other more?" },
-  { icon: "🇷🇼", title: "Built for Rwanda", desc: "Localized for Kigali's districts, Kinyarwanda and Swahili speakers, and mobile money — not a copy-paste of foreign platforms." },
-  { icon: "📈", title: "Economic Empowerment", desc: "We exist to help skilled women turn informal work into visible, sustainable income." },
-  { icon: "🔍", title: "Transparency", desc: "Our Trust Score formula is open and explained — no hidden algorithms deciding who gets seen." },
+  { Icon: Handshake,  title: "Trust First",           desc: "Every feature we build starts with one question: does this help customers and providers trust each other more?" },
+  { Icon: MapPin,     title: "Built for Rwanda",       desc: "Localized for Kigali's districts, Kinyarwanda and Swahili speakers, and mobile money — not a copy-paste of foreign platforms." },
+  { Icon: TrendingUp, title: "Economic Empowerment",   desc: "We exist to help skilled women turn informal work into visible, sustainable income." },
+  { Icon: Eye,        title: "Transparency",            desc: "Our Trust Score formula is open and explained — no hidden algorithms deciding who gets seen." },
 ];
 
 const TIMELINE = [
@@ -135,7 +136,7 @@ export default function AboutPage() {
         <div style={{ position: "absolute", top: "-10%", right: "-5%", width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, #F9731620 0%, transparent 70%)", pointerEvents: "none" }} />
         <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center flex flex-col gap-4 relative z-10">
           <div className="inline-flex items-center gap-2 bg-orange-100 text-orange-700 text-xs font-semibold px-3 py-1.5 rounded-full w-fit mx-auto">
-            <span>🇷🇼</span> Our Story
+            <MapPin size={13} /> Our Story
           </div>
           <h1 style={{ color: "#1E293B" }} className="text-3xl sm:text-5xl font-black tracking-tight">
             Building visibility for<br /><span style={{ color: "#F97316" }}>Kigali's skilled women</span>
@@ -192,8 +193,8 @@ export default function AboutPage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {VALUES.map((v) => (
               <div key={v.title} className="bg-white rounded-2xl p-6 border border-orange-100 flex flex-col gap-3">
-                <div style={{ backgroundColor: "#FFF7ED" }} className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl">
-                  {v.icon}
+                <div style={{ backgroundColor: "#FFF7ED", color: "#F97316" }} className="w-12 h-12 rounded-2xl flex items-center justify-center">
+                  <v.Icon size={22} />
                 </div>
                 <p className="font-bold text-slate-800">{v.title}</p>
                 <p className="text-sm text-slate-500 leading-relaxed">{v.desc}</p>

@@ -1,59 +1,70 @@
-// src/context/AuthContext.jsx
-// Holds the logged-in user + token for the whole app.
-//
-// Usage:
-//   const { user, login, register, logout, loading } = useAuth();
-//
-// On first load, if a token exists in localStorage, we call /me to
-// restore the session (so a page refresh keeps you logged in).
-
 import { createContext, useContext, useEffect, useState } from "react";
-import { loginRequest, registerRequest, getMeRequest } from "../api/auth.js";
-import { tokenStore } from "../api/client.js";
+import { supabase } from "../lib/supabase";
 
 const AuthContext = createContext(null);
 
+function mapUser(supabaseUser) {
+  if (!supabaseUser) return null;
+  return {
+    id: supabaseUser.id,
+    email: supabaseUser.email,
+    role: supabaseUser.user_metadata?.role || "customer",
+    full_name: supabaseUser.user_metadata?.full_name || "",
+    phone: supabaseUser.user_metadata?.phone || "",
+  };
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  // `loading` is true only during the initial session restore on mount.
   const [loading, setLoading] = useState(true);
 
-  // Restore session on first load
   useEffect(() => {
-    const token = tokenStore.get();
-    if (!token) {
+    // Restore session on first load
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(mapUser(session?.user ?? null));
       setLoading(false);
-      return;
-    }
-    getMeRequest()
-      .then((data) => setUser(data.user))
-      .catch(() => {
-        // token invalid/expired → clear it
-        tokenStore.clear();
-        setUser(null);
-      })
-      .finally(() => setLoading(false));
+    });
+
+    // Listen for auth state changes (login, logout, token refresh)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(mapUser(session?.user ?? null));
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  // Log in: store token, set user. Returns the user (for role-based redirect).
-  const login = async (credentials) => {
-    const { user, token } = await loginRequest(credentials);
-    tokenStore.set(token);
-    setUser(user);
-    return user;
+  const login = async ({ email, password }) => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw new Error(error.message);
+    return mapUser(data.user);
   };
 
-  // Register: store token, set user. Returns the user.
-  const register = async (payload) => {
-    const { user, token } = await registerRequest(payload);
-    tokenStore.set(token);
-    setUser(user);
-    return user;
+  const register = async ({ fullName, email, phone, password, role }) => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { full_name: fullName, phone, role },
+      },
+    });
+    if (error) throw new Error(error.message);
+
+    // If user is a provider, also create the provider_profiles row
+    if (role === "provider" && data.user) {
+      await supabase.from("provider_profiles").insert({
+        user_id: data.user.id,
+        trust_score: 0,
+        profile_completeness: 0,
+        response_rate: 0,
+        repeat_rate: 0,
+      });
+    }
+
+    return mapUser(data.user);
   };
 
-  const logout = () => {
-    tokenStore.clear();
-    setUser(null);
+  const logout = async () => {
+    await supabase.auth.signOut();
   };
 
   const value = { user, loading, login, register, logout };
@@ -62,8 +73,6 @@ export function AuthProvider({ children }) {
 
 export function useAuth() {
   const ctx = useContext(AuthContext);
-  if (!ctx) {
-    throw new Error("useAuth() must be used inside an <AuthProvider>.");
-  }
+  if (!ctx) throw new Error("useAuth() must be used inside an <AuthProvider>.");
   return ctx;
 }

@@ -4,9 +4,13 @@
 
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useLang } from "../../i18n/LangContext";
 import { useAuth } from "../../context/AuthContext";
 import LanguageSwitcher from "../../components/shared/LanguageSwitcher";
+import {
+  LayoutDashboard, Search, Calendar, Heart, Star, Settings,
+  ChevronRight, ChevronLeft, LogOut, MapPin, TrendingUp, Menu,
+  Scissors, Sparkles, Package, ChefHat, Palette, Layers, Inbox, CheckCircle,
+} from "lucide-react";
 
 // Build initials from a full name, e.g. "Niyomugaba Jean" → "NJ"
 function initialsFromName(name = "") {
@@ -54,12 +58,12 @@ const BOOKINGS = [
 ];
 
 const CATEGORIES = [
-  { label: "Tailoring & Fashion", icon: "✂️" },
-  { label: "Hair & Beauty", icon: "💇‍♀️" },
-  { label: "Handcraft & Weaving", icon: "🧺" },
-  { label: "Catering & Food", icon: "🍽️" },
-  { label: "Event Decoration", icon: "🎀" },
-  { label: "Cleaning Services", icon: "🧹" },
+  { label: "Tailoring & Fashion", Icon: Scissors },
+  { label: "Hair & Beauty",       Icon: Sparkles  },
+  { label: "Handcraft & Weaving", Icon: Package   },
+  { label: "Catering & Food",     Icon: ChefHat   },
+  { label: "Event Decoration",    Icon: Palette   },
+  { label: "Cleaning Services",   Icon: Layers    },
 ];
 
 const MY_REVIEWS = [
@@ -79,11 +83,18 @@ function Avatar({ initials, color, size = 40 }) {
 }
 
 function StarRating({ rating, size = "sm" }) {
-  const px = size === "sm" ? "text-xs" : "text-sm";
+  const px = size === "sm" ? 12 : 14;
   return (
-    <span className={`flex gap-0.5 ${px}`}>
-      {[1,2,3,4,5].map((s) => (
-        <span key={s} style={{ color: s <= Math.round(rating) ? "#F97316" : "#CBD5E1" }}>★</span>
+    <span className="flex gap-0.5">
+      {[1, 2, 3, 4, 5].map((s) => (
+        <Star
+          key={s}
+          size={px}
+          style={{
+            color: s <= Math.round(rating) ? "#F97316" : "#CBD5E1",
+            fill:  s <= Math.round(rating) ? "#F97316" : "none",
+          }}
+        />
       ))}
     </span>
   );
@@ -151,7 +162,7 @@ function ProviderCard({ provider, savedIds, toggleSave }) {
           aria-label={isSaved ? "Unsave provider" : "Save provider"}
           style={{ color: isSaved ? "#F97316" : "#CBD5E1" }}
         >
-          {isSaved ? "♥" : "♡"}
+          <Heart size={18} style={{ fill: isSaved ? "#F97316" : "none" }} />
         </button>
       </div>
 
@@ -170,7 +181,9 @@ function ProviderCard({ provider, savedIds, toggleSave }) {
       </div>
 
       <div className="flex items-center justify-between pt-1 border-t border-slate-100">
-        <span className="text-xs text-slate-500">📍 {provider.district} · {provider.completedJobs} jobs</span>
+        <div className="flex items-center gap-1.5 text-slate-400">
+          <MapPin size={12} /><span className="text-xs">{provider.district} · {provider.completedJobs} jobs</span>
+        </div>
         <button style={{ backgroundColor: "#F97316" }} className="text-white text-xs font-medium px-3 py-1.5 rounded-lg hover:opacity-90 transition-opacity">
           Book Now
         </button>
@@ -183,12 +196,12 @@ function ProviderCard({ provider, savedIds, toggleSave }) {
 // NAV ITEMS
 // ─────────────────────────────────────────────────────────────────────────────
 const NAV_ITEMS = [
-  { id: "overview", icon: "🏠", label: "Overview" },
-  { id: "browse",   icon: "🔍", label: "Browse" },
-  { id: "bookings", icon: "📅", label: "Bookings" },
-  { id: "saved",    icon: "♥",  label: "Saved" },
-  { id: "reviews",  icon: "⭐", label: "Reviews" },
-  { id: "settings", icon: "⚙️",  label: "Settings" },
+  { id: "overview", Icon: LayoutDashboard, label: "Overview" },
+  { id: "browse",   Icon: Search,          label: "Browse"   },
+  { id: "bookings", Icon: Calendar,        label: "Bookings" },
+  { id: "saved",    Icon: Heart,           label: "Saved"    },
+  { id: "reviews",  Icon: Star,            label: "Reviews"  },
+  { id: "settings", Icon: Settings,        label: "Settings" },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -233,7 +246,7 @@ function Sidebar({ active, setActive, collapsed, setCollapsed }) {
               style={{ backgroundColor: isActive ? "#F97316" : "transparent", color: isActive ? "white" : "#94A3B8" }}
               title={collapsed ? item.label : undefined}
             >
-              <span className="text-base flex-shrink-0">{item.icon}</span>
+              <item.Icon size={18} className="flex-shrink-0" />
               {!collapsed && <span className="text-sm font-medium whitespace-nowrap">{item.label}</span>}
             </button>
           );
@@ -247,7 +260,7 @@ function Sidebar({ active, setActive, collapsed, setCollapsed }) {
           className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-500 hover:text-slate-300 hover:bg-slate-700 transition-colors w-full"
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
-          <span className="text-base">{collapsed ? "→" : "←"}</span>
+          {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
           {!collapsed && <span className="text-xs font-medium">Collapse</span>}
         </button>
         <Link
@@ -255,7 +268,7 @@ function Sidebar({ active, setActive, collapsed, setCollapsed }) {
           className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-500 hover:text-red-400 hover:bg-slate-700 transition-colors"
           title={collapsed ? "Log out" : undefined}
         >
-          <span className="text-base">🚪</span>
+          <LogOut size={18} />
           {!collapsed && <span className="text-sm font-medium">Log out</span>}
         </Link>
       </div>
@@ -279,7 +292,7 @@ function OverviewSection({ savedIds, toggleSave, setActive }) {
       >
         <div className="flex flex-col gap-1">
           <p style={{ color: "#F97316" }} className="text-xs font-bold uppercase tracking-widest">Good morning</p>
-          <h2 className="text-white text-xl font-black">Welcome back, {firstName(CUSTOMER.name)}! 👋</h2>
+          <h2 className="text-white text-xl font-black">Welcome back, {firstName(CUSTOMER.name)}!</h2>
           <p className="text-slate-400 text-sm">
             You have <span style={{ color: "#F97316" }} className="font-semibold">{upcoming.length} upcoming booking{upcoming.length !== 1 ? "s" : ""}</span>.
           </p>
@@ -295,10 +308,10 @@ function OverviewSection({ savedIds, toggleSave, setActive }) {
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon="📅" label="Total Bookings" value={CUSTOMER.totalBookings} color="#F97316" />
-        <StatCard icon="⏳" label="Active Bookings" value={CUSTOMER.activeBookings} color="#3B82F6" />
-        <StatCard icon="♥" label="Saved Providers" value={CUSTOMER.savedCount} color="#EC4899" />
-        <StatCard icon="⭐" label="Reviews Given" value={MY_REVIEWS.length} color="#F59E0B" />
+        <StatCard icon={<Calendar size={18} />} label="Total Bookings" value={CUSTOMER.totalBookings} color="#F97316" />
+        <StatCard icon={<TrendingUp size={18} />} label="Active Bookings" value={CUSTOMER.activeBookings} color="#3B82F6" />
+        <StatCard icon={<Heart size={18} />} label="Saved Providers" value={CUSTOMER.savedCount} color="#EC4899" />
+        <StatCard icon={<Star size={18} />} label="Reviews Given" value={MY_REVIEWS.length} color="#F59E0B" />
       </div>
 
       {/* Upcoming bookings */}
@@ -426,7 +439,7 @@ function BrowseSection({ savedIds, toggleSave }) {
             key={cat.label}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-slate-600 border border-slate-200 bg-white hover:border-orange-300 hover:text-orange-600 transition-colors flex-shrink-0"
           >
-            <span>{cat.icon}</span> {cat.label}
+            <cat.Icon size={14} /> {cat.label}
           </button>
         ))}
       </div>
@@ -442,7 +455,7 @@ function BrowseSection({ savedIds, toggleSave }) {
 
       {filtered.length === 0 && (
         <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center">
-          <p className="text-3xl mb-3">🔍</p>
+          <Search size={28} className="text-slate-300 mx-auto mb-3" />
           <p className="font-semibold text-slate-700">No providers found</p>
           <p className="text-sm text-slate-400 mt-1">Try adjusting your search or filters.</p>
         </div>
@@ -497,7 +510,7 @@ function BookingsSection() {
                   <StatusBadge status={b.status} />
                 </div>
                 <div className="flex items-center gap-4 mt-3 flex-wrap">
-                  <span className="text-xs text-slate-500 flex items-center gap-1">📅 {b.date} · {b.time}</span>
+                  <span className="text-xs text-slate-500 flex items-center gap-1"><Calendar size={11} /> {b.date} · {b.time}</span>
                   <span className="text-xs font-semibold text-slate-700">{b.amount}</span>
                 </div>
 
@@ -536,7 +549,7 @@ function BookingsSection() {
 
         {filtered.length === 0 && (
           <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center">
-            <p className="text-3xl mb-3">📭</p>
+            <Inbox size={28} className="text-slate-300 mx-auto mb-3" />
             <p className="font-semibold text-slate-700">No {filter} bookings</p>
             <p className="text-sm text-slate-400 mt-1">Browse providers to make your first booking.</p>
           </div>
@@ -561,7 +574,7 @@ function SavedSection({ savedIds, toggleSave, setActive }) {
 
       {saved.length === 0 ? (
         <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center flex flex-col items-center gap-3">
-          <p className="text-3xl">♡</p>
+          <Heart size={28} className="text-slate-200 mx-auto" />
           <p className="font-semibold text-slate-700">No saved providers yet</p>
           <p className="text-sm text-slate-400">Tap the heart icon on any provider to save them here.</p>
           <button
@@ -754,7 +767,7 @@ function Topbar({ active, mobileMenuOpen, setMobileMenuOpen }) {
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           className="lg:hidden p-1.5 rounded-lg text-slate-500 hover:bg-slate-100"
         >
-          ☰
+          <Menu size={20} />
         </button>
         <h1 style={{ color: "#1E293B" }} className="font-bold text-base">{label}</h1>
       </div>
@@ -782,7 +795,7 @@ function MobileNav({ active, setActive }) {
             className="flex-1 flex flex-col items-center gap-0.5 py-2 transition-colors"
             style={{ color: isActive ? "#F97316" : "#94A3B8" }}
           >
-            <span className="text-lg">{item.icon}</span>
+            <item.Icon size={20} />
             <span className="text-xs font-medium">{item.label}</span>
           </button>
         );

@@ -5,6 +5,10 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useLang } from "../../i18n/LangContext";
 import LanguageSwitcher from "../../components/shared/LanguageSwitcher";
+import {
+  Menu, X, MapPin, Mail, Phone, Clock, ChevronDown,
+  MessageCircle, HelpCircle, Briefcase, Shield, FileText, CheckCircle,
+} from "lucide-react";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // NAVBAR
@@ -45,7 +49,7 @@ function Navbar() {
         </div>
 
         <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden p-2 rounded-lg text-slate-600" aria-label="Toggle menu">
-          {menuOpen ? "✕" : "☰"}
+          {menuOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
       </div>
 
@@ -91,10 +95,10 @@ function Footer() {
 // DATA
 // ─────────────────────────────────────────────────────────────────────────────
 const CONTACT_INFO = [
-  { icon: "📍", label: "Office", value: "Kigali Innovation City, Gasabo, Kigali, Rwanda" },
-  { icon: "✉️", label: "Email", value: "support@inziraworks.rw" },
-  { icon: "📞", label: "Phone", value: "+250 788 000 000" },
-  { icon: "🕒", label: "Hours", value: "Mon – Fri: 8:00 AM – 6:00 PM (CAT)" },
+  { Icon: MapPin, label: "Office", value: "Kigali Innovation City, Gasabo, Kigali, Rwanda" },
+  { Icon: Mail,   label: "Email",  value: "support@inziraworks.rw" },
+  { Icon: Phone,  label: "Phone",  value: "+250 788 000 000" },
+  { Icon: Clock,  label: "Hours",  value: "Mon – Fri: 8:00 AM – 6:00 PM (CAT)" },
 ];
 
 const SUBJECTS = [
@@ -141,12 +145,10 @@ function FAQItem({ faq, isOpen, onToggle }) {
         aria-expanded={isOpen}
       >
         <span className="font-semibold text-slate-800 text-sm">{faq.q}</span>
-        <span
-          style={{ color: "#F97316", transition: "transform 0.2s", transform: isOpen ? "rotate(180deg)" : "rotate(0deg)" }}
-          className="flex-shrink-0 text-sm"
-        >
-          ▾
-        </span>
+        <ChevronDown
+          size={16}
+          style={{ color: "#F97316", transition: "transform 0.2s", transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", flexShrink: 0 }}
+        />
       </button>
       {isOpen && (
         <div className="px-5 pb-4">
@@ -201,8 +203,8 @@ function ContactForm() {
   if (sent) {
     return (
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-8 flex flex-col items-center text-center gap-4">
-        <div style={{ backgroundColor: "#F0FDF4", border: "2px solid #10B981" }} className="w-16 h-16 rounded-full flex items-center justify-center text-3xl">
-          ✓
+        <div style={{ backgroundColor: "#F0FDF4", border: "2px solid #10B981" }} className="w-16 h-16 rounded-full flex items-center justify-center">
+          <CheckCircle size={30} style={{ color: "#10B981" }} />
         </div>
         <div>
           <h3 style={{ color: "#1E293B" }} className="text-xl font-black">Message sent!</h3>
@@ -315,7 +317,7 @@ export default function ContactPage() {
       >
         <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center flex flex-col gap-3">
           <div className="inline-flex items-center gap-2 bg-orange-100 text-orange-700 text-xs font-semibold px-3 py-1.5 rounded-full w-fit mx-auto">
-            <span>💬</span> We're here to help
+            <MessageCircle size={13} /> We're here to help
           </div>
           <h1 style={{ color: "#1E293B" }} className="text-3xl sm:text-4xl font-black tracking-tight">Get in Touch</h1>
           <p className="text-slate-500 text-base max-w-xl mx-auto">
@@ -329,8 +331,8 @@ export default function ContactPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {CONTACT_INFO.map((info) => (
             <div key={info.label} className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col gap-2">
-              <div style={{ backgroundColor: "#FFF7ED" }} className="w-10 h-10 rounded-xl flex items-center justify-center text-xl">
-                {info.icon}
+              <div style={{ backgroundColor: "#FFF7ED", color: "#F97316" }} className="w-10 h-10 rounded-xl flex items-center justify-center">
+                <info.Icon size={18} />
               </div>
               <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">{info.label}</p>
               <p className="text-sm font-medium text-slate-700 leading-relaxed">{info.value}</p>
@@ -349,7 +351,7 @@ export default function ContactPage() {
             <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden flex-1 min-h-[240px] flex items-center justify-center relative">
               {/* Map placeholder */}
               <div style={{ backgroundColor: "#F1F5F9" }} className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                <span className="text-4xl">🗺️</span>
+                <MapPin size={36} style={{ color: "#CBD5E1" }} />
                 <p className="text-sm font-medium text-slate-500">Kigali Innovation City</p>
                 <p className="text-xs text-slate-400">Gasabo, Kigali, Rwanda</p>
               </div>
@@ -359,13 +361,13 @@ export default function ContactPage() {
             <div className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col gap-3">
               <p style={{ color: "#1E293B" }} className="font-bold text-sm">Quick Links</p>
               {[
-                { label: "Help Center", icon: "❓" },
-                { label: "Become a Provider", icon: "💼" },
-                { label: "Trust & Safety", icon: "🛡️" },
-                { label: "Terms of Use", icon: "📄" },
+                { label: "Help Center",      Icon: HelpCircle },
+                { label: "Become a Provider", Icon: Briefcase  },
+                { label: "Trust & Safety",   Icon: Shield      },
+                { label: "Terms of Use",     Icon: FileText    },
               ].map((link) => (
                 <a key={link.label} href="#" className="flex items-center gap-3 text-sm text-slate-600 hover:text-orange-500 transition-colors">
-                  <span>{link.icon}</span> {link.label}
+                  <link.Icon size={15} /> {link.label}
                 </a>
               ))}
             </div>

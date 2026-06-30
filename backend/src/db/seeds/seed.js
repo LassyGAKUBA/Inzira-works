@@ -1,282 +1,197 @@
+// Seed script — uses direct pg pool to insert into auth.users (bypasses
+// Supabase Auth Admin API which has project-level restrictions).
+// The handle_new_user trigger then auto-creates public.users rows.
+
 import pool, { getClient } from "../../config/db.js";
-import { hashPassword } from "../../utils/password.js";
- 
-/**
- * Seeds demo data that mirrors the frontend screens:
- *   - Categories: Tailoring, Hairdresser, Handcraft, Catering
- *   - Providers:  Uwase Clarisse (94), Mukamana Diane (88), Ingabire Alice (91)
- *                 each with specialties, services, and portfolio items
- *   - Customers:  Niyomugaba Jean, Habimana Eric
- *   - Admin:      admin@inzira.works
- *   - Bookings & reviews seen on the dashboards and profile pages
- *
- * Every account password is: Password123
- */
-async function seed() {
+import { createClient } from "@supabase/supabase-js";
+import { env } from "../../config/env.js";
+
+const supabase = createClient(env.supabaseUrl, env.supabaseServiceRoleKey, {
+  auth: { autoRefreshToken: false, persistSession: false },
+});
+
+const USERS = [
+  { email: "admin@inzira.works",   password: "Password123", full_name: "Platform Admin",  phone: "0780000000", role: "admin"    },
+  { email: "jean@example.com",     password: "Password123", full_name: "Niyomugaba Jean", phone: "0781111111", role: "customer" },
+  { email: "eric@example.com",     password: "Password123", full_name: "Habimana Eric",   phone: "0785555555", role: "customer" },
+  { email: "clarisse@example.com", password: "Password123", full_name: "Uwase Clarisse",  phone: "0782222222", role: "provider" },
+  { email: "diane@example.com",    password: "Password123", full_name: "Mukamana Diane",  phone: "0783333333", role: "provider" },
+  { email: "alice@example.com",    password: "Password123", full_name: "Ingabire Alice",  phone: "0784444444", role: "provider" },
+];
+
+// Insert auth users directly into auth.users via pg pool.
+// pgcrypto's crypt() creates a bcrypt hash compatible with Supabase Auth.
+async function createAuthUsers(client) {
+  const ids = {};
+  for (const u of USERS) {
+    const meta = JSON.stringify({ full_name: u.full_name, phone: u.phone, role: u.role });
+    const { rows } = await client.query(
+      `INSERT INTO auth.users (
+         instance_id, id, aud, role, email, encrypted_password,
+         email_confirmed_at, raw_user_meta_data, raw_app_meta_data,
+         created_at, updated_at,
+         confirmation_token, email_change, email_change_token_new, recovery_token
+       ) VALUES (
+         '00000000-0000-0000-0000-000000000000',
+         gen_random_uuid(),
+         'authenticated', 'authenticated',
+         $1,
+         crypt($2, gen_salt('bf')),
+         now(), $3::jsonb,
+         '{"provider":"email","providers":["email"]}'::jsonb,
+         now(), now(), '', '', '', ''
+       )
+       RETURNING id`,
+      [u.email, u.password, meta]
+    );
+    if (rows[0]) {
+      ids[u.email] = rows[0].id;
+      console.log(`  ✓  ${u.email}  (${u.role})`);
+    } else {
+      console.warn(`  ⚠  ${u.email}: already exists, skipping`);
+      // Fetch existing id
+      const { rows: ex } = await client.query(`SELECT id FROM auth.users WHERE email = $1`, [u.email]);
+      if (ex[0]) ids[u.email] = ex[0].id;
+    }
+  }
+  return ids;
+}
+
+async function seedProviderData(ids) {
+  const claisseId = ids["clarisse@example.com"];
+  const dianeId   = ids["diane@example.com"];
+  const aliceId   = ids["alice@example.com"];
+  const jeanId    = ids["jean@example.com"];
+  const ericId    = ids["eric@example.com"];
+
+  const { data: cats } = await supabase.from("categories").insert([
+    { name: "Tailoring & Fashion", slug: "tailoring",  icon: "scissors", is_active: true },
+    { name: "Hair & Beauty",       slug: "hair",        icon: "comb",     is_active: true },
+    { name: "Handcraft & Weaving", slug: "handcraft",   icon: "basket",   is_active: true },
+    { name: "Catering & Food",     slug: "catering",    icon: "utensils", is_active: true },
+  ]).select();
+  const catMap = Object.fromEntries((cats || []).map((c) => [c.slug, c.id]));
+
+  const { data: profiles, error: ppErr } = await supabase.from("provider_profiles").insert([
+    {
+      user_id: claisseId, headline: "Tailor & Fashion Designer",
+      bio: "Experienced tailor based in Gasabo specialising in dresses, uniforms, and alterations, with a focus on traditional Rwandan attire and wedding wear.",
+      district: "Gasabo", avg_response_minutes: 60, response_rate: 95,
+      repeat_rate: 78, verification_status: "verified",
+      profile_completeness: 85, trust_score: 94,
+    },
+    {
+      user_id: dianeId, headline: "Professional Hairdresser",
+      bio: "Hairdresser with 5+ years of experience specialising in braiding, natural hair care, and styling. Works from a home salon in Niboye.",
+      district: "Kicukiro", avg_response_minutes: 90, response_rate: 90,
+      repeat_rate: 70, verification_status: "verified",
+      profile_completeness: 80, trust_score: 88,
+    },
+    {
+      user_id: aliceId, headline: "Handcraft & Basket Weaving",
+      bio: "Handcraft artisan creating agaseke peace baskets and sisal crafts made to export quality using traditional Rwandan techniques.",
+      district: "Nyarugenge", avg_response_minutes: 120, response_rate: 88,
+      repeat_rate: 65, verification_status: "verified",
+      profile_completeness: 82, trust_score: 91,
+    },
+  ]).select();
+
+  if (ppErr) { console.error("provider_profiles error:", ppErr.message); return; }
+  const [clarissePP, dianePP, alicePP] = profiles;
+
+  await supabase.from("provider_categories").insert([
+    { provider_id: clarissePP.id, category_id: catMap["tailoring"] },
+    { provider_id: dianePP.id,   category_id: catMap["hair"]      },
+    { provider_id: alicePP.id,   category_id: catMap["handcraft"] },
+  ]);
+
+  await supabase.from("provider_specialties").insert([
+    { provider_id: clarissePP.id, label: "Dresses"       },
+    { provider_id: clarissePP.id, label: "Uniforms"      },
+    { provider_id: clarissePP.id, label: "Alterations"   },
+    { provider_id: dianePP.id,   label: "Braiding"       },
+    { provider_id: dianePP.id,   label: "Natural Hair"   },
+    { provider_id: dianePP.id,   label: "Styling"        },
+    { provider_id: alicePP.id,   label: "Agaseke"        },
+    { provider_id: alicePP.id,   label: "Sisal Crafts"   },
+    { provider_id: alicePP.id,   label: "Export Quality" },
+  ]);
+
+  await supabase.from("services").insert([
+    { provider_id: clarissePP.id, category_id: catMap["tailoring"], title: "Dress Alteration",        description: "Hemming, resizing, and repairs",       price: 10000,  price_type: "starting" },
+    { provider_id: clarissePP.id, category_id: catMap["tailoring"], title: "Custom Wedding Dress",    description: "Bespoke bridal gown, made to measure",  price: 120000, price_type: "starting" },
+    { provider_id: clarissePP.id, category_id: catMap["tailoring"], title: "School Uniform (set)",    description: "Complete uniform set",                  price: 8000,   price_type: "fixed"    },
+    { provider_id: dianePP.id,   category_id: catMap["hair"],       title: "Box Braids",              description: "Knotless or classic box braids",        price: 12000,  price_type: "starting" },
+    { provider_id: dianePP.id,   category_id: catMap["hair"],       title: "Natural Hair Treatment",  description: "Deep conditioning and scalp care",      price: 5000,   price_type: "fixed"    },
+    { provider_id: dianePP.id,   category_id: catMap["hair"],       title: "Bridal Hair Styling",     description: "Wedding and special-event styling",     price: 30000,  price_type: "starting" },
+    { provider_id: alicePP.id,   category_id: catMap["handcraft"],  title: "Agaseke Peace Basket",    description: "Traditional handwoven basket",          price: 15000,  price_type: "starting" },
+    { provider_id: alicePP.id,   category_id: catMap["handcraft"],  title: "Sisal Home Decor Set",    description: "Decorative woven home pieces",          price: 25000,  price_type: "starting" },
+    { provider_id: alicePP.id,   category_id: catMap["handcraft"],  title: "Export Bulk Order",       description: "Export-quality craft batches",          price: 50000,  price_type: "starting" },
+  ]);
+
+  await supabase.from("portfolio_items").insert([
+    { provider_id: clarissePP.id, image_url: "/portfolio/clarisse-1.jpg", caption: "Wedding dress collection" },
+    { provider_id: clarissePP.id, image_url: "/portfolio/clarisse-2.jpg", caption: "School uniforms batch"    },
+    { provider_id: clarissePP.id, image_url: "/portfolio/clarisse-3.jpg", caption: "Traditional imishanana"   },
+    { provider_id: dianePP.id,   image_url: "/portfolio/diane-1.jpg",    caption: "Box braids styles"         },
+    { provider_id: dianePP.id,   image_url: "/portfolio/diane-2.jpg",    caption: "Bridal hair"               },
+    { provider_id: alicePP.id,   image_url: "/portfolio/alice-1.jpg",    caption: "Agaseke baskets"           },
+    { provider_id: alicePP.id,   image_url: "/portfolio/alice-2.jpg",    caption: "Sisal crafts"              },
+  ]);
+
+  const { data: bookings } = await supabase.from("bookings").insert([
+    { customer_id: jeanId, provider_id: claisseId, title: "Traditional Dress",       status: "completed", scheduled_date: "2026-03-10", amount: 45000,  responded_at: new Date().toISOString() },
+    { customer_id: ericId, provider_id: claisseId, title: "Office Suit",             status: "completed", scheduled_date: "2026-02-28", amount: 60000,  responded_at: new Date().toISOString() },
+    { customer_id: jeanId, provider_id: claisseId, title: "School Uniforms",         status: "completed", scheduled_date: "2026-02-15", amount: 32000,  responded_at: new Date().toISOString() },
+    { customer_id: ericId, provider_id: dianeId,   title: "Box Braids",              status: "completed", scheduled_date: "2026-03-05", amount: 14000,  responded_at: new Date().toISOString() },
+    { customer_id: jeanId, provider_id: aliceId,   title: "Agaseke Baskets",         status: "completed", scheduled_date: "2026-02-20", amount: 30000,  responded_at: new Date().toISOString() },
+    { customer_id: jeanId, provider_id: claisseId, title: "Wedding Dress (pending)", status: "pending",   scheduled_date: "2026-07-14", amount: 120000 },
+  ]).select();
+
+  if (!bookings?.length) return;
+  const [b1, b2, b3, b4, b5] = bookings;
+
+  await supabase.from("reviews").insert([
+    { booking_id: b1.id, customer_id: jeanId, provider_id: claisseId, rating: 5, comment: "The dress she made was perfect — delivered on time and exactly as described.",      moderation_status: "approved" },
+    { booking_id: b2.id, customer_id: ericId, provider_id: claisseId, rating: 5, comment: "Professional, punctual, and great attention to detail. Highly recommended.",       moderation_status: "approved" },
+    { booking_id: b3.id, customer_id: jeanId, provider_id: claisseId, rating: 4, comment: "Beautiful uniforms. Slight delay on delivery but the quality made up for it.",     moderation_status: "approved" },
+    { booking_id: b4.id, customer_id: ericId, provider_id: dianeId,   rating: 5, comment: "My braids came out amazing and lasted for weeks. Will definitely book again.",     moderation_status: "approved" },
+    { booking_id: b5.id, customer_id: jeanId, provider_id: aliceId,   rating: 5, comment: "Stunning agaseke baskets — exactly what I wanted for gifts. True craftsmanship.", moderation_status: "approved" },
+  ]);
+
+  await supabase.from("saved_providers").insert([
+    { customer_id: jeanId, provider_id: claisseId },
+    { customer_id: jeanId, provider_id: dianeId   },
+    { customer_id: jeanId, provider_id: aliceId   },
+  ]);
+}
+
+async function main() {
+  console.log("🌱 Seeding Supabase...\n");
+
   const client = await getClient();
   try {
-    await client.query("BEGIN");
- 
-    // Wipe existing rows (children first via CASCADE on users/categories)
-    await client.query("TRUNCATE users, categories RESTART IDENTITY CASCADE");
- 
-    const pw = await hashPassword("Password123");
- 
-    // ── Categories ──────────────────────────────────────────
-    const categories = [
-      ["Tailoring", "tailoring", "scissors"],
-      ["Hairdresser", "hairdresser", "comb"],
-      ["Handcraft", "handcraft", "basket"],
-      ["Catering", "catering", "utensils"],
-    ];
-    const catIds = {};
-    for (const [name, slug, icon] of categories) {
-      const { rows } = await client.query(
-        `INSERT INTO categories (name, slug, icon) VALUES ($1,$2,$3) RETURNING id`,
-        [name, slug, icon]
-      );
-      catIds[slug] = rows[0].id;
-    }
- 
-    // ── Admin ───────────────────────────────────────────────
-    await client.query(
-      `INSERT INTO users (full_name, email, phone, password_hash, role)
-       VALUES ($1,$2,$3,$4,'admin')`,
-      ["Platform Admin", "admin@inzira.works", "0780000000", pw]
-    );
- 
-    // ── Customers ───────────────────────────────────────────
-    const { rows: custRows } = await client.query(
-      `INSERT INTO users (full_name, email, phone, password_hash, role, district)
-       VALUES ($1,$2,$3,$4,'customer',$5) RETURNING id`,
-      ["Niyomugaba Jean", "jean@example.com", "0781111111", pw, "Gasabo"]
-    );
-    const customerId = custRows[0].id;
- 
-    const { rows: cust2Rows } = await client.query(
-      `INSERT INTO users (full_name, email, phone, password_hash, role, district)
-       VALUES ($1,$2,$3,$4,'customer',$5) RETURNING id`,
-      ["Habimana Eric", "eric@example.com", "0785555555", pw, "Kicukiro"]
-    );
-    const customer2Id = cust2Rows[0].id;
- 
-    // ── Provider factory ────────────────────────────────────
-    async function createProvider(p) {
-      const { rows: uRows } = await client.query(
-        `INSERT INTO users (full_name, email, phone, password_hash, role, district)
-         VALUES ($1,$2,$3,$4,'provider',$5) RETURNING id`,
-        [p.fullName, p.email, p.phone, pw, p.district]
-      );
-      const userId = uRows[0].id;
- 
-      const { rows: pRows } = await client.query(
-        `INSERT INTO provider_profiles
-           (user_id, headline, bio, district, avg_response_minutes,
-            response_rate, repeat_rate, verification_status, verified_at,
-            profile_completeness, trust_score)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8, now(), $9, $10)
-         RETURNING id`,
-        [
-          userId, p.headline, p.bio, p.district, p.avgResponseMinutes,
-          p.responseRate, p.repeatRate, p.verificationStatus,
-          p.profileCompleteness, p.trustScore,
-        ]
-      );
-      const profileId = pRows[0].id;
-      const categoryId = catIds[p.categorySlug];
- 
-      await client.query(
-        `INSERT INTO provider_categories (provider_id, category_id) VALUES ($1,$2)`,
-        [profileId, categoryId]
-      );
- 
-      for (const label of p.specialties) {
-        await client.query(
-          `INSERT INTO provider_specialties (provider_id, label) VALUES ($1,$2)`,
-          [profileId, label]
-        );
-      }
- 
-      // Services
-      for (const s of p.services || []) {
-        await client.query(
-          `INSERT INTO services (provider_id, category_id, title, description, price, price_type)
-           VALUES ($1,$2,$3,$4,$5,$6)`,
-          [profileId, categoryId, s.title, s.description, s.price, s.priceType]
-        );
-      }
- 
-      // Portfolio
-      for (const item of p.portfolio || []) {
-        await client.query(
-          `INSERT INTO portfolio_items (provider_id, image_url, caption)
-           VALUES ($1,$2,$3)`,
-          [profileId, item.imageUrl, item.caption]
-        );
-      }
- 
-      return { userId, profileId };
-    }
- 
-    const clarisse = await createProvider({
-      fullName: "Uwase Clarisse",
-      email: "clarisse@example.com",
-      phone: "0782222222",
-      district: "Gasabo",
-      headline: "Tailor & Fashion Designer",
-      bio: "Experienced tailor based in Gasabo specializing in dresses, uniforms, and alterations, with a focus on traditional Rwandan attire and wedding wear. Known for attention to detail and on-time delivery.",
-      categorySlug: "tailoring",
-      specialties: ["Dresses", "Uniforms", "Alterations"],
-      avgResponseMinutes: 60,
-      responseRate: 95,
-      repeatRate: 78,
-      verificationStatus: "verified",
-      profileCompleteness: 85,
-      trustScore: 94,
-      services: [
-        { title: "Dress Alteration", description: "Hemming, resizing, and repairs", price: 10000, priceType: "starting" },
-        { title: "Custom Wedding Dress", description: "Bespoke bridal gown, made to measure", price: 120000, priceType: "starting" },
-        { title: "School Uniform (per set)", description: "Complete uniform set", price: 8000, priceType: "fixed" },
-      ],
-      portfolio: [
-        { imageUrl: "/portfolio/clarisse-1.jpg", caption: "Wedding dress collection" },
-        { imageUrl: "/portfolio/clarisse-2.jpg", caption: "School uniforms batch" },
-        { imageUrl: "/portfolio/clarisse-3.jpg", caption: "Traditional imishanana" },
-      ],
-    });
- 
-    const diane = await createProvider({
-      fullName: "Mukamana Diane",
-      email: "diane@example.com",
-      phone: "0783333333",
-      district: "Kicukiro",
-      headline: "Professional Hairdresser",
-      bio: "Hairdresser with 5+ years of experience specializing in braiding, natural hair care, and styling. Works from a home salon in Niboye and offers mobile services for weddings and events.",
-      categorySlug: "hairdresser",
-      specialties: ["Braiding", "Natural Hair", "Styling"],
-      avgResponseMinutes: 90,
-      responseRate: 90,
-      repeatRate: 70,
-      verificationStatus: "verified",
-      profileCompleteness: 80,
-      trustScore: 88,
-      services: [
-        { title: "Box Braids", description: "Knotless or classic box braids", price: 12000, priceType: "starting" },
-        { title: "Natural Hair Treatment", description: "Deep conditioning and scalp care", price: 5000, priceType: "fixed" },
-        { title: "Bridal Hair Styling", description: "Wedding and special-event styling", price: 30000, priceType: "starting" },
-      ],
-      portfolio: [
-        { imageUrl: "/portfolio/diane-1.jpg", caption: "Box braids styles" },
-        { imageUrl: "/portfolio/diane-2.jpg", caption: "Bridal hair" },
-        { imageUrl: "/portfolio/diane-3.jpg", caption: "Natural hair care" },
-      ],
-    });
- 
-    const alice = await createProvider({
-      fullName: "Ingabire Alice",
-      email: "alice@example.com",
-      phone: "0784444444",
-      district: "Nyarugenge",
-      headline: "Handcraft & Basket Weaving",
-      bio: "Handcraft artisan creating agaseke peace baskets and sisal crafts made to export quality. Each piece is handwoven using traditional Rwandan techniques.",
-      categorySlug: "handcraft",
-      specialties: ["Agaseke", "Sisal Crafts", "Export Quality"],
-      avgResponseMinutes: 120,
-      responseRate: 88,
-      repeatRate: 65,
-      verificationStatus: "verified",
-      profileCompleteness: 82,
-      trustScore: 91,
-      services: [
-        { title: "Agaseke Peace Basket", description: "Traditional handwoven basket", price: 15000, priceType: "starting" },
-        { title: "Sisal Home Decor Set", description: "Decorative woven home pieces", price: 25000, priceType: "starting" },
-        { title: "Export Bulk Order", description: "Export-quality craft batches", price: 50000, priceType: "starting" },
-      ],
-      portfolio: [
-        { imageUrl: "/portfolio/alice-1.jpg", caption: "Agaseke baskets" },
-        { imageUrl: "/portfolio/alice-2.jpg", caption: "Sisal crafts" },
-        { imageUrl: "/portfolio/alice-3.jpg", caption: "Export collection" },
-      ],
-    });
- 
-    // ── A pending booking (mirrors provider + customer dashboards) ─
-    await client.query(
-      `INSERT INTO bookings (customer_id, provider_id, title, status, scheduled_date, amount)
-       VALUES ($1,$2,$3,'pending','2026-06-14', 30000)`,
-      [customerId, clarisse.userId, "Wedding Dress Alteration"]
-    );
- 
-    // ── Completed bookings + reviews ────────────────────────
-    // Each review needs a completed booking to attach to.
-    async function addReview({ customerId, providerUserId, title, amount, date, rating, comment }) {
-      const { rows } = await client.query(
-        `INSERT INTO bookings (customer_id, provider_id, title, status, scheduled_date, amount, responded_at)
-         VALUES ($1,$2,$3,'completed',$4,$5, now()) RETURNING id`,
-        [customerId, providerUserId, title, date, amount]
-      );
-      await client.query(
-        `INSERT INTO reviews (booking_id, customer_id, provider_id, rating, comment)
-         VALUES ($1,$2,$3,$4,$5)`,
-        [rows[0].id, customerId, providerUserId, rating, comment]
-      );
-    }
- 
-    // Clarisse — 3 reviews from 2 customers
-    await addReview({
-      customerId, providerUserId: clarisse.userId,
-      title: "Traditional Dress", amount: 45000, date: "2026-06-10",
-      rating: 5, comment: "The dress she made was perfect — exactly as described and delivered on time.",
-    });
-    await addReview({
-      customerId: customer2Id, providerUserId: clarisse.userId,
-      title: "Office Suit", amount: 60000, date: "2026-05-28",
-      rating: 5, comment: "Professional, punctual, and great attention to detail. Highly recommended.",
-    });
-    await addReview({
-      customerId, providerUserId: clarisse.userId,
-      title: "School Uniforms", amount: 32000, date: "2026-05-15",
-      rating: 4, comment: "Beautiful uniforms. Slight delay on delivery but the quality made up for it.",
-    });
- 
-    // Diane — 1 review
-    await addReview({
-      customerId: customer2Id, providerUserId: diane.userId,
-      title: "Box Braids", amount: 14000, date: "2026-06-05",
-      rating: 5, comment: "My braids came out amazing and lasted for weeks. Will book again.",
-    });
- 
-    // Alice — 1 review
-    await addReview({
-      customerId, providerUserId: alice.userId,
-      title: "Agaseke Baskets", amount: 30000, date: "2026-05-30",
-      rating: 5, comment: "Stunning agaseke baskets, exactly what I wanted for gifts. True craftsmanship.",
-    });
- 
-    // ── Saved providers (customer dashboard bookmarks) ──────
-    for (const prov of [clarisse, diane, alice]) {
-      await client.query(
-        `INSERT INTO saved_providers (customer_id, provider_id) VALUES ($1,$2)`,
-        [customerId, prov.userId]
-      );
-    }
- 
-    await client.query("COMMIT");
-    console.log(" Seed complete.");
+    // Clear existing data
+    await client.query("TRUNCATE auth.users CASCADE");
+
+    console.log("Creating auth users (direct SQL)...");
+    const ids = await createAuthUsers(client);
+
+    // Wait for handle_new_user trigger to create public.users rows
+    await new Promise((r) => setTimeout(r, 1500));
+
+    console.log("\nInserting provider data...");
+    await seedProviderData(ids);
+
+    console.log("\n✅ Seed complete.");
     console.log("   Login with any of these (password: Password123):");
-    console.log("   • admin@inzira.works     (admin)");
-    console.log("   • jean@example.com       (customer)");
-    console.log("   • eric@example.com       (customer)");
-    console.log("   • clarisse@example.com   (provider, trust 94)");
-    console.log("   • diane@example.com      (provider, trust 88)");
-    console.log("   • alice@example.com      (provider, trust 91)");
-  } catch (err) {
-    await client.query("ROLLBACK");
-    console.error(" Seed failed:", err.message);
-    process.exitCode = 1;
+    for (const u of USERS) {
+      console.log(`   • ${u.email.padEnd(26)} (${u.role})`);
+    }
   } finally {
     client.release();
     await pool.end();
   }
 }
- 
-seed();
+
+main().catch((err) => { console.error(err); process.exit(1); });

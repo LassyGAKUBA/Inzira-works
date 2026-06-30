@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useLang } from "../../i18n/LangContext";
 import { useAuth } from "../../context/AuthContext";
 import LanguageSwitcher from "../../components/shared/LanguageSwitcher";
+import { Star, MapPin } from "lucide-react";
 
 // ── Reusable Input ────────────────────────────────────────────────────────────
 function FormInput({ label, type = "text", value, onChange, placeholder, error, rightElement }) {
@@ -126,7 +127,7 @@ export default function LoginPage() {
           {/* Testimonial card */}
           <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5 flex flex-col gap-3">
             <div className="flex gap-1">
-              {[1,2,3,4,5].map((s) => <span key={s} style={{ color: "#F97316" }} className="text-sm">★</span>)}
+              {[1,2,3,4,5].map((s) => <Star key={s} size={14} style={{ color: "#F97316", fill: "#F97316" }} />)}
             </div>
             <p className="text-slate-300 text-sm leading-relaxed">
               "Inzira Works helped me reach customers I never could before. My bookings doubled in the first month."
@@ -143,7 +144,7 @@ export default function LoginPage() {
         </div>
 
         {/* Footer note */}
-        <p className="text-slate-600 text-xs relative z-10">🇷🇼 Kigali, Rwanda · BSc Capstone Project</p>
+        <p className="text-slate-600 text-xs relative z-10 flex items-center gap-1"><MapPin size={11} /> Kigali, Rwanda · BSc Capstone Project</p>
       </div>
 
       {/* ── Right Panel (form) ── */}

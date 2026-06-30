@@ -63,7 +63,7 @@ export function useLang() {
 
 // ── Language options list (use this anywhere you need flags/labels) ───────────
 export const LANG_OPTIONS = [
-  { code: "en", label: "English",     flag: "🇬🇧", short: "EN" },
-  { code: "rw", label: "Kinyarwanda", flag: "🇷🇼", short: "RW" },
-  { code: "sw", label: "Swahili",     flag: "sw",  short: "SW" },
+  { code: "en", label: "English",     short: "EN" },
+  { code: "rw", label: "Kinyarwanda", short: "RW" },
+  { code: "sw", label: "Swahili",     short: "SW" },
 ];
