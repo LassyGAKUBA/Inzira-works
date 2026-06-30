@@ -202,7 +202,7 @@ function Footer() {
   const { t } = useLang();
   return (
     <footer style={{ backgroundColor: "#0F172A" }} className="py-10 mt-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-2">
           <div style={{ backgroundColor: "#F97316" }} className="w-7 h-7 rounded-lg flex items-center justify-center">
             <span className="text-white font-black text-xs">IW</span>
@@ -432,7 +432,7 @@ function PageShell({ children }) {
 function LoadingState() {
   return (
     <PageShell>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-20 flex flex-col items-center gap-4">
+      <div className="px-4 sm:px-6 py-20 flex flex-col items-center gap-4">
         <span className="w-10 h-10 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin" />
         <p className="text-slate-400 text-sm">Loading provider…</p>
       </div>
@@ -443,7 +443,7 @@ function LoadingState() {
 function NotFoundState() {
   return (
     <PageShell>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-20">
+      <div className="px-4 sm:px-6 py-20">
         <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center flex flex-col items-center gap-3">
           <Search size={36} className="text-slate-300" />
           <p className="font-bold text-slate-700 text-lg">Provider not found</p>
@@ -526,7 +526,7 @@ export default function ProviderProfilePage() {
       <Navbar />
 
       {/* Breadcrumb */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-4">
+      <div className="px-4 sm:px-6 pt-4">
         <div className="flex items-center gap-2 text-xs text-slate-400">
           <Link to="/" className="hover:text-orange-500">Home</Link>
           <span>/</span>
@@ -537,7 +537,7 @@ export default function ProviderProfilePage() {
       </div>
 
       {/* Profile header */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-4">
+      <section className="px-4 sm:px-6 pt-4">
         <div className="bg-white rounded-2xl border border-slate-100 p-6 flex flex-col gap-5">
           <div className="flex flex-col sm:flex-row gap-5 items-start">
             <Avatar initials={provider.initials} color={provider.color} size={88} />
@@ -641,7 +641,7 @@ export default function ProviderProfilePage() {
       </section>
 
       {/* Tabs + content */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+      <section className="px-4 sm:px-6 py-6">
         <div className="grid lg:grid-cols-[1fr_320px] gap-6">
           <div className="flex flex-col gap-4">
             {/* Tab bar */}

@@ -212,7 +212,7 @@ function Footer() {
   const { t } = useLang();
   return (
     <footer style={{ backgroundColor: "#0F172A" }} className="py-10 mt-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-2">
           <div style={{ backgroundColor: "#F97316" }} className="w-7 h-7 rounded-lg flex items-center justify-center">
             <span className="text-white font-black text-xs">IW</span>
@@ -464,7 +464,7 @@ export default function ProviderDirectory() {
         style={{ background: "linear-gradient(135deg, #FFF7ED 0%, #FFECD2 60%, #FFF7ED 100%)" }}
         className="py-10"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col gap-5">
+        <div className="px-4 sm:px-6 flex flex-col gap-5">
           <div>
             <h1 style={{ color: "#1E293B" }} className="text-2xl sm:text-3xl font-black tracking-tight">
               Browse Skilled Women in Kigali
@@ -515,7 +515,7 @@ export default function ProviderDirectory() {
       </section>
 
       {/* Body */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 flex-1 w-full">
+      <div className="px-4 sm:px-6 py-8 flex-1 w-full">
         <div className="grid lg:grid-cols-[280px_1fr] gap-6">
           {/* Desktop filters sidebar */}
           <div className="hidden lg:block">

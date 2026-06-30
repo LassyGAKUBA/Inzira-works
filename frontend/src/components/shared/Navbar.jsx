@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { useLang } from "../../i18n/LangContext";
@@ -30,7 +30,7 @@ export default function Navbar() {
 
   return (
     <nav className={`sticky top-0 z-50 bg-white transition-all duration-200 ${scrolled ? "shadow-sm" : "border-b border-slate-100"}`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <div className="px-4 sm:px-6 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2 flex-shrink-0">
           <div style={{ backgroundColor: "#F97316" }} className="w-8 h-8 rounded-lg flex items-center justify-center">
             <span className="text-white font-black text-sm">IW</span>
