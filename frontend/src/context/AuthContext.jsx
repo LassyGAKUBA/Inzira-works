@@ -39,12 +39,12 @@ export function AuthProvider({ children }) {
     return mapUser(data.user);
   };
 
-  const register = async ({ fullName, email, phone, password, role }) => {
+  const register = async ({ fullName, email, phone, district, password, role }) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name: fullName, phone, role },
+        data: { full_name: fullName, phone, district, role },
       },
     });
     if (error) throw new Error(error.message);
