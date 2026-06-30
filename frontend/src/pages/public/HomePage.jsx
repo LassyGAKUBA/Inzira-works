@@ -322,7 +322,7 @@ const FEATURED_PROVIDERS = [
 const TESTIMONIALS = [
   { name: "Niyomugaba Jean",  role: "Business Owner, Kigali", textKey: "test_1", rating: 5, initials: "NJ", color: "#F97316" },
   { name: "Habimana Eric",    role: "Event Planner",          textKey: "test_2", rating: 5, initials: "HE", color: "#8B5CF6" },
-  { name: "Uwimana Grace",    role: "Hotel Manager",          textKey: "test_3", rating: 5, initials: "UG", color: "#10B981" },
+  { name: "Uwimana Grace",    role: "Hotel Manager, Kigali",  textKey: "test_3", rating: 4, initials: "UG", color: "#10B981" },
 ];
 
 const STEPS = [
@@ -405,7 +405,6 @@ function LanguageSwitcher({ compact = false }) {
         aria-label="Switch language"
         aria-expanded={open}
       >
-        <span>{current.flag}</span>
         <span>{compact ? current.short : current.label}</span>
         <ChevronDown
           size={14}
@@ -427,7 +426,6 @@ function LanguageSwitcher({ compact = false }) {
                 className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left
                   ${lang === opt.code ? "bg-orange-50 text-orange-600 font-semibold" : "text-slate-600 hover:bg-slate-50"}`}
               >
-                <span className="text-base">{opt.flag}</span>
                 <span>{opt.label}</span>
                 {lang === opt.code && <Check size={14} className="ml-auto" style={{ color: "#F97316" }} />}
               </button>
@@ -705,32 +703,23 @@ function HeroSection() {
 // PLATFORM FACTS BAR
 // ─────────────────────────────────────────────────────────────────────────────
 function PlatformBar() {
-  const { t } = useLang();
-  const facts = [
-    { value: "3", key: "stat_districts",  Icon: MapPin   },
-    { value: "4", key: "stat_categories", Icon: Scissors },
-    { value: "100%", key: "stat_verified", Icon: Shield   },
-    { value: "Free", key: "stat_trust",    Icon: Users    },
+  const items = [
+    "Serving Gasabo · Kicukiro · Nyarugenge",
+    "Tailoring, Hair, Handcraft & Catering",
+    "Trust Score on every profile",
+    "Free to join",
   ];
   return (
-    <section style={{ backgroundColor: "#0F172A" }} className="py-10">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 grid grid-cols-2 md:grid-cols-4 gap-6">
-        {facts.map((f) => (
-          <div key={f.key} className="flex flex-col items-center gap-2 text-center">
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center"
-              style={{ backgroundColor: "#F9731620" }}
-            >
-              <f.Icon size={18} style={{ color: "#F97316" }} />
-            </div>
-            <p style={{ color: "#F97316" }} className="text-2xl font-black tracking-tight">
-              {f.value}
-            </p>
-            <p className="text-slate-400 text-xs leading-snug">{t(f.key)}</p>
-          </div>
+    <div style={{ backgroundColor: "#0F172A", borderTop: "1px solid #1E293B" }} className="py-3">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-center flex-wrap gap-x-6 gap-y-1">
+        {items.map((item, i) => (
+          <span key={i} className="flex items-center gap-6">
+            <span className="text-slate-500 text-xs">{item}</span>
+            {i < items.length - 1 && <span className="text-slate-700 text-xs hidden sm:inline">|</span>}
+          </span>
         ))}
       </div>
-    </section>
+    </div>
   );
 }
 
@@ -742,20 +731,23 @@ function CategoriesSection() {
   return (
     <section style={{ backgroundColor: "#F8FAFC" }} className="py-20">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="text-center mb-12">
-          <p
-            className="text-xs font-bold uppercase tracking-widest mb-3"
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10">
+          <div>
+            <h2
+              style={{ color: "#0F172A" }}
+              className="text-3xl sm:text-4xl font-black tracking-tight"
+            >
+              {t("cat_h2")}
+            </h2>
+            <p className="text-slate-500 mt-2 text-base">{t("cat_desc")}</p>
+          </div>
+          <Link
+            to="/providers"
+            className="flex items-center gap-1.5 text-sm font-semibold flex-shrink-0 hover:opacity-80 transition-opacity"
             style={{ color: "#F97316" }}
           >
-            {t("cat_label")}
-          </p>
-          <h2
-            style={{ color: "#0F172A" }}
-            className="text-3xl sm:text-4xl font-black tracking-tight"
-          >
-            {t("cat_h2")}
-          </h2>
-          <p className="text-slate-500 mt-3 text-base max-w-md mx-auto">{t("cat_desc")}</p>
+            {t("cat_browse")} <ArrowRight size={14} />
+          </Link>
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -860,24 +852,19 @@ function FeaturedProviders() {
   return (
     <section className="py-20 bg-white">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="flex items-end justify-between mb-12">
+        <div className="flex items-end justify-between mb-10">
           <div>
-            <p
-              className="text-xs font-bold uppercase tracking-widest mb-3"
-              style={{ color: "#F97316" }}
-            >
-              {t("fp_label")}
-            </p>
             <h2
               style={{ color: "#0F172A" }}
               className="text-3xl sm:text-4xl font-black tracking-tight"
             >
               {t("fp_h2")}
             </h2>
+            <p className="text-slate-500 mt-2 text-base">Verified, rated, and ready to book</p>
           </div>
           <Link
             to="/providers"
-            className="hidden sm:flex items-center gap-1.5 text-sm font-semibold transition-opacity hover:opacity-80"
+            className="hidden sm:flex items-center gap-1.5 text-sm font-semibold transition-opacity hover:opacity-80 flex-shrink-0"
             style={{ color: "#F97316" }}
           >
             {t("fp_viewall")}
@@ -913,50 +900,46 @@ function HowItWorks() {
   const { t } = useLang();
   return (
     <section style={{ backgroundColor: "#F8FAFC" }} className="py-20">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="text-center mb-14">
-          <p
-            className="text-xs font-bold uppercase tracking-widest mb-3"
-            style={{ color: "#F97316" }}
-          >
-            {t("hiw_label")}
-          </p>
-          <h2
-            style={{ color: "#0F172A" }}
-            className="text-3xl sm:text-4xl font-black tracking-tight"
-          >
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 grid md:grid-cols-2 gap-16 items-start">
+        {/* Left — sticky heading */}
+        <div className="md:sticky md:top-24">
+          <h2 style={{ color: "#0F172A" }} className="text-3xl sm:text-4xl font-black tracking-tight leading-tight">
             {t("hiw_h2")}
           </h2>
+          <p className="text-slate-500 mt-4 text-base leading-relaxed">
+            {t("hiw_s3_desc")}
+          </p>
+          <Link
+            to="/providers"
+            style={{ backgroundColor: "#F97316" }}
+            className="inline-flex items-center gap-2 text-white font-semibold text-sm px-6 py-3 rounded-xl hover:opacity-90 transition-opacity mt-6"
+          >
+            {t("fp_viewall")} <ArrowRight size={15} />
+          </Link>
         </div>
 
-        <div className="grid sm:grid-cols-3 gap-6 relative">
+        {/* Right — numbered steps */}
+        <div className="flex flex-col">
           {STEPS.map((step, i) => (
-            <div key={step.titleKey} className="relative flex flex-col gap-4">
-              {i < STEPS.length - 1 && (
-                <div
-                  className="hidden sm:block absolute top-7 left-[calc(100%_-_24px)] w-1/2 h-px z-0"
-                  style={{ background: "linear-gradient(to right, #F9731640, transparent)" }}
-                />
-              )}
-              <div className="relative z-10 bg-white rounded-2xl p-6 border border-slate-100 hover:border-orange-100 hover:shadow-sm transition-all duration-200 flex flex-col gap-4">
-                <div className="flex items-center gap-4">
-                  <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: "#FFF7ED" }}
-                  >
-                    <step.Icon size={22} style={{ color: "#F97316" }} />
+            <div
+              key={step.titleKey}
+              className={`flex gap-6 py-8 ${i < STEPS.length - 1 ? "border-b border-slate-200" : ""}`}
+            >
+              <div className="flex-shrink-0 w-12 pt-1">
+                <span
+                  style={{ color: "#F97316", fontSize: "2.5rem", fontWeight: 900, lineHeight: 1, display: "block", opacity: 0.25 }}
+                >
+                  {step.num}
+                </span>
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "#FFF7ED" }}>
+                    <step.Icon size={18} style={{ color: "#F97316" }} />
                   </div>
-                  <span
-                    className="text-3xl font-black leading-none"
-                    style={{ color: "#F9731620" }}
-                  >
-                    {step.num}
-                  </span>
+                  <p className="font-bold text-slate-800">{t(step.titleKey)}</p>
                 </div>
-                <div>
-                  <p className="font-bold text-slate-800 mb-1.5">{t(step.titleKey)}</p>
-                  <p className="text-sm text-slate-500 leading-relaxed">{t(step.descKey)}</p>
-                </div>
+                <p className="text-slate-500 text-sm leading-relaxed pl-12">{t(step.descKey)}</p>
               </div>
             </div>
           ))}
@@ -1027,46 +1010,56 @@ function TrustScoreSection() {
 // ─────────────────────────────────────────────────────────────────────────────
 function Testimonials() {
   const { t } = useLang();
+  const [featured, ...rest] = TESTIMONIALS;
   return (
-    <section style={{ backgroundColor: "#FFFFFF" }} className="py-20">
+    <section className="py-20 bg-white">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="text-center mb-12">
-          <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "#F97316" }}>
-            {t("test_label")}
-          </p>
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 mb-10">
           <h2 style={{ color: "#0F172A" }} className="text-3xl sm:text-4xl font-black tracking-tight">
             {t("test_h2")}
           </h2>
+          <span className="text-slate-400 text-sm">From real customers</span>
         </div>
 
         <div className="grid md:grid-cols-3 gap-5">
-          {TESTIMONIALS.map((test) => (
-            <div
-              key={test.name}
-              className="bg-white rounded-2xl p-6 border border-slate-100 flex flex-col gap-4 hover:shadow-sm transition-shadow duration-200"
-            >
-              <StarRating rating={test.rating} size="md" />
-              <p className="text-slate-600 text-sm leading-relaxed flex-1">
-                &ldquo;{t(test.textKey)}&rdquo;
-              </p>
-              <div className="flex items-center gap-3 pt-3 border-t border-slate-100">
-                <div
-                  style={{
-                    backgroundColor: test.color + "20",
-                    color: test.color,
-                    border: `2px solid ${test.color}`,
-                  }}
-                  className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-                >
-                  {test.initials}
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-slate-800">{test.name}</p>
-                  <p className="text-xs text-slate-500">{test.role}</p>
-                </div>
+          {/* Featured — spans 2 cols */}
+          <div className="md:col-span-2 bg-slate-50 rounded-2xl p-8 border border-slate-100 flex flex-col gap-5">
+            <StarRating rating={featured.rating} size="md" />
+            <p style={{ color: "#1E293B" }} className="text-lg leading-relaxed flex-1 font-medium">
+              &ldquo;{t(featured.textKey)}&rdquo;
+            </p>
+            <div className="flex items-center gap-3 pt-4 border-t border-slate-200">
+              <Avatar initials={featured.initials} color={featured.color} size={40} />
+              <div>
+                <p className="text-sm font-semibold text-slate-800">{featured.name}</p>
+                <p className="text-xs text-slate-500">{featured.role}</p>
               </div>
             </div>
-          ))}
+          </div>
+
+          {/* Two smaller cards stacked */}
+          <div className="flex flex-col gap-5">
+            {rest.map((test) => (
+              <div key={test.name} className="bg-white rounded-2xl p-5 border border-slate-100 flex flex-col gap-3 flex-1">
+                <StarRating rating={test.rating} />
+                <p className="text-slate-600 text-sm leading-relaxed flex-1">
+                  &ldquo;{t(test.textKey)}&rdquo;
+                </p>
+                <div className="flex items-center gap-2.5 pt-3 border-t border-slate-100">
+                  <div
+                    style={{ backgroundColor: test.color + "20", color: test.color, border: `2px solid ${test.color}` }}
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+                  >
+                    {test.initials}
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-slate-800">{test.name}</p>
+                    <p className="text-xs text-slate-500">{test.role}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
@@ -1079,30 +1072,32 @@ function Testimonials() {
 function CTASection() {
   const { t } = useLang();
   return (
-    <section style={{ backgroundColor: "#F97316" }} className="py-20">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center flex flex-col items-center gap-6">
-        <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-          {t("cta_h2")}
-        </h2>
-        <p className="text-orange-100 text-base sm:text-lg max-w-xl leading-relaxed">
-          {t("cta_desc")}
-        </p>
+    <section style={{ backgroundColor: "#0F172A" }} className="py-20">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 grid md:grid-cols-2 gap-12 items-center">
+        <div className="flex flex-col gap-4">
+          <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-tight">
+            {t("cta_h2")}
+          </h2>
+          <p className="text-slate-400 text-base leading-relaxed">
+            {t("cta_desc")}
+          </p>
+          <p className="text-slate-600 text-xs mt-1">{t("cta_free")}</p>
+        </div>
         <div className="flex flex-col sm:flex-row gap-3">
           <Link
             to="/signup"
-            className="bg-white font-bold px-8 py-3 rounded-xl hover:bg-orange-50 transition-colors text-sm"
-            style={{ color: "#C2410C" }}
+            style={{ backgroundColor: "#F97316" }}
+            className="text-white font-bold px-8 py-3.5 rounded-xl hover:opacity-90 transition-opacity text-sm text-center"
           >
             {t("cta_join")}
           </Link>
           <Link
             to="/providers"
-            className="border-2 border-white text-white font-bold px-8 py-3 rounded-xl hover:bg-white hover:text-orange-600 transition-colors text-sm"
+            className="text-slate-300 font-bold px-8 py-3.5 rounded-xl border border-slate-700 hover:border-slate-500 hover:text-white transition-all text-sm text-center"
           >
             {t("cta_browse")}
           </Link>
         </div>
-        <p className="text-orange-200 text-xs">{t("cta_free")}</p>
       </div>
     </section>
   );
