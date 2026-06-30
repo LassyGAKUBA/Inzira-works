@@ -317,18 +317,18 @@ BEGIN
   FROM provider_profiles pp
   JOIN users u ON u.id = pp.user_id
   LEFT JOIN (
-    SELECT provider_id,
+    SELECT reviews.provider_id,
            ROUND(AVG(rating)::NUMERIC, 1) AS avg_rating,
            COUNT(*)                        AS review_count
     FROM reviews
     WHERE moderation_status = 'approved'
-    GROUP BY provider_id
+    GROUP BY reviews.provider_id
   ) r ON r.provider_id = u.id
   LEFT JOIN (
-    SELECT provider_id,
+    SELECT provider_specialties.provider_id,
            ARRAY_AGG(label) AS specialties
     FROM provider_specialties
-    GROUP BY provider_id
+    GROUP BY provider_specialties.provider_id
   ) s ON s.provider_id = pp.id
   WHERE u.is_active = TRUE
   ORDER BY pp.trust_score DESC;

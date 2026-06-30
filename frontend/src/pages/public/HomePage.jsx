@@ -1,10 +1,11 @@
-import { useState, useEffect, createContext, useContext } from "react";
+﻿import { useState, useEffect, createContext, useContext } from "react";
 import { Link } from "react-router-dom";
 import {
   Search, MapPin, Star, Check, CheckCircle, ArrowRight,
-  Menu, X, ChevronDown, Scissors, Sparkles, Package,
-  ChefHat, Calendar, Eye, Shield, Users,
+  Scissors, Sparkles, Package, ChefHat, Calendar, Eye, Shield, Users,
 } from "lucide-react";
+import Navbar from "../../components/shared/Navbar";
+import PageTransition from "../../components/shared/PageTransition";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TRANSLATIONS
@@ -300,11 +301,6 @@ function LangProvider({ children }) {
 // ─────────────────────────────────────────────────────────────────────────────
 // DATA
 // ─────────────────────────────────────────────────────────────────────────────
-const LANG_OPTIONS = [
-  { code: "en", label: "English",     short: "EN" },
-  { code: "rw", label: "Kinyarwanda", short: "RW" },
-  { code: "sw", label: "Swahili",     short: "SW" },
-];
 
 const CATEGORIES = [
   { labelKey: "Tailoring & Fashion", Icon: Scissors },
@@ -386,169 +382,6 @@ function Avatar({ initials, color, size = 48 }) {
     >
       {initials}
     </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// LANGUAGE SWITCHER
-// ─────────────────────────────────────────────────────────────────────────────
-function LanguageSwitcher({ compact = false }) {
-  const { lang, setLang } = useLang();
-  const [open, setOpen] = useState(false);
-  const current = LANG_OPTIONS.find((l) => l.code === lang);
-
-  return (
-    <div className="relative">
-      <button
-        onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-orange-500 transition-colors px-2 py-1.5 rounded-lg hover:bg-orange-50"
-        aria-label="Switch language"
-        aria-expanded={open}
-      >
-        <span>{compact ? current.short : current.label}</span>
-        <ChevronDown
-          size={14}
-          style={{
-            transition: "transform 0.2s",
-            transform: open ? "rotate(180deg)" : "rotate(0deg)",
-          }}
-        />
-      </button>
-
-      {open && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full mt-1 z-50 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden min-w-[160px]">
-            {LANG_OPTIONS.map((opt) => (
-              <button
-                key={opt.code}
-                onClick={() => { setLang(opt.code); setOpen(false); }}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left
-                  ${lang === opt.code ? "bg-orange-50 text-orange-600 font-semibold" : "text-slate-600 hover:bg-slate-50"}`}
-              >
-                <span>{opt.label}</span>
-                {lang === opt.code && <Check size={14} className="ml-auto" style={{ color: "#F97316" }} />}
-              </button>
-            ))}
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// NAVBAR
-// ─────────────────────────────────────────────────────────────────────────────
-function Navbar() {
-  const { t } = useLang();
-  const [scrolled, setScrolled] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  useEffect(() => {
-    const handler = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", handler);
-    return () => window.removeEventListener("scroll", handler);
-  }, []);
-
-  const navLinks = [
-    { key: "nav_browse",  to: "/providers" },
-    { key: "nav_about",   to: "/about"     },
-    { key: "nav_contact", to: "/contact"   },
-  ];
-
-  return (
-    <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled || menuOpen ? "bg-white shadow-sm" : "bg-transparent"
-      }`}
-    >
-      <div className="px-6 sm:px-10 h-16 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2">
-          <div
-            style={{ backgroundColor: "#F97316" }}
-            className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-          >
-            <span className="text-white font-black text-sm">IW</span>
-          </div>
-          <span style={{ color: "#0F172A" }} className="font-bold text-lg tracking-tight">
-            Inzira Works
-          </span>
-        </Link>
-
-        <div className="hidden md:flex items-center gap-7">
-          {navLinks.map((item) => (
-            <Link
-              key={item.key}
-              to={item.to}
-              className="text-sm font-medium text-slate-600 hover:text-orange-500 transition-colors"
-            >
-              {t(item.key)}
-            </Link>
-          ))}
-        </div>
-
-        <div className="hidden md:flex items-center gap-3">
-          <LanguageSwitcher compact />
-          <div className="w-px h-5 bg-slate-200" />
-          <Link
-            to="/login"
-            style={{ color: "#0F172A" }}
-            className="text-sm font-medium hover:text-orange-500 transition-colors"
-          >
-            {t("nav_login")}
-          </Link>
-          <Link
-            to="/signup"
-            style={{ backgroundColor: "#F97316" }}
-            className="text-sm font-semibold text-white px-4 py-2 rounded-xl hover:opacity-90 transition-opacity"
-          >
-            {t("nav_getstarted")}
-          </Link>
-        </div>
-
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          className="md:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors"
-          aria-label="Toggle menu"
-        >
-          {menuOpen ? <X size={20} /> : <Menu size={20} />}
-        </button>
-      </div>
-
-      {menuOpen && (
-        <div className="md:hidden bg-white border-t border-slate-100 px-4 py-4 flex flex-col gap-4">
-          {navLinks.map((item) => (
-            <Link
-              key={item.key}
-              to={item.to}
-              onClick={() => setMenuOpen(false)}
-              className="text-sm font-medium text-slate-700 hover:text-orange-500 transition-colors"
-            >
-              {t(item.key)}
-            </Link>
-          ))}
-          <LanguageSwitcher />
-          <div className="flex gap-3 pt-1">
-            <Link
-              to="/login"
-              onClick={() => setMenuOpen(false)}
-              className="text-sm font-medium text-slate-700 border border-slate-200 px-4 py-2 rounded-xl flex-1 text-center hover:border-slate-300 transition-colors"
-            >
-              {t("nav_login")}
-            </Link>
-            <Link
-              to="/signup"
-              onClick={() => setMenuOpen(false)}
-              style={{ backgroundColor: "#F97316" }}
-              className="text-sm font-semibold text-white px-4 py-2 rounded-xl flex-1 text-center hover:opacity-90 transition-opacity"
-            >
-              {t("nav_getstarted")}
-            </Link>
-          </div>
-        </div>
-      )}
-    </nav>
   );
 }
 
@@ -899,7 +732,7 @@ function FeaturedProviders() {
 function HowItWorks() {
   const { t } = useLang();
   return (
-    <section style={{ backgroundColor: "#F8FAFC" }} className="py-20">
+    <section id="how-it-works" style={{ backgroundColor: "#F8FAFC" }} className="py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 grid md:grid-cols-2 gap-16 items-start">
         {/* Left — sticky heading */}
         <div className="md:sticky md:top-24">
@@ -1169,6 +1002,7 @@ function Footer() {
 export default function HomePage() {
   return (
     <LangProvider>
+      <PageTransition>
       <div className="min-h-screen font-sans">
         <Navbar />
         <HeroSection />
@@ -1181,6 +1015,7 @@ export default function HomePage() {
         <CTASection />
         <Footer />
       </div>
+      </PageTransition>
     </LangProvider>
   );
 }
