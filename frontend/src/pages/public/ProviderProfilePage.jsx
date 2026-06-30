@@ -624,19 +624,6 @@ export default function ProviderProfilePage() {
             </div>
           )}
 
-          {/* CTA buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 pt-1">
-            <button
-              onClick={() => setShowBooking(true)}
-              style={{ backgroundColor: "#F97316" }}
-              className="flex-1 text-white font-semibold py-3 rounded-xl hover:opacity-90 transition-opacity"
-            >
-              Book Now
-            </button>
-            <button className="flex-1 sm:flex-none text-slate-600 font-semibold py-3 px-6 rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors flex items-center justify-center gap-2">
-              <MessageCircle size={16} /> Message
-            </button>
-          </div>
         </div>
       </section>
 
