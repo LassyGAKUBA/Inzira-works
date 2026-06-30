@@ -6,7 +6,6 @@ import LanguageSwitcher from "./LanguageSwitcher";
 
 const NAV_LINKS = [
   { key: "nav_browse",  to: "/providers" },
-  { key: "nav_how",    to: "/#how-it-works" },
   { key: "nav_about",  to: "/about" },
   { key: "nav_contact", to: "/contact" },
 ];

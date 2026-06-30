@@ -413,7 +413,7 @@ function HeroSection() {
         }}
       />
 
-      <div className="relative px-6 sm:px-12 py-20 w-full grid md:grid-cols-2 gap-12 items-center">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-20 w-full grid md:grid-cols-2 gap-12 items-center">
         {/* Left */}
         <div className="flex flex-col gap-6">
           <div
