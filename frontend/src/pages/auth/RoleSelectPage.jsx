@@ -106,8 +106,12 @@ export default function RoleSelectPage() {
     setLoading(true);
     setApiError("");
     try {
-      const user = await register({ ...signupData, role: selected });
-      navigate(user.role === "provider" ? "/provider/dashboard" : "/customer/dashboard");
+      const { needsConfirmation, user } = await register({ ...signupData, role: selected });
+      if (needsConfirmation) {
+        navigate("/check-email", { state: { email: signupData.email } });
+      } else {
+        navigate(user.role === "provider" ? "/provider/dashboard" : "/customer/dashboard");
+      }
     } catch (err) {
       setApiError(err.message || "Could not create your account. Please try again.");
     } finally {

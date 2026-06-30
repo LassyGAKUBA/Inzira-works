@@ -44,13 +44,17 @@ export function AuthProvider({ children }) {
       email,
       password,
       options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
         data: { full_name: fullName, phone, district, role },
       },
     });
     if (error) throw new Error(error.message);
 
-    // If user is a provider, also create the provider_profiles row
-    if (role === "provider" && data.user) {
+    // session is null when Supabase requires email confirmation
+    const needsConfirmation = !data.session;
+
+    // Only create provider profile immediately when there is no confirmation step
+    if (!needsConfirmation && role === "provider" && data.user) {
       await supabase.from("provider_profiles").insert({
         user_id: data.user.id,
         trust_score: 0,
@@ -60,7 +64,7 @@ export function AuthProvider({ children }) {
       });
     }
 
-    return mapUser(data.user);
+    return { needsConfirmation, user: mapUser(data.user) };
   };
 
   const logout = async () => {
