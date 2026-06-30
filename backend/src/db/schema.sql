@@ -288,45 +288,45 @@ CREATE POLICY "provider_update_own"  ON provider_profiles FOR UPDATE USING (auth
 -- Returns all active providers for the directory page
 CREATE OR REPLACE FUNCTION get_providers()
 RETURNS TABLE(
-  provider_id        UUID,
-  user_id            UUID,
-  full_name          VARCHAR,
-  avatar_url         TEXT,
-  headline           VARCHAR,
-  district           VARCHAR,
-  trust_score        NUMERIC,
-  verification_status verify_status,
-  avg_rating         NUMERIC,
-  review_count       BIGINT,
-  specialties        TEXT[]
+  provider_id         UUID,
+  user_id             UUID,
+  full_name           TEXT,
+  avatar_url          TEXT,
+  headline            TEXT,
+  district            TEXT,
+  trust_score         NUMERIC,
+  verification_status TEXT,
+  avg_rating          NUMERIC,
+  review_count        BIGINT,
+  specialties         TEXT[]
 ) SECURITY DEFINER AS $$
 BEGIN
   RETURN QUERY
   SELECT
-    pp.id                                               AS provider_id,
-    u.id                                                AS user_id,
-    u.full_name,
-    u.avatar_url,
-    pp.headline,
-    pp.district,
-    pp.trust_score,
-    pp.verification_status,
-    COALESCE(r.avg_rating, 0)                           AS avg_rating,
-    COALESCE(r.review_count, 0)                         AS review_count,
-    COALESCE(s.specialties, ARRAY[]::TEXT[])            AS specialties
+    pp.id::UUID                                               AS provider_id,
+    u.id::UUID                                                AS user_id,
+    u.full_name::TEXT,
+    u.avatar_url::TEXT,
+    pp.headline::TEXT,
+    pp.district::TEXT,
+    pp.trust_score::NUMERIC,
+    pp.verification_status::TEXT                              AS verification_status,
+    COALESCE(r.avg_rating,    0::NUMERIC)::NUMERIC            AS avg_rating,
+    COALESCE(r.review_count,  0::BIGINT)::BIGINT              AS review_count,
+    COALESCE(s.specialties,   ARRAY[]::TEXT[])                AS specialties
   FROM provider_profiles pp
   JOIN users u ON u.id = pp.user_id
   LEFT JOIN (
     SELECT reviews.provider_id,
-           ROUND(AVG(rating)::NUMERIC, 1) AS avg_rating,
-           COUNT(*)                        AS review_count
+           ROUND(AVG(reviews.rating::NUMERIC), 1)  AS avg_rating,
+           COUNT(*)::BIGINT                          AS review_count
     FROM reviews
-    WHERE moderation_status = 'approved'
+    WHERE reviews.moderation_status = 'approved'
     GROUP BY reviews.provider_id
   ) r ON r.provider_id = u.id
   LEFT JOIN (
     SELECT provider_specialties.provider_id,
-           ARRAY_AGG(label) AS specialties
+           ARRAY_AGG(provider_specialties.label) AS specialties
     FROM provider_specialties
     GROUP BY provider_specialties.provider_id
   ) s ON s.provider_id = pp.id
