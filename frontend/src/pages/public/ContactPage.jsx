@@ -328,7 +328,7 @@ export default function ContactPage() {
 
       {/* Contact info cards */}
       <section className="py-10">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {CONTACT_INFO.map((info) => (
             <div key={info.label} className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col gap-2">
               <div style={{ backgroundColor: "#FFF7ED", color: "#F97316" }} className="w-10 h-10 rounded-xl flex items-center justify-center">
@@ -343,7 +343,7 @@ export default function ContactPage() {
 
       {/* Form + Map */}
       <section className="pb-16">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 grid lg:grid-cols-[1.2fr_1fr] gap-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 grid lg:grid-cols-[1.2fr_1fr] gap-6">
           <ContactForm />
 
           {/* Map placeholder + quick links */}

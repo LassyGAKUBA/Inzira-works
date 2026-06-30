@@ -150,7 +150,7 @@ export default function AboutPage() {
 
       {/* ── Mission ── */}
       <section className="py-16">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 grid md:grid-cols-2 gap-12 items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 grid md:grid-cols-2 gap-12 items-center">
           <div className="flex flex-col gap-4">
             <p style={{ color: "#F97316" }} className="text-xs font-bold uppercase tracking-widest">Our Mission</p>
             <h2 style={{ color: "#1E293B" }} className="text-3xl font-black tracking-tight leading-tight">
@@ -185,7 +185,7 @@ export default function AboutPage() {
 
       {/* ── Values ── */}
       <section style={{ backgroundColor: "#FFF7ED" }} className="py-16">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12">
             <p style={{ color: "#F97316" }} className="text-xs font-bold uppercase tracking-widest mb-3">What We Stand For</p>
             <h2 style={{ color: "#1E293B" }} className="text-3xl font-black tracking-tight">Our Values</h2>
@@ -238,7 +238,7 @@ export default function AboutPage() {
 
       {/* ── Trust Score deep-dive ── */}
       <section style={{ backgroundColor: "#1E293B" }} className="py-16">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col gap-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col gap-10">
           <div className="text-center">
             <p style={{ color: "#F97316" }} className="text-xs font-bold uppercase tracking-widest mb-3">How We Build Trust</p>
             <h2 className="text-white text-3xl font-black tracking-tight">The Trust Score, Explained</h2>
