@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useLang } from "../../i18n/LangContext";
 import LanguageSwitcher from "../../components/shared/LanguageSwitcher";
+import { KeyRound, Mail } from "lucide-react";
 
 export default function ForgotPasswordPage() {
   const { t } = useLang();
@@ -48,8 +49,8 @@ export default function ForgotPasswordPage() {
           {!sent ? (
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-8 flex flex-col gap-6">
               {/* Icon */}
-              <div style={{ backgroundColor: "#FFF7ED" }} className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl">
-                🔑
+              <div style={{ backgroundColor: "#FFF7ED", color: "#F97316" }} className="w-14 h-14 rounded-2xl flex items-center justify-center">
+                <KeyRound size={24} />
               </div>
 
               <div className="flex flex-col gap-1">
@@ -100,8 +101,8 @@ export default function ForgotPasswordPage() {
           ) : (
             /* Success state */
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-8 flex flex-col items-center gap-5 text-center">
-              <div style={{ backgroundColor: "#F0FDF4", border: "2px solid #10B981" }} className="w-16 h-16 rounded-full flex items-center justify-center text-3xl">
-                ✉️
+              <div style={{ backgroundColor: "#F0FDF4", border: "2px solid #10B981", color: "#10B981" }} className="w-16 h-16 rounded-full flex items-center justify-center">
+                <Mail size={28} />
               </div>
               <div className="flex flex-col gap-2">
                 <h2 style={{ color: "#1E293B" }} className="text-xl font-black">Check your email</h2>

@@ -7,7 +7,12 @@ import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useLang } from "../../i18n/LangContext";
 import LanguageSwitcher from "../../components/shared/LanguageSwitcher";
-import { api } from "../../api/client";
+import { supabase } from "../../lib/supabase";
+import {
+  MapPin, Star, CheckCircle, ArrowRight,
+  Menu, X, SlidersHorizontal, Search, AlertTriangle,
+  Scissors, Sparkles, Package, ChefHat,
+} from "lucide-react";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CATEGORIES  (focused on the four core services)
@@ -16,10 +21,10 @@ import { api } from "../../api/client";
 // Put the image files in:  frontend/public/categories/
 // ─────────────────────────────────────────────────────────────────────────────
 const CATEGORIES = [
-  { label: "Tailoring & Fashion", image: "/categories/tailoring.jpg", emoji: "", count: 142 },
-  { label: "Hair & Beauty",       image: "/categories/hair.jpg",      emoji: "", count: 98 },
-  { label: "Handcraft & Weaving", image: "/categories/handcraft.jpg", emoji: "", count: 76 },
-  { label: "Catering & Food",     image: "/categories/catering.jpg",  emoji: "", count: 61 },
+  { label: "Tailoring & Fashion", image: "/categories/tailoring.jpg", Icon: Scissors, count: 142 },
+  { label: "Hair & Beauty",       image: "/categories/hair.jpg",      Icon: Sparkles,  count: 98  },
+  { label: "Handcraft & Weaving", image: "/categories/handcraft.jpg", Icon: Package,   count: 76  },
+  { label: "Catering & Food",     image: "/categories/catering.jpg",  Icon: ChefHat,   count: 61  },
 ];
 
 const DISTRICTS = ["Gasabo", "Kicukiro", "Nyarugenge"];
@@ -68,30 +73,36 @@ function mapProvider(row) {
 // PRIMITIVES
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Category thumbnail: shows the image, falls back to the emoji if it fails to load.
-function CategoryIcon({ category, size = 20, rounded = 6 }) {
-  const [failed, setFailed] = useState(false);
+function CategoryIcon({ category, size = 20 }) {
+  const [imgOk, setImgOk] = useState(!!category.image);
 
-  if (failed || !category.image) {
-    return <span style={{ fontSize: size * 0.9, lineHeight: 1 }}>{category.emoji}</span>;
+  if (imgOk) {
+    return (
+      <img
+        src={category.image}
+        alt={category.label}
+        onError={() => setImgOk(false)}
+        style={{ width: size, height: size, objectFit: "cover", borderRadius: 4, flexShrink: 0 }}
+      />
+    );
   }
-
-  return (
-    <img
-      src={category.image}
-      alt={category.label}
-      onError={() => setFailed(true)}
-      style={{ width: size, height: size, objectFit: "cover", borderRadius: rounded, flexShrink: 0 }}
-    />
-  );
+  const Icon = category.Icon;
+  return <Icon size={size * 0.8} style={{ color: "#F97316", flexShrink: 0 }} />;
 }
 
 function StarRating({ rating, size = "sm" }) {
-  const px = size === "sm" ? "text-xs" : "text-sm";
+  const px = size === "sm" ? 12 : 14;
   return (
-    <span className={`flex items-center gap-0.5 ${px}`}>
-      {[1,2,3,4,5].map((s) => (
-        <span key={s} style={{ color: s <= Math.round(rating) ? "#F97316" : "#CBD5E1" }}>★</span>
+    <span className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((s) => (
+        <Star
+          key={s}
+          size={px}
+          style={{
+            color: s <= Math.round(rating) ? "#F97316" : "#CBD5E1",
+            fill:  s <= Math.round(rating) ? "#F97316" : "none",
+          }}
+        />
       ))}
     </span>
   );
@@ -144,7 +155,9 @@ function ProviderCard({ provider }) {
           <span className="text-xs text-slate-400">New provider</span>
         )}
         {provider.verified && (
-          <span className="text-xs text-green-600 flex items-center gap-0.5">✓ Verified</span>
+          <span className="text-xs text-emerald-600 flex items-center gap-1">
+            <CheckCircle size={11} /> Verified
+          </span>
         )}
       </div>
 
@@ -154,14 +167,17 @@ function ProviderCard({ provider }) {
         ))}
       </div>
 
-      <div className="flex items-center justify-between pt-1 border-t border-slate-100">
-        <span className="text-xs text-slate-500">📍 {provider.district}</span>
+      <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+        <div className="flex items-center gap-1.5 text-slate-400">
+          <MapPin size={12} />
+          <span className="text-xs">{provider.district}</span>
+        </div>
         <Link
           to={`/providers/${provider.id}`}
-          style={{ backgroundColor: "#F97316" }}
-          className="text-white text-xs font-medium px-3 py-1.5 rounded-lg hover:opacity-90 transition-opacity"
+          className="text-xs font-semibold flex items-center gap-1 hover:opacity-80 transition-opacity"
+          style={{ color: "#F97316" }}
         >
-          View Profile
+          View Profile <ArrowRight size={12} />
         </Link>
       </div>
     </div>
@@ -229,8 +245,8 @@ function Navbar() {
           <Link to="/signup" style={{ backgroundColor: "#F97316" }} className="text-sm font-semibold text-white px-4 py-2 rounded-xl hover:opacity-90 transition-opacity">{t("nav_getstarted")}</Link>
         </div>
 
-        <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden p-2 rounded-lg text-slate-600" aria-label="Toggle menu">
-          {menuOpen ? "✕" : "☰"}
+        <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors" aria-label="Toggle menu">
+          {menuOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
       </div>
 
@@ -312,7 +328,9 @@ function FiltersSidebar({ filters, setFilters, onClose }) {
             </button>
           )}
           {onClose && (
-            <button onClick={onClose} className="text-slate-400 lg:hidden">✕</button>
+            <button onClick={onClose} className="text-slate-400 hover:text-slate-600 lg:hidden transition-colors">
+              <X size={18} />
+            </button>
           )}
         </div>
       </div>
@@ -370,7 +388,7 @@ function FiltersSidebar({ filters, setFilters, onClose }) {
                 color: filters.minRating === r ? "white" : "#64748B",
               }}
             >
-              {r === 0 ? "Any" : `${r}+ ★`}
+              {r === 0 ? "Any" : `${r}+`}
             </button>
           ))}
         </div>
@@ -405,7 +423,9 @@ function FiltersSidebar({ filters, setFilters, onClose }) {
           onChange={(e) => setFilter("verifiedOnly", e.target.checked)}
           className="accent-orange-500"
         />
-        <span className="text-sm text-slate-600">✓ Verified providers only</span>
+        <span className="text-sm text-slate-600 flex items-center gap-1.5">
+          <CheckCircle size={14} className="text-emerald-500" /> Verified providers only
+        </span>
       </label>
     </div>
   );
@@ -415,7 +435,6 @@ function FiltersSidebar({ filters, setFilters, onClose }) {
 // MAIN PAGE
 // ─────────────────────────────────────────────────────────────────────────────
 export default function ProviderDirectory() {
-  const { t } = useLang();
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("trust");
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -440,7 +459,8 @@ export default function ProviderDirectory() {
       setLoading(true);
       setError("");
       try {
-        const { providers: rows } = await api.get("/api/providers");
+        const { data: rows, error } = await supabase.rpc("get_providers");
+        if (error) throw new Error(error.message);
         if (!cancelled) setProviders(rows.map(mapProvider));
       } catch (err) {
         if (!cancelled) setError(err.message || "Could not load providers.");
@@ -571,7 +591,7 @@ export default function ProviderDirectory() {
                 onClick={() => setMobileFiltersOpen(true)}
                 className="lg:hidden flex items-center gap-2 text-sm font-semibold text-slate-600 border border-slate-200 bg-white px-4 py-2 rounded-xl"
               >
-                ⚙️ Filters {activeFilterCount > 0 && <span style={{ backgroundColor: "#F97316" }} className="text-white text-xs rounded-full px-1.5">{activeFilterCount}</span>}
+                <SlidersHorizontal size={15} /> Filters {activeFilterCount > 0 && <span style={{ backgroundColor: "#F97316" }} className="text-white text-xs rounded-full px-1.5">{activeFilterCount}</span>}
               </button>
 
               <p className="text-sm text-slate-500 hidden sm:block">
@@ -598,31 +618,31 @@ export default function ProviderDirectory() {
                 {filters.categories.map((cat) => (
                   <span key={cat} className="flex items-center gap-1.5 text-xs font-medium bg-orange-50 text-orange-600 px-3 py-1 rounded-full">
                     {cat}
-                    <button onClick={() => setFilters((p) => ({ ...p, categories: p.categories.filter((c) => c !== cat) }))}>✕</button>
+                    <button onClick={() => setFilters((p) => ({ ...p, categories: p.categories.filter((c) => c !== cat) }))}><X size={11} /></button>
                   </span>
                 ))}
                 {filters.district !== "all" && (
                   <span className="flex items-center gap-1.5 text-xs font-medium bg-orange-50 text-orange-600 px-3 py-1 rounded-full">
-                    📍 {filters.district}
-                    <button onClick={() => setFilters((p) => ({ ...p, district: "all" }))}>✕</button>
+                    <MapPin size={11} /> {filters.district}
+                    <button onClick={() => setFilters((p) => ({ ...p, district: "all" }))}><X size={11} /></button>
                   </span>
                 )}
                 {filters.minRating > 0 && (
                   <span className="flex items-center gap-1.5 text-xs font-medium bg-orange-50 text-orange-600 px-3 py-1 rounded-full">
-                    {filters.minRating}+ ★
-                    <button onClick={() => setFilters((p) => ({ ...p, minRating: 0 }))}>✕</button>
+                    {filters.minRating}+ <Star size={11} style={{ fill: "#EA580C" }} />
+                    <button onClick={() => setFilters((p) => ({ ...p, minRating: 0 }))}><X size={11} /></button>
                   </span>
                 )}
                 {filters.minTrust > 0 && (
                   <span className="flex items-center gap-1.5 text-xs font-medium bg-orange-50 text-orange-600 px-3 py-1 rounded-full">
                     Trust {filters.minTrust}+
-                    <button onClick={() => setFilters((p) => ({ ...p, minTrust: 0 }))}>✕</button>
+                    <button onClick={() => setFilters((p) => ({ ...p, minTrust: 0 }))}><X size={11} /></button>
                   </span>
                 )}
                 {filters.verifiedOnly && (
                   <span className="flex items-center gap-1.5 text-xs font-medium bg-orange-50 text-orange-600 px-3 py-1 rounded-full">
-                    ✓ Verified only
-                    <button onClick={() => setFilters((p) => ({ ...p, verifiedOnly: false }))}>✕</button>
+                    <CheckCircle size={11} /> Verified only
+                    <button onClick={() => setFilters((p) => ({ ...p, verifiedOnly: false }))}><X size={11} /></button>
                   </span>
                 )}
               </div>
@@ -631,7 +651,7 @@ export default function ProviderDirectory() {
             {/* Grid */}
             {error ? (
               <div className="bg-white rounded-2xl border border-red-100 p-12 text-center flex flex-col items-center gap-3">
-                <p className="text-3xl">⚠️</p>
+                <AlertTriangle size={28} className="text-red-300" />
                 <p className="font-semibold text-slate-700">Couldn't load providers</p>
                 <p className="text-sm text-slate-400">{error}</p>
               </div>
@@ -645,7 +665,7 @@ export default function ProviderDirectory() {
               </div>
             ) : (
               <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center flex flex-col items-center gap-3">
-                <p className="text-3xl">🔍</p>
+                <Search size={28} className="text-slate-300" />
                 <p className="font-semibold text-slate-700">No providers match your filters</p>
                 <p className="text-sm text-slate-400">Try removing some filters or searching a different term.</p>
                 <button

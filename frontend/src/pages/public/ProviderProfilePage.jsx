@@ -8,7 +8,12 @@ import { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useLang } from "../../i18n/LangContext";
 import LanguageSwitcher from "../../components/shared/LanguageSwitcher";
-import { api } from "../../api/client";
+import { supabase } from "../../lib/supabase";
+import {
+  MapPin, Star, CheckCircle, ArrowRight,
+  Menu, X, Heart, Share2, MessageCircle, Lock,
+  Search, Image as ImageIcon,
+} from "lucide-react";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // API → VIEW MAPPING
@@ -145,11 +150,18 @@ function Avatar({ initials, color, size = 48 }) {
 }
 
 function StarRating({ rating, size = "sm" }) {
-  const px = size === "sm" ? "text-xs" : "text-base";
+  const px = size === "sm" ? 12 : 14;
   return (
-    <span className={`flex items-center gap-0.5 ${px}`}>
-      {[1,2,3,4,5].map((s) => (
-        <span key={s} style={{ color: s <= Math.round(rating) ? "#F97316" : "#CBD5E1" }}>★</span>
+    <span className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((s) => (
+        <Star
+          key={s}
+          size={px}
+          style={{
+            color: s <= Math.round(rating) ? "#F97316" : "#CBD5E1",
+            fill:  s <= Math.round(rating) ? "#F97316" : "none",
+          }}
+        />
       ))}
     </span>
   );
@@ -170,7 +182,9 @@ function PortfolioImage({ item }) {
   const [failed, setFailed] = useState(false);
   if (failed || !item.imageUrl) {
     return (
-      <div style={{ backgroundColor: "#F1F5F9" }} className="h-32 flex items-center justify-center text-3xl text-slate-300">🖼️</div>
+      <div style={{ backgroundColor: "#F1F5F9" }} className="h-32 flex items-center justify-center text-slate-300">
+        <ImageIcon size={32} />
+      </div>
     );
   }
   return (
@@ -229,8 +243,8 @@ function Navbar() {
           <Link to="/signup" style={{ backgroundColor: "#F97316" }} className="text-sm font-semibold text-white px-4 py-2 rounded-xl hover:opacity-90 transition-opacity">{t("nav_getstarted")}</Link>
         </div>
 
-        <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden p-2 rounded-lg text-slate-600" aria-label="Toggle menu">
-          {menuOpen ? "✕" : "☰"}
+        <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors" aria-label="Toggle menu">
+          {menuOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
       </div>
 
@@ -323,7 +337,9 @@ function BookingModal({ provider, onClose }) {
       <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
         {sent ? (
           <div className="p-8 flex flex-col items-center text-center gap-4">
-            <div style={{ backgroundColor: "#F0FDF4", border: "2px solid #10B981" }} className="w-16 h-16 rounded-full flex items-center justify-center text-3xl">✓</div>
+            <div style={{ backgroundColor: "#F0FDF4", border: "2px solid #10B981" }} className="w-16 h-16 rounded-full flex items-center justify-center">
+              <CheckCircle size={30} style={{ color: "#10B981" }} />
+            </div>
             <div>
               <h3 style={{ color: "#1E293B" }} className="text-xl font-black">Booking request sent!</h3>
               <p className="text-slate-500 text-sm mt-2 leading-relaxed">
@@ -345,7 +361,9 @@ function BookingModal({ provider, onClose }) {
                   <p className="text-xs text-slate-500">{provider.role}</p>
                 </div>
               </div>
-              <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-lg">✕</button>
+              <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
+                <X size={20} />
+              </button>
             </div>
 
             <form onSubmit={handleSubmit} className="p-5 flex flex-col gap-4" noValidate>
@@ -450,7 +468,9 @@ function ShareModal({ provider, onClose }) {
       <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-sm p-5 flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <h3 className="font-bold text-slate-800">Share Profile</h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-lg">✕</button>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
+            <X size={20} />
+          </button>
         </div>
         <div className="flex gap-2 bg-slate-50 rounded-xl p-2 border border-slate-100">
           <input readOnly value={url} className="flex-1 px-2 text-xs text-slate-600 bg-transparent outline-none truncate" />
@@ -496,7 +516,7 @@ function NotFoundState() {
     <PageShell>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-20">
         <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center flex flex-col items-center gap-3">
-          <p className="text-4xl">🔍</p>
+          <Search size={36} className="text-slate-300" />
           <p className="font-bold text-slate-700 text-lg">Provider not found</p>
           <p className="text-sm text-slate-400">This provider may have been removed or the link is incorrect.</p>
           <Link to="/providers" style={{ backgroundColor: "#F97316" }} className="text-white text-sm font-semibold px-5 py-2 rounded-xl hover:opacity-90 transition-opacity mt-1">
@@ -533,7 +553,8 @@ export default function ProviderProfilePage() {
 
     (async () => {
       try {
-        const { provider: data } = await api.get(`/api/providers/${id}`);
+        const { data, error } = await supabase.rpc("get_provider_detail", { p_id: id });
+        if (error || !data) throw new Error("Not found");
         if (!cancelled) setProvider(mapProvider(data));
       } catch {
         if (!cancelled) setNotFound(true);
@@ -543,8 +564,8 @@ export default function ProviderProfilePage() {
 
       // Similar providers — best effort, ignore failures.
       try {
-        const { providers } = await api.get("/api/providers");
-        if (!cancelled) setSimilar(mapSimilar(providers, id));
+        const { data: rows } = await supabase.rpc("get_providers");
+        if (!cancelled) setSimilar(mapSimilar(rows || [], id));
       } catch { /* non-critical */ }
     })();
 
@@ -597,28 +618,38 @@ export default function ProviderProfilePage() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <h1 style={{ color: "#1E293B" }} className="text-2xl font-black">{provider.name}</h1>
                     {provider.verified && (
-                      <span className="text-green-600 text-sm flex items-center gap-1">✓ Verified</span>
+                      <span className="text-emerald-600 text-sm flex items-center gap-1 font-medium">
+                        <CheckCircle size={14} /> Verified
+                      </span>
                     )}
                   </div>
                   <p className="text-slate-500 text-base mt-0.5">{provider.role}</p>
-                  <p className="text-slate-400 text-sm mt-1">📍 {provider.district} · Member since {provider.memberSince}</p>
+                  <div className="flex items-center gap-1.5 text-slate-400 text-sm mt-1">
+                    <MapPin size={13} />
+                    <span>{provider.district} · Member since {provider.memberSince}</span>
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setSaved(!saved)}
-                    className="w-10 h-10 rounded-xl border border-slate-200 flex items-center justify-center text-lg transition-colors hover:border-orange-300"
-                    style={{ color: saved ? "#F97316" : "#94A3B8" }}
+                    className="w-10 h-10 rounded-xl border border-slate-200 flex items-center justify-center transition-all hover:border-orange-300"
                     aria-label={saved ? "Unsave" : "Save"}
                   >
-                    {saved ? "♥" : "♡"}
+                    <Heart
+                      size={18}
+                      style={{
+                        color: saved ? "#F97316" : "#94A3B8",
+                        fill: saved ? "#F97316" : "none",
+                      }}
+                    />
                   </button>
                   <button
                     onClick={() => setShowShare(true)}
-                    className="w-10 h-10 rounded-xl border border-slate-200 flex items-center justify-center text-lg text-slate-400 hover:border-orange-300 hover:text-orange-500 transition-colors"
+                    className="w-10 h-10 rounded-xl border border-slate-200 flex items-center justify-center text-slate-400 hover:border-orange-300 hover:text-orange-500 transition-colors"
                     aria-label="Share"
                   >
-                    🔗
+                    <Share2 size={18} />
                   </button>
                 </div>
               </div>
@@ -672,8 +703,8 @@ export default function ProviderProfilePage() {
             >
               Book Now
             </button>
-            <button className="flex-1 sm:flex-none text-slate-600 font-semibold py-3 px-6 rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors">
-              💬 Message
+            <button className="flex-1 sm:flex-none text-slate-600 font-semibold py-3 px-6 rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors flex items-center justify-center gap-2">
+              <MessageCircle size={16} /> Message
             </button>
           </div>
         </div>
@@ -781,7 +812,7 @@ export default function ProviderProfilePage() {
                           {reviewDist.map((d) => (
                             <div key={d.r} className="flex items-center gap-3">
                               <span className="text-xs text-slate-500 w-4">{d.r}</span>
-                              <span style={{ color: "#F97316" }} className="text-xs">★</span>
+                              <Star size={11} style={{ color: "#F97316", fill: "#F97316" }} />
                               <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
                                 <div style={{ width: `${d.pct}%`, backgroundColor: "#F97316" }} className="h-full rounded-full" />
                               </div>
@@ -838,7 +869,7 @@ export default function ProviderProfilePage() {
                     </div>
                     <div>
                       <p style={{ color: "#F97316" }} className="text-xs font-bold uppercase tracking-widest">
-                        {total >= 90 ? "Excellent 🏆" : total >= 75 ? "Good 👍" : "Building ⬆️"}
+                        {total >= 90 ? "Excellent" : total >= 75 ? "Good Standing" : "Building Trust"}
                       </p>
                       <p className="text-white text-base mt-1 leading-relaxed">
                         This score is calculated from real job history, customer feedback, and platform activity.
@@ -860,8 +891,8 @@ export default function ProviderProfilePage() {
                     ))}
                   </div>
 
-                  <Link to="/about" style={{ color: "#F97316" }} className="text-sm font-semibold hover:underline">
-                    Learn how the Trust Score is calculated →
+                  <Link to="/about" className="flex items-center gap-1.5 text-sm font-semibold hover:opacity-80 transition-opacity w-fit" style={{ color: "#F97316" }}>
+                    Learn how the Trust Score is calculated <ArrowRight size={14} />
                   </Link>
                 </div>
               )}
@@ -882,11 +913,12 @@ export default function ProviderProfilePage() {
               >
                 Book Now
               </button>
-              <button className="text-slate-600 font-semibold py-3 rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors">
-                💬 Send Message
+              <button className="text-slate-600 font-semibold py-3 rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors flex items-center justify-center gap-2">
+                <MessageCircle size={16} /> Send Message
               </button>
               <div className="pt-2 border-t border-slate-100 flex items-center gap-2 text-xs text-slate-400">
-                <span>🔒</span> Your contact info is only shared after booking is confirmed
+                <Lock size={11} className="flex-shrink-0" />
+                Your contact info is only shared after booking is confirmed
               </div>
             </div>
 

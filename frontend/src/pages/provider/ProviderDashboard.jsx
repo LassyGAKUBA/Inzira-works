@@ -4,9 +4,13 @@
 
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useLang } from "../../i18n/LangContext";
 import { useAuth } from "../../context/AuthContext";
 import LanguageSwitcher from "../../components/shared/LanguageSwitcher";
+import {
+  LayoutDashboard, Calendar, Image as ImageIcon, Star, Shield, Settings,
+  ChevronRight, ChevronLeft, LogOut, Zap, TrendingUp, Heart, Menu,
+  Inbox, CheckCircle,
+} from "lucide-react";
 
 // Build initials from a full name, e.g. "Uwase Clarisse" → "UC"
 function initialsFromName(name = "") {
@@ -51,12 +55,12 @@ const BOOKINGS = [
 ];
 
 const PORTFOLIO = [
-  { id: 1, title: "Wedding Dress Collection", category: "Formal Wear", likes: 24, emoji: "👗" },
-  { id: 2, title: "School Uniforms Batch", category: "Uniforms", likes: 18, emoji: "👔" },
-  { id: 3, title: "Traditional Imishanana", category: "Traditional", likes: 31, emoji: "🪡" },
-  { id: 4, title: "Office Suit Series", category: "Formal Wear", likes: 15, emoji: "🧥" },
-  { id: 5, title: "Children's Clothing Set", category: "Kids Wear", likes: 22, emoji: "🧒" },
-  { id: 6, title: "Casual Dress Line", category: "Casual", likes: 19, emoji: "👘" },
+  { id: 1, title: "Wedding Dress Collection", category: "Formal Wear",  likes: 24 },
+  { id: 2, title: "School Uniforms Batch",    category: "Uniforms",     likes: 18 },
+  { id: 3, title: "Traditional Imishanana",   category: "Traditional",  likes: 31 },
+  { id: 4, title: "Office Suit Series",        category: "Formal Wear",  likes: 15 },
+  { id: 5, title: "Children's Clothing Set",  category: "Kids Wear",    likes: 22 },
+  { id: 6, title: "Casual Dress Line",         category: "Casual",       likes: 19 },
 ];
 
 const REVIEWS = [
@@ -88,8 +92,15 @@ function Avatar({ initials, color, size = 40 }) {
 function StarRating({ rating }) {
   return (
     <span className="flex gap-0.5">
-      {[1,2,3,4,5].map((s) => (
-        <span key={s} style={{ color: s <= rating ? "#F97316" : "#CBD5E1" }} className="text-sm">★</span>
+      {[1, 2, 3, 4, 5].map((s) => (
+        <Star
+          key={s}
+          size={13}
+          style={{
+            color: s <= rating ? "#F97316" : "#CBD5E1",
+            fill:  s <= rating ? "#F97316" : "none",
+          }}
+        />
       ))}
     </span>
   );
@@ -131,12 +142,12 @@ function StatCard({ icon, label, value, sub, color = "#F97316" }) {
 // NAV ITEMS
 // ─────────────────────────────────────────────────────────────────────────────
 const NAV_ITEMS = [
-  { id: "overview",    icon: "📊", label: "Overview" },
-  { id: "bookings",    icon: "📅", label: "Bookings" },
-  { id: "portfolio",   icon: "🖼️",  label: "Portfolio" },
-  { id: "reviews",     icon: "⭐", label: "Reviews" },
-  { id: "trust",       icon: "✦",  label: "Trust Score" },
-  { id: "settings",    icon: "⚙️",  label: "Settings" },
+  { id: "overview",  Icon: LayoutDashboard, label: "Overview"    },
+  { id: "bookings",  Icon: Calendar,        label: "Bookings"    },
+  { id: "portfolio", Icon: ImageIcon,       label: "Portfolio"   },
+  { id: "reviews",   Icon: Star,            label: "Reviews"     },
+  { id: "trust",     Icon: Shield,          label: "Trust Score" },
+  { id: "settings",  Icon: Settings,        label: "Settings"    },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -192,7 +203,7 @@ function Sidebar({ active, setActive, collapsed, setCollapsed }) {
               }}
               title={collapsed ? item.label : undefined}
             >
-              <span className="text-base flex-shrink-0">{item.icon}</span>
+              <item.Icon size={18} className="flex-shrink-0" />
               {!collapsed && (
                 <span className="text-sm font-medium whitespace-nowrap">{item.label}</span>
               )}
@@ -208,7 +219,7 @@ function Sidebar({ active, setActive, collapsed, setCollapsed }) {
           className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-500 hover:text-slate-300 hover:bg-slate-700 transition-colors w-full"
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
-          <span className="text-base">{collapsed ? "→" : "←"}</span>
+          {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
           {!collapsed && <span className="text-xs font-medium">Collapse</span>}
         </button>
         <Link
@@ -216,7 +227,7 @@ function Sidebar({ active, setActive, collapsed, setCollapsed }) {
           className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-500 hover:text-red-400 hover:bg-slate-700 transition-colors"
           title={collapsed ? "Log out" : undefined}
         >
-          <span className="text-base">🚪</span>
+          <LogOut size={18} />
           {!collapsed && <span className="text-sm font-medium">Log out</span>}
         </Link>
       </div>
@@ -239,7 +250,7 @@ function OverviewSection() {
       >
         <div className="flex flex-col gap-1">
           <p style={{ color: "#F97316" }} className="text-xs font-bold uppercase tracking-widest">Good morning</p>
-          <h2 className="text-white text-xl font-black">Welcome back, {firstName(PROVIDER.name)}! 👋</h2>
+          <h2 className="text-white text-xl font-black">Welcome back, {firstName(PROVIDER.name)}!</h2>
           <p className="text-slate-400 text-sm">You have <span style={{ color: "#F97316" }} className="font-semibold">{pending} pending booking{pending !== 1 ? "s" : ""}</span> waiting for your response.</p>
         </div>
         <div
@@ -253,10 +264,10 @@ function OverviewSection() {
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon="📅" label="Total Bookings" value={BOOKINGS.length} sub="+2 this week" color="#F97316" />
-        <StatCard icon="✅" label="Completed Jobs" value={PROVIDER.completedJobs} sub="+5 this month" color="#10B981" />
-        <StatCard icon="⭐" label="Average Rating" value={PROVIDER.rating} color="#F59E0B" />
-        <StatCard icon="💰" label="This Month" value={PROVIDER.thisMonth} sub="↑ 12%" color="#8B5CF6" />
+        <StatCard icon={<Calendar size={18} />} label="Total Bookings" value={BOOKINGS.length} sub="+2 this week" color="#F97316" />
+        <StatCard icon={<Shield size={18} />} label="Completed Jobs" value={PROVIDER.completedJobs} sub="+5 this month" color="#10B981" />
+        <StatCard icon={<Star size={18} />} label="Average Rating" value={PROVIDER.rating} color="#F59E0B" />
+        <StatCard icon={<TrendingUp size={18} />} label="This Month" value={PROVIDER.thisMonth} sub="↑ 12%" color="#8B5CF6" />
       </div>
 
       {/* Recent bookings preview */}
@@ -285,7 +296,7 @@ function OverviewSection() {
       {/* Profile completeness alert */}
       {PROVIDER.profileComplete < 100 && (
         <div className="bg-orange-50 border border-orange-200 rounded-2xl p-5 flex items-start gap-4">
-          <span className="text-xl flex-shrink-0">⚡</span>
+          <Zap size={18} className="flex-shrink-0 text-orange-500" />
           <div className="flex-1">
             <p className="font-semibold text-orange-800 text-sm">Complete your profile to boost your Trust Score</p>
             <p className="text-orange-600 text-xs mt-1">Your profile is {PROVIDER.profileComplete}% complete. Add your bio and more portfolio items to reach 100%.</p>
@@ -351,7 +362,7 @@ function BookingsSection() {
                 </div>
                 <div className="flex items-center gap-4 mt-3 flex-wrap">
                   <span className="text-xs text-slate-500 flex items-center gap-1">
-                    📅 {b.date} · {b.time}
+                    <Calendar size={11} /> {b.date} · {b.time}
                   </span>
                   <span className="text-xs font-semibold text-slate-700">{b.amount}</span>
                 </div>
@@ -383,7 +394,7 @@ function BookingsSection() {
 
         {filtered.length === 0 && (
           <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center">
-            <p className="text-3xl mb-3">📭</p>
+            <Inbox size={28} className="text-slate-300 mx-auto mb-3" />
             <p className="font-semibold text-slate-700">No {filter} bookings</p>
             <p className="text-sm text-slate-400 mt-1">They'll appear here when customers book you.</p>
           </div>
@@ -435,7 +446,7 @@ function PortfolioSection() {
           </div>
           {/* Upload area */}
           <div className="border-2 border-dashed border-orange-300 rounded-xl p-8 text-center bg-white">
-            <p className="text-2xl mb-2">📷</p>
+            <ImageIcon size={28} className="text-orange-300 mx-auto mb-2" />
             <p className="text-sm font-medium text-slate-600">Click to upload photos</p>
             <p className="text-xs text-slate-400 mt-1">JPG, PNG up to 5MB each · Max 5 photos</p>
           </div>
@@ -452,16 +463,18 @@ function PortfolioSection() {
           <div key={item.id} className="bg-white rounded-2xl border border-slate-100 overflow-hidden group hover:shadow-md transition-shadow">
             {/* Placeholder image area */}
             <div
-              className="h-40 flex items-center justify-center text-5xl"
+              className="h-40 flex items-center justify-center"
               style={{ backgroundColor: "#F8FAFC" }}
             >
-              {item.emoji}
+              <ImageIcon size={32} className="text-slate-300" />
             </div>
             <div className="p-3">
               <p className="text-sm font-semibold text-slate-800 leading-tight">{item.title}</p>
               <div className="flex items-center justify-between mt-1.5">
                 <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{item.category}</span>
-                <span className="text-xs text-slate-400 flex items-center gap-1">❤️ {item.likes}</span>
+                <span className="text-xs text-slate-400 flex items-center gap-1">
+                  <Heart size={11} style={{ color: "#F97316", fill: "#F97316" }} /> {item.likes}
+                </span>
               </div>
             </div>
           </div>
@@ -497,7 +510,7 @@ function ReviewsSection() {
           {dist.map((d) => (
             <div key={d.r} className="flex items-center gap-3">
               <span className="text-xs text-slate-500 w-4">{d.r}</span>
-              <span style={{ color: "#F97316" }} className="text-xs">★</span>
+              <Star size={11} style={{ color: "#F97316", fill: "#F97316" }} />
               <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
                 <div style={{ width: `${d.pct}%`, backgroundColor: "#F97316" }} className="h-full rounded-full" />
               </div>
@@ -571,7 +584,7 @@ function TrustScoreSection() {
           <div>
             <p style={{ color: "#F97316" }} className="text-xs font-bold uppercase tracking-widest">Current Score</p>
             <p className="text-white text-2xl font-black mt-1">
-              {total >= 90 ? "Excellent 🏆" : total >= 75 ? "Good 👍" : "Building ⬆️"}
+              {total >= 90 ? "Excellent" : total >= 75 ? "Good" : "Building"}
             </p>
             <p className="text-slate-400 text-sm mt-1">
               You're in the top 15% of providers on Inzira Works.
@@ -579,10 +592,10 @@ function TrustScoreSection() {
           </div>
           <div className="flex gap-2">
             <div style={{ backgroundColor: "#10B98120", border: "1px solid #10B98140" }} className="px-3 py-1.5 rounded-lg text-xs font-semibold text-green-400 flex items-center gap-1">
-              ✓ Verified
+              <CheckCircle size={11} /> Verified
             </div>
             <div style={{ backgroundColor: "#F9731620", border: "1px solid #F9731640" }} className="px-3 py-1.5 rounded-lg text-xs font-semibold text-orange-400 flex items-center gap-1">
-              ★ Top Rated
+              <Star size={11} style={{ fill: "#FB923C" }} /> Top Rated
             </div>
           </div>
         </div>
@@ -772,7 +785,7 @@ function Topbar({ active, mobileMenuOpen, setMobileMenuOpen }) {
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           className="lg:hidden p-1.5 rounded-lg text-slate-500 hover:bg-slate-100"
         >
-          ☰
+          <Menu size={20} />
         </button>
         <h1 style={{ color: "#1E293B" }} className="font-bold text-base">{label}</h1>
       </div>
@@ -800,7 +813,7 @@ function MobileNav({ active, setActive }) {
             className="flex-1 flex flex-col items-center gap-0.5 py-2 transition-colors"
             style={{ color: isActive ? "#F97316" : "#94A3B8" }}
           >
-            <span className="text-lg">{item.icon}</span>
+            <item.Icon size={20} />
             <span className="text-xs font-medium">{item.label}</span>
           </button>
         );

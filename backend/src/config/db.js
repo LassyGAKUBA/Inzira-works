@@ -8,7 +8,7 @@ const { Pool } = pg;
  * Uses DATABASE_URL if provided, otherwise falls back to discrete PG* vars.
  */
 const pool = env.databaseUrl
-  ? new Pool({ connectionString: env.databaseUrl })
+  ? new Pool({ connectionString: env.databaseUrl, ssl: { rejectUnauthorized: false } })
   : new Pool({
       host: env.pg.host,
       port: env.pg.port,

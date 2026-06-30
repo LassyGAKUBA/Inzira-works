@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useLang } from "../../i18n/LangContext";
 import LanguageSwitcher from "../../components/shared/LanguageSwitcher";
+import { MapPin } from "lucide-react";
 
 // ── Reusable Input ────────────────────────────────────────────────────────────
 function FormInput({ label, type = "text", value, onChange, placeholder, error, hint }) {
@@ -192,7 +193,7 @@ export default function SignupPage() {
           </div>
         </div>
 
-        <p className="text-slate-600 text-xs relative z-10">🇷🇼 Kigali, Rwanda · Free to join</p>
+        <p className="text-slate-600 text-xs relative z-10 flex items-center gap-1"><MapPin size={11} /> Kigali, Rwanda · Free to join</p>
       </div>
 
       {/* ── Right Panel (form) ── */}

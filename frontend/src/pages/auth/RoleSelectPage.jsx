@@ -6,11 +6,12 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useLang } from "../../i18n/LangContext";
 import { useAuth } from "../../context/AuthContext";
 import LanguageSwitcher from "../../components/shared/LanguageSwitcher";
+import { Briefcase, Users, Check } from "lucide-react";
 
 const ROLES = [
   {
     id: "provider",
-    icon: "💼",
+    Icon: Briefcase,
     title: "Service Provider",
     titleRw: "Utoa Serivisi",
     titleSw: "Mtoa Huduma",
@@ -44,7 +45,7 @@ const ROLES = [
   },
   {
     id: "customer",
-    icon: "🔍",
+    Icon: Users,
     title: "Customer",
     titleRw: "Umukiriya",
     titleSw: "Mteja",
@@ -145,7 +146,7 @@ export default function RoleSelectPage() {
                     border: step.active ? "2px solid #F97316" : "none",
                   }}
                 >
-                  {step.done ? "✓" : step.n}
+                  {step.done ? <Check size={14} /> : step.n}
                 </div>
                 <span
                   className="text-xs font-medium hidden sm:block"
@@ -199,20 +200,20 @@ export default function RoleSelectPage() {
                   {/* Selected checkmark */}
                   {isSelected && (
                     <div
-                      className="absolute top-4 right-4 w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold"
+                      className="absolute top-4 right-4 w-6 h-6 rounded-full flex items-center justify-center text-white"
                       style={{ backgroundColor: role.color }}
                     >
-                      ✓
+                      <Check size={13} />
                     </div>
                   )}
 
                   {/* Icon + title */}
                   <div className="flex items-center gap-3">
                     <div
-                      className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl"
-                      style={{ backgroundColor: role.bgLight }}
+                      className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                      style={{ backgroundColor: role.bgLight, color: role.color }}
                     >
-                      {role.icon}
+                      <role.Icon size={22} />
                     </div>
                     <div>
                       <p style={{ color: "#1E293B" }} className="font-bold text-base">{getTitle(role)}</p>
@@ -232,7 +233,7 @@ export default function RoleSelectPage() {
                   <div className="flex flex-col gap-2">
                     {getPerks(role).map((perk) => (
                       <div key={perk} className="flex items-start gap-2">
-                        <span style={{ color: role.color }} className="text-xs mt-0.5 flex-shrink-0">✓</span>
+                        <Check size={12} style={{ color: role.color }} className="mt-0.5 flex-shrink-0" />
                         <span className="text-xs text-slate-600 leading-relaxed">{perk}</span>
                       </div>
                     ))}

@@ -7,6 +7,9 @@
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 -- ── Drop (reverse dependency order) ─────────────────────────
+DROP TRIGGER  IF EXISTS on_auth_user_created ON auth.users;
+DROP FUNCTION IF EXISTS public.handle_new_user() CASCADE;
+
 DROP TABLE IF EXISTS verification_requests CASCADE;
 DROP TABLE IF EXISTS saved_providers       CASCADE;
 DROP TABLE IF EXISTS reviews               CASCADE;
@@ -45,11 +48,10 @@ $$ LANGUAGE plpgsql;
 --  USERS  (all roles live here)
 -- ============================================================
 CREATE TABLE users (
-  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id            UUID PRIMARY KEY,
   full_name     VARCHAR(120) NOT NULL,
   email         VARCHAR(160) UNIQUE NOT NULL,
-  phone         VARCHAR(20)  NOT NULL,
-  password_hash VARCHAR(255) NOT NULL,
+  phone         VARCHAR(20)  NOT NULL DEFAULT '',
   role          user_role    NOT NULL DEFAULT 'customer',
   district      VARCHAR(60),
   avatar_url    TEXT,
@@ -220,3 +222,216 @@ CREATE TABLE verification_requests (
 );
 
 CREATE INDEX idx_verif_status ON verification_requests(status);
+
+-- ============================================================
+--  SUPABASE AUTH → PUBLIC.USERS SYNC TRIGGER
+--  Fires when a new user signs up via Supabase Auth and
+--  automatically creates the matching public.users row.
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.users (id, full_name, email, phone, role)
+  VALUES (
+    NEW.id,
+    COALESCE(NEW.raw_user_meta_data->>'full_name', 'User'),
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data->>'phone', ''),
+    COALESCE((NEW.raw_user_meta_data->>'role')::user_role, 'customer')
+  )
+  ON CONFLICT (id) DO NOTHING;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- ============================================================
+--  ROW LEVEL SECURITY
+-- ============================================================
+ALTER TABLE users                 ENABLE ROW LEVEL SECURITY;
+ALTER TABLE provider_profiles     ENABLE ROW LEVEL SECURITY;
+ALTER TABLE categories            ENABLE ROW LEVEL SECURITY;
+ALTER TABLE provider_categories   ENABLE ROW LEVEL SECURITY;
+ALTER TABLE provider_specialties  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE services              ENABLE ROW LEVEL SECURITY;
+ALTER TABLE portfolio_items       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bookings              ENABLE ROW LEVEL SECURITY;
+ALTER TABLE reviews               ENABLE ROW LEVEL SECURITY;
+ALTER TABLE saved_providers       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE verification_requests ENABLE ROW LEVEL SECURITY;
+
+-- Public read: anyone (including anonymous) can browse provider data
+CREATE POLICY "public_read_users"              ON users              FOR SELECT USING (true);
+CREATE POLICY "public_read_provider_profiles"  ON provider_profiles  FOR SELECT USING (true);
+CREATE POLICY "public_read_categories"         ON categories         FOR SELECT USING (true);
+CREATE POLICY "public_read_provider_cats"      ON provider_categories FOR SELECT USING (true);
+CREATE POLICY "public_read_specialties"        ON provider_specialties FOR SELECT USING (true);
+CREATE POLICY "public_read_services"           ON services           FOR SELECT USING (true);
+CREATE POLICY "public_read_portfolio"          ON portfolio_items    FOR SELECT USING (true);
+CREATE POLICY "public_read_reviews"            ON reviews            FOR SELECT USING (moderation_status = 'approved');
+
+-- Authenticated users can manage their own data
+CREATE POLICY "users_update_own"     ON users             FOR UPDATE USING (auth.uid() = id);
+CREATE POLICY "bookings_own"         ON bookings          FOR ALL    USING (auth.uid() = customer_id OR auth.uid() = provider_id);
+CREATE POLICY "saved_providers_own"  ON saved_providers   FOR ALL    USING (auth.uid() = customer_id);
+CREATE POLICY "reviews_insert_own"   ON reviews           FOR INSERT WITH CHECK (auth.uid() = customer_id);
+CREATE POLICY "provider_profile_own" ON provider_profiles FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "provider_update_own"  ON provider_profiles FOR UPDATE USING (auth.uid() = user_id);
+
+-- ============================================================
+--  RPC FUNCTIONS  (called by the frontend via supabase.rpc())
+-- ============================================================
+
+-- Returns all active providers for the directory page
+CREATE OR REPLACE FUNCTION get_providers()
+RETURNS TABLE(
+  provider_id        UUID,
+  user_id            UUID,
+  full_name          VARCHAR,
+  avatar_url         TEXT,
+  headline           VARCHAR,
+  district           VARCHAR,
+  trust_score        NUMERIC,
+  verification_status verify_status,
+  avg_rating         NUMERIC,
+  review_count       BIGINT,
+  specialties        TEXT[]
+) SECURITY DEFINER AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+    pp.id                                               AS provider_id,
+    u.id                                                AS user_id,
+    u.full_name,
+    u.avatar_url,
+    pp.headline,
+    pp.district,
+    pp.trust_score,
+    pp.verification_status,
+    COALESCE(r.avg_rating, 0)                           AS avg_rating,
+    COALESCE(r.review_count, 0)                         AS review_count,
+    COALESCE(s.specialties, ARRAY[]::TEXT[])            AS specialties
+  FROM provider_profiles pp
+  JOIN users u ON u.id = pp.user_id
+  LEFT JOIN (
+    SELECT provider_id,
+           ROUND(AVG(rating)::NUMERIC, 1) AS avg_rating,
+           COUNT(*)                        AS review_count
+    FROM reviews
+    WHERE moderation_status = 'approved'
+    GROUP BY provider_id
+  ) r ON r.provider_id = u.id
+  LEFT JOIN (
+    SELECT provider_id,
+           ARRAY_AGG(label) AS specialties
+    FROM provider_specialties
+    GROUP BY provider_id
+  ) s ON s.provider_id = pp.id
+  WHERE u.is_active = TRUE
+  ORDER BY pp.trust_score DESC;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Returns full detail for a single provider by provider_profiles.id
+CREATE OR REPLACE FUNCTION get_provider_detail(p_id UUID)
+RETURNS JSONB SECURITY DEFINER AS $$
+DECLARE
+  v_provider     RECORD;
+  v_specialties  TEXT[];
+  v_services     JSONB;
+  v_portfolio    JSONB;
+  v_reviews      JSONB;
+BEGIN
+  SELECT
+    pp.id                          AS provider_id,
+    u.id                           AS user_id,
+    u.full_name,
+    u.avatar_url,
+    u.created_at                   AS member_since,
+    pp.headline,
+    pp.bio,
+    pp.district,
+    pp.cover_image_url,
+    pp.avg_response_minutes,
+    pp.response_rate,
+    pp.repeat_rate,
+    pp.profile_completeness,
+    pp.trust_score,
+    pp.verification_status,
+    COALESCE(r.avg_rating, 0)      AS avg_rating,
+    COALESCE(r.review_count, 0)    AS review_count,
+    COALESCE(b.completed_jobs, 0)  AS completed_jobs
+  INTO v_provider
+  FROM provider_profiles pp
+  JOIN users u ON u.id = pp.user_id
+  LEFT JOIN (
+    SELECT provider_id,
+           ROUND(AVG(rating)::NUMERIC, 1) AS avg_rating,
+           COUNT(*) AS review_count
+    FROM reviews WHERE moderation_status = 'approved'
+    GROUP BY provider_id
+  ) r ON r.provider_id = u.id
+  LEFT JOIN (
+    SELECT provider_id, COUNT(*) AS completed_jobs
+    FROM bookings WHERE status = 'completed'
+    GROUP BY provider_id
+  ) b ON b.provider_id = u.id
+  WHERE pp.id = p_id;
+
+  IF NOT FOUND THEN RETURN NULL; END IF;
+
+  SELECT ARRAY_AGG(label ORDER BY label) INTO v_specialties
+  FROM provider_specialties WHERE provider_id = p_id;
+
+  SELECT COALESCE(JSON_AGG(
+    JSON_BUILD_OBJECT('id', id, 'title', title, 'description', description, 'price', price, 'price_type', price_type)
+    ORDER BY created_at
+  ), '[]'::JSON) INTO v_services
+  FROM services WHERE provider_id = p_id AND is_active = TRUE;
+
+  SELECT COALESCE(JSON_AGG(
+    JSON_BUILD_OBJECT('id', id, 'image_url', image_url, 'caption', caption)
+    ORDER BY created_at
+  ), '[]'::JSON) INTO v_portfolio
+  FROM portfolio_items WHERE provider_id = p_id;
+
+  SELECT COALESCE(JSON_AGG(
+    JSON_BUILD_OBJECT(
+      'id', rv.id, 'rating', rv.rating, 'comment', rv.comment,
+      'created_at', rv.created_at, 'customer_name', cu.full_name
+    )
+    ORDER BY rv.created_at DESC
+  ), '[]'::JSON) INTO v_reviews
+  FROM reviews rv
+  JOIN users cu ON cu.id = rv.customer_id
+  WHERE rv.provider_id = v_provider.user_id AND rv.moderation_status = 'approved';
+
+  RETURN JSON_BUILD_OBJECT(
+    'provider_id',        v_provider.provider_id,
+    'user_id',            v_provider.user_id,
+    'full_name',          v_provider.full_name,
+    'avatar_url',         v_provider.avatar_url,
+    'member_since',       v_provider.member_since,
+    'headline',           v_provider.headline,
+    'bio',                v_provider.bio,
+    'district',           v_provider.district,
+    'cover_image_url',    v_provider.cover_image_url,
+    'avg_response_minutes', v_provider.avg_response_minutes,
+    'response_rate',      v_provider.response_rate,
+    'repeat_rate',        v_provider.repeat_rate,
+    'profile_completeness', v_provider.profile_completeness,
+    'trust_score',        v_provider.trust_score,
+    'verification_status', v_provider.verification_status,
+    'avg_rating',         v_provider.avg_rating,
+    'review_count',       v_provider.review_count,
+    'completed_jobs',     v_provider.completed_jobs,
+    'specialties',        COALESCE(v_specialties, ARRAY[]::TEXT[]),
+    'services',           v_services,
+    'portfolio',          v_portfolio,
+    'reviews',            v_reviews
+  );
+END;
+$$ LANGUAGE plpgsql;

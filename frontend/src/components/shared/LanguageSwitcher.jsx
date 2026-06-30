@@ -9,6 +9,7 @@
 
 import { useState } from "react";
 import { useLang, LANG_OPTIONS } from "../../i18n/LangContext";
+import { ChevronDown, Check } from "lucide-react";
 
 export default function LanguageSwitcher({ compact = false }) {
   const { lang, setLang } = useLang();
@@ -25,19 +26,12 @@ export default function LanguageSwitcher({ compact = false }) {
         aria-label="Switch language"
         className="flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-orange-500 transition-colors px-2 py-1.5 rounded-lg hover:bg-orange-50"
       >
-        <span aria-hidden="true">{current.flag}</span>
         <span>{compact ? current.short : current.label}</span>
-        <span
+        <ChevronDown
+          size={14}
           aria-hidden="true"
-          style={{
-            display: "inline-block",
-            transition: "transform 0.2s",
-            transform: open ? "rotate(180deg)" : "rotate(0deg)",
-            fontSize: "0.6rem",
-          }}
-        >
-          ▾
-        </span>
+          style={{ transition: "transform 0.2s", transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
+        />
       </button>
 
       {/* Backdrop — closes dropdown when clicking outside */}
@@ -68,10 +62,9 @@ export default function LanguageSwitcher({ compact = false }) {
                       : "text-slate-600 hover:bg-slate-50"
                     }`}
                 >
-                  <span className="text-base" aria-hidden="true">{opt.flag}</span>
                   <span>{opt.label}</span>
                   {isActive && (
-                    <span className="ml-auto text-orange-500" aria-hidden="true">✓</span>
+                    <Check size={14} className="ml-auto text-orange-500" aria-hidden="true" />
                   )}
                 </button>
               </li>
