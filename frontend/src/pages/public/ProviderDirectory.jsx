@@ -1,4 +1,4 @@
-// src/pages/public/ProviderDirectory.jsx
+﻿// src/pages/public/ProviderDirectory.jsx
 // Public Provider Directory — browse & search page (no login required)
 // Includes: Navbar, hero search header, filters sidebar, provider grid, pagination, footer
 // Fetches live providers from the backend (GET /api/providers).
@@ -6,11 +6,12 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useLang } from "../../i18n/LangContext";
-import LanguageSwitcher from "../../components/shared/LanguageSwitcher";
+import Navbar from "../../components/shared/Navbar";
+import PageTransition from "../../components/shared/PageTransition";
 import { supabase } from "../../lib/supabase";
 import {
   MapPin, Star, CheckCircle, ArrowRight,
-  Menu, X, SlidersHorizontal, Search, AlertTriangle,
+  X, SlidersHorizontal, Search, AlertTriangle,
   Scissors, Sparkles, Package, ChefHat,
 } from "lucide-react";
 
@@ -207,69 +208,6 @@ function SkeletonCard() {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// NAVBAR (shared, simplified for directory page)
-// ─────────────────────────────────────────────────────────────────────────────
-function Navbar() {
-  const { t } = useLang();
-  const [scrolled, setScrolled] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  useEffect(() => {
-    const handler = () => setScrolled(window.scrollY > 10);
-    window.addEventListener("scroll", handler);
-    return () => window.removeEventListener("scroll", handler);
-  }, []);
-
-  return (
-    <nav className={`sticky top-0 z-50 transition-all duration-200 bg-white ${scrolled ? "shadow-sm" : "border-b border-slate-100"}`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2">
-          <div style={{ backgroundColor: "#F97316" }} className="w-8 h-8 rounded-lg flex items-center justify-center">
-            <span className="text-white font-black text-sm">IW</span>
-          </div>
-          <span style={{ color: "#1E293B" }} className="font-bold text-lg tracking-tight">Inzira Works</span>
-        </Link>
-
-        <div className="hidden md:flex items-center gap-8">
-          <Link to="/providers" style={{ color: "#F97316" }} className="text-sm font-semibold">{t("nav_browse")}</Link>
-          <a href="#" className="text-sm font-medium text-slate-600 hover:text-orange-500 transition-colors">{t("nav_how")}</a>
-          <a href="#" className="text-sm font-medium text-slate-600 hover:text-orange-500 transition-colors">{t("nav_about")}</a>
-          <a href="#" className="text-sm font-medium text-slate-600 hover:text-orange-500 transition-colors">{t("nav_contact")}</a>
-        </div>
-
-        <div className="hidden md:flex items-center gap-3">
-          <LanguageSwitcher compact />
-          <div className="w-px h-5 bg-slate-200" />
-          <Link to="/login" style={{ color: "#1E293B" }} className="text-sm font-medium hover:text-orange-500 transition-colors">{t("nav_login")}</Link>
-          <Link to="/signup" style={{ backgroundColor: "#F97316" }} className="text-sm font-semibold text-white px-4 py-2 rounded-xl hover:opacity-90 transition-opacity">{t("nav_getstarted")}</Link>
-        </div>
-
-        <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors" aria-label="Toggle menu">
-          {menuOpen ? <X size={20} /> : <Menu size={20} />}
-        </button>
-      </div>
-
-      {menuOpen && (
-        <div className="md:hidden bg-white border-t border-slate-100 px-4 py-4 flex flex-col gap-4">
-          <Link to="/providers" style={{ color: "#F97316" }} className="text-sm font-semibold">{t("nav_browse")}</Link>
-          <a href="#" className="text-sm font-medium text-slate-700">{t("nav_how")}</a>
-          <a href="#" className="text-sm font-medium text-slate-700">{t("nav_about")}</a>
-          <a href="#" className="text-sm font-medium text-slate-700">{t("nav_contact")}</a>
-          <LanguageSwitcher />
-          <div className="flex gap-3 pt-1">
-            <Link to="/login" className="text-sm font-medium text-slate-700 border border-slate-200 px-4 py-2 rounded-xl flex-1 text-center">{t("nav_login")}</Link>
-            <Link to="/signup" style={{ backgroundColor: "#F97316" }} className="text-sm font-semibold text-white px-4 py-2 rounded-xl flex-1 text-center">{t("nav_getstarted")}</Link>
-          </div>
-        </div>
-      )}
-    </nav>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// FOOTER (compact)
-// ─────────────────────────────────────────────────────────────────────────────
 function Footer() {
   const { t } = useLang();
   return (
@@ -517,6 +455,7 @@ export default function ProviderDirectory() {
     + (filters.verifiedOnly ? 1 : 0);
 
   return (
+    <PageTransition>
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#F8FAFC" }}>
       <Navbar />
 
@@ -734,5 +673,6 @@ export default function ProviderDirectory() {
 
       <Footer />
     </div>
+    </PageTransition>
   );
 }
