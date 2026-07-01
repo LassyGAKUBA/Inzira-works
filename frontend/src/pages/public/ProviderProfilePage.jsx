@@ -21,7 +21,7 @@ import {
 // The backend returns snake_case with numbers as strings. These helpers turn
 // the GET /api/providers/:id response into the shape this page renders.
 // ─────────────────────────────────────────────────────────────────────────────
-const AVATAR_PALETTE = ["#F97316", "#8B5CF6", "#10B981", "#3B82F6", "#EC4899", "#A855F7", "#06B6D4", "#F59E0B"];
+const AVATAR_PALETTE = ["#0E5C46", "#8B5CF6", "#10B981", "#3B82F6", "#EC4899", "#A855F7", "#06B6D4", "#F59E0B"];
 
 function initialsFrom(name = "") {
   return name.trim().split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
@@ -131,7 +131,7 @@ function computeTrustFactors(p) {
   const pct = (v, cap = 100) => Math.min(Math.max(v, 0) / cap, 1);
   const verifiedPct = p.verified ? 1 : 0.4;
   return [
-    { label: "Customer Ratings",     max: 40, score: Math.round(pct(p.rating, 5) * 40), color: "#F97316" },
+    { label: "Customer Ratings",     max: 40, score: Math.round(pct(p.rating, 5) * 40), color: "#0E5C46" },
     { label: "Completed Jobs",       max: 25, score: Math.round(pct(p.completedJobs, 20) * 25), color: "#8B5CF6" },
     { label: "Profile Completeness", max: 15, score: Math.round(pct(p.profileCompleteness) * 15), color: "#10B981" },
     { label: "Response Rate",        max: 10, score: Math.round(pct(p.responseRate) * 10), color: "#3B82F6" },
@@ -159,8 +159,8 @@ function StarRating({ rating, size = "sm" }) {
           key={s}
           size={px}
           style={{
-            color: s <= Math.round(rating) ? "#F97316" : "#CBD5E1",
-            fill:  s <= Math.round(rating) ? "#F97316" : "none",
+            color: s <= Math.round(rating) ? "#0E5C46" : "#CBD5E1",
+            fill:  s <= Math.round(rating) ? "#0E5C46" : "none",
           }}
         />
       ))}
@@ -169,7 +169,7 @@ function StarRating({ rating, size = "sm" }) {
 }
 
 function TrustScoreBadge({ score, size = "md" }) {
-  const color = score >= 90 ? "#10B981" : score >= 75 ? "#F97316" : "#64748B";
+  const color = score >= 90 ? "#10B981" : score >= 75 ? "#0E5C46" : "#64748B";
   const px = size === "lg" ? "text-base px-3 py-1" : "text-xs px-2 py-0.5";
   return (
     <div style={{ border: `2px solid ${color}`, color }} className={`inline-flex items-center gap-1 rounded-full font-bold bg-white ${px}`}>
@@ -201,10 +201,10 @@ function PortfolioImage({ item }) {
 function Footer() {
   const { t } = useLang();
   return (
-    <footer style={{ backgroundColor: "#0F172A" }} className="py-10 mt-12">
+    <footer style={{ backgroundColor: "#0a3d2c" }} className="py-10 mt-12">
       <div className="px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-2">
-          <div style={{ backgroundColor: "#F97316" }} className="w-7 h-7 rounded-lg flex items-center justify-center">
+          <div style={{ backgroundColor: "#0E5C46" }} className="w-7 h-7 rounded-lg flex items-center justify-center">
             <span className="text-white font-black text-xs">IW</span>
           </div>
           <span className="text-white font-bold text-sm">Inzira Works</span>
@@ -270,13 +270,13 @@ function BookingModal({ provider, onClose }) {
               <CheckCircle size={30} style={{ color: "#10B981" }} />
             </div>
             <div>
-              <h3 style={{ color: "#1E293B" }} className="text-xl font-black">Booking request sent!</h3>
+              <h3 style={{ color: "#172420" }} className="text-xl font-black">Booking request sent!</h3>
               <p className="text-slate-500 text-sm mt-2 leading-relaxed">
                 {provider.name} will review your request and confirm within {provider.responseTime}.
                 You'll be notified once it's accepted.
               </p>
             </div>
-            <button onClick={onClose} style={{ backgroundColor: "#F97316" }} className="text-white font-semibold text-sm px-6 py-2.5 rounded-xl hover:opacity-90 transition-opacity">
+            <button onClick={onClose} style={{ backgroundColor: "#0E5C46" }} className="text-white font-semibold text-sm px-6 py-2.5 rounded-xl hover:opacity-90 transition-opacity">
               Done
             </button>
           </div>
@@ -302,7 +302,7 @@ function BookingModal({ provider, onClose }) {
                   value={form.service}
                   onChange={set("service")}
                   className={`w-full px-4 py-3 rounded-xl border text-sm text-slate-800 outline-none transition-all bg-white
-                    ${errors.service ? "border-red-400" : "border-slate-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100"}`}
+                    ${errors.service ? "border-red-400" : "border-slate-200 focus:border-green-400 focus:ring-2 focus:ring-orange-100"}`}
                 >
                   {provider.services.length === 0 && <option value="">No services listed</option>}
                   {provider.services.map((s) => (
@@ -321,7 +321,7 @@ function BookingModal({ provider, onClose }) {
                     onChange={set("date")}
                     min={new Date().toISOString().split("T")[0]}
                     className={`w-full px-3 py-3 rounded-xl border text-sm text-slate-800 outline-none transition-all bg-white
-                      ${errors.date ? "border-red-400" : "border-slate-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100"}`}
+                      ${errors.date ? "border-red-400" : "border-slate-200 focus:border-green-400 focus:ring-2 focus:ring-orange-100"}`}
                   />
                   {errors.date && <p className="text-xs text-red-500">{errors.date}</p>}
                 </div>
@@ -332,7 +332,7 @@ function BookingModal({ provider, onClose }) {
                     value={form.time}
                     onChange={set("time")}
                     className={`w-full px-3 py-3 rounded-xl border text-sm text-slate-800 outline-none transition-all bg-white
-                      ${errors.time ? "border-red-400" : "border-slate-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100"}`}
+                      ${errors.time ? "border-red-400" : "border-slate-200 focus:border-green-400 focus:ring-2 focus:ring-orange-100"}`}
                   />
                   {errors.time && <p className="text-xs text-red-500">{errors.time}</p>}
                 </div>
@@ -345,14 +345,14 @@ function BookingModal({ provider, onClose }) {
                   onChange={set("notes")}
                   rows={3}
                   placeholder="Describe what you need, sizes, preferred fabric, etc."
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm text-slate-800 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 resize-none bg-white"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm text-slate-800 outline-none focus:border-green-400 focus:ring-2 focus:ring-orange-100 resize-none bg-white"
                 />
               </div>
 
               {form.service && (
-                <div className="bg-orange-50 border border-orange-100 rounded-xl p-3 flex items-center justify-between">
-                  <span className="text-sm text-orange-700 font-medium">Estimated price</span>
-                  <span className="text-sm font-bold text-orange-700">
+                <div className="bg-green-50 border border-green-100 rounded-xl p-3 flex items-center justify-between">
+                  <span className="text-sm text-green-800 font-medium">Estimated price</span>
+                  <span className="text-sm font-bold text-green-800">
                     {provider.services.find((s) => s.name === form.service)?.price}
                   </span>
                 </div>
@@ -361,7 +361,7 @@ function BookingModal({ provider, onClose }) {
               <button
                 type="submit"
                 disabled={loading}
-                style={{ backgroundColor: loading ? "#FDA96B" : "#F97316" }}
+                style={{ backgroundColor: loading ? "#3d8a6e" : "#0E5C46" }}
                 className="text-white font-semibold py-3 rounded-xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
               >
                 {loading && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
@@ -405,7 +405,7 @@ function ShareModal({ provider, onClose }) {
           <input readOnly value={url} className="flex-1 px-2 text-xs text-slate-600 bg-transparent outline-none truncate" />
           <button
             onClick={handleCopy}
-            style={{ backgroundColor: copied ? "#10B981" : "#F97316" }}
+            style={{ backgroundColor: copied ? "#10B981" : "#0E5C46" }}
             className="text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
           >
             {copied ? "Copied!" : "Copy"}
@@ -421,7 +421,7 @@ function ShareModal({ provider, onClose }) {
 // ─────────────────────────────────────────────────────────────────────────────
 function PageShell({ children }) {
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#F8FAFC" }}>
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#ede9e0" }}>
       <Navbar />
       <div className="flex-1">{children}</div>
       <Footer />
@@ -433,7 +433,7 @@ function LoadingState() {
   return (
     <PageShell>
       <div className="px-4 sm:px-6 py-20 flex flex-col items-center gap-4">
-        <span className="w-10 h-10 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin" />
+        <span className="w-10 h-10 border-4 border-green-200 border-t-orange-500 rounded-full animate-spin" />
         <p className="text-slate-400 text-sm">Loading provider…</p>
       </div>
     </PageShell>
@@ -448,7 +448,7 @@ function NotFoundState() {
           <Search size={36} className="text-slate-300" />
           <p className="font-bold text-slate-700 text-lg">Provider not found</p>
           <p className="text-sm text-slate-400">This provider may have been removed or the link is incorrect.</p>
-          <Link to="/providers" style={{ backgroundColor: "#F97316" }} className="text-white text-sm font-semibold px-5 py-2 rounded-xl hover:opacity-90 transition-opacity mt-1">
+          <Link to="/providers" style={{ backgroundColor: "#0E5C46" }} className="text-white text-sm font-semibold px-5 py-2 rounded-xl hover:opacity-90 transition-opacity mt-1">
             Back to all providers
           </Link>
         </div>
@@ -522,15 +522,15 @@ export default function ProviderProfilePage() {
 
   return (
     <PageTransition>
-    <div className="min-h-screen" style={{ backgroundColor: "#F8FAFC" }}>
+    <div className="min-h-screen" style={{ backgroundColor: "#ede9e0" }}>
       <Navbar />
 
       {/* Breadcrumb */}
       <div className="px-4 sm:px-6 pt-4">
         <div className="flex items-center gap-2 text-xs text-slate-400">
-          <Link to="/" className="hover:text-orange-500">Home</Link>
+          <Link to="/" className="hover:text-green-700">Home</Link>
           <span>/</span>
-          <Link to="/providers" className="hover:text-orange-500">Providers</Link>
+          <Link to="/providers" className="hover:text-green-700">Providers</Link>
           <span>/</span>
           <span className="text-slate-600">{provider.name}</span>
         </div>
@@ -546,7 +546,7 @@ export default function ProviderProfilePage() {
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h1 style={{ color: "#1E293B" }} className="text-2xl font-black">{provider.name}</h1>
+                    <h1 style={{ color: "#172420" }} className="text-2xl font-black">{provider.name}</h1>
                     {provider.verified && (
                       <span className="text-emerald-600 text-sm flex items-center gap-1 font-medium">
                         <CheckCircle size={14} /> Verified
@@ -563,20 +563,20 @@ export default function ProviderProfilePage() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setSaved(!saved)}
-                    className="w-10 h-10 rounded-xl border border-slate-200 flex items-center justify-center transition-all hover:border-orange-300"
+                    className="w-10 h-10 rounded-xl border border-slate-200 flex items-center justify-center transition-all hover:border-green-300"
                     aria-label={saved ? "Unsave" : "Save"}
                   >
                     <Heart
                       size={18}
                       style={{
-                        color: saved ? "#F97316" : "#94A3B8",
-                        fill: saved ? "#F97316" : "none",
+                        color: saved ? "#0E5C46" : "#94A3B8",
+                        fill: saved ? "#0E5C46" : "none",
                       }}
                     />
                   </button>
                   <button
                     onClick={() => setShowShare(true)}
-                    className="w-10 h-10 rounded-xl border border-slate-200 flex items-center justify-center text-slate-400 hover:border-orange-300 hover:text-orange-500 transition-colors"
+                    className="w-10 h-10 rounded-xl border border-slate-200 flex items-center justify-center text-slate-400 hover:border-green-300 hover:text-green-700 transition-colors"
                     aria-label="Share"
                   >
                     <Share2 size={18} />
@@ -596,7 +596,7 @@ export default function ProviderProfilePage() {
                 ) : (
                   <span className="text-sm text-slate-400">New provider</span>
                 )}
-                <span className="text-sm font-medium px-2.5 py-1 rounded-full bg-orange-50 text-orange-600">{provider.badge}</span>
+                <span className="text-sm font-medium px-2.5 py-1 rounded-full bg-green-50 text-green-700">{provider.badge}</span>
               </div>
 
               {/* Quick stats */}
@@ -607,7 +607,7 @@ export default function ProviderProfilePage() {
                   { label: "Responds In", value: provider.responseTime },
                 ].map((stat) => (
                   <div key={stat.label} className="bg-slate-50 rounded-xl p-3 text-center">
-                    <p style={{ color: "#1E293B" }} className="font-black text-lg">{stat.value}</p>
+                    <p style={{ color: "#172420" }} className="font-black text-lg">{stat.value}</p>
                     <p className="text-xs text-slate-500">{stat.label}</p>
                   </div>
                 ))}
@@ -639,7 +639,7 @@ export default function ProviderProfilePage() {
                   onClick={() => setActiveTab(tab.id)}
                   className="px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all"
                   style={{
-                    backgroundColor: activeTab === tab.id ? "#F97316" : "transparent",
+                    backgroundColor: activeTab === tab.id ? "#0E5C46" : "transparent",
                     color: activeTab === tab.id ? "white" : "#64748B",
                   }}
                 >
@@ -652,7 +652,7 @@ export default function ProviderProfilePage() {
               {/* ABOUT */}
               {activeTab === "about" && (
                 <div className="flex flex-col gap-4">
-                  <h3 style={{ color: "#1E293B" }} className="font-bold text-lg">About {provider.name.split(" ")[0]}</h3>
+                  <h3 style={{ color: "#172420" }} className="font-bold text-lg">About {provider.name.split(" ")[0]}</h3>
                   <p className="text-slate-600 text-sm leading-relaxed">{provider.bio || "No bio provided yet."}</p>
 
                   <div className="grid sm:grid-cols-2 gap-4 pt-2">
@@ -671,7 +671,7 @@ export default function ProviderProfilePage() {
               {/* SERVICES */}
               {activeTab === "services" && (
                 <div className="flex flex-col gap-3">
-                  <h3 style={{ color: "#1E293B" }} className="font-bold text-lg mb-1">Services & Pricing</h3>
+                  <h3 style={{ color: "#172420" }} className="font-bold text-lg mb-1">Services & Pricing</h3>
                   {provider.services.length === 0 ? (
                     <p className="text-sm text-slate-400">No services listed yet.</p>
                   ) : (
@@ -681,7 +681,7 @@ export default function ProviderProfilePage() {
                           <p className="font-semibold text-slate-800 text-sm">{s.name}</p>
                           {s.description && <p className="text-xs text-slate-400 mt-0.5">{s.description}</p>}
                         </div>
-                        <p style={{ color: "#F97316" }} className="font-bold text-sm whitespace-nowrap">{s.price}</p>
+                        <p style={{ color: "#0E5C46" }} className="font-bold text-sm whitespace-nowrap">{s.price}</p>
                       </div>
                     ))
                   )}
@@ -692,7 +692,7 @@ export default function ProviderProfilePage() {
               {/* PORTFOLIO */}
               {activeTab === "portfolio" && (
                 <div className="flex flex-col gap-4">
-                  <h3 style={{ color: "#1E293B" }} className="font-bold text-lg">Portfolio</h3>
+                  <h3 style={{ color: "#172420" }} className="font-bold text-lg">Portfolio</h3>
                   {provider.portfolio.length === 0 ? (
                     <p className="text-sm text-slate-400">No portfolio items yet.</p>
                   ) : (
@@ -713,7 +713,7 @@ export default function ProviderProfilePage() {
               {/* REVIEWS */}
               {activeTab === "reviews" && (
                 <div className="flex flex-col gap-5">
-                  <h3 style={{ color: "#1E293B" }} className="font-bold text-lg">Customer Reviews</h3>
+                  <h3 style={{ color: "#172420" }} className="font-bold text-lg">Customer Reviews</h3>
 
                   {reviewList.length === 0 ? (
                     <p className="text-sm text-slate-400">No reviews yet — be the first to book and review.</p>
@@ -721,7 +721,7 @@ export default function ProviderProfilePage() {
                     <>
                       <div className="grid sm:grid-cols-2 gap-6 pb-4 border-b border-slate-100">
                         <div className="flex flex-col items-center justify-center gap-2 text-center">
-                          <p style={{ color: "#1E293B" }} className="text-5xl font-black">{provider.rating.toFixed(1)}</p>
+                          <p style={{ color: "#172420" }} className="text-5xl font-black">{provider.rating.toFixed(1)}</p>
                           <StarRating rating={provider.rating} size="md" />
                           <p className="text-slate-500 text-sm">Based on {provider.reviews} reviews</p>
                         </div>
@@ -729,9 +729,9 @@ export default function ProviderProfilePage() {
                           {reviewDist.map((d) => (
                             <div key={d.r} className="flex items-center gap-3">
                               <span className="text-xs text-slate-500 w-4">{d.r}</span>
-                              <Star size={11} style={{ color: "#F97316", fill: "#F97316" }} />
+                              <Star size={11} style={{ color: "#0E5C46", fill: "#0E5C46" }} />
                               <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
-                                <div style={{ width: `${d.pct}%`, backgroundColor: "#F97316" }} className="h-full rounded-full" />
+                                <div style={{ width: `${d.pct}%`, backgroundColor: "#0E5C46" }} className="h-full rounded-full" />
                               </div>
                               <span className="text-xs text-slate-400 w-4">{d.count}</span>
                             </div>
@@ -764,28 +764,28 @@ export default function ProviderProfilePage() {
               {/* TRUST SCORE */}
               {activeTab === "trust" && (
                 <div className="flex flex-col gap-5">
-                  <h3 style={{ color: "#1E293B" }} className="font-bold text-lg">Trust Score Breakdown</h3>
+                  <h3 style={{ color: "#172420" }} className="font-bold text-lg">Trust Score Breakdown</h3>
 
                   <div
                     className="rounded-2xl p-6 flex flex-col sm:flex-row items-center gap-6"
-                    style={{ background: "linear-gradient(135deg, #1E293B 0%, #0F172A 100%)" }}
+                    style={{ background: "linear-gradient(135deg, #1E293B 0%, #0a3d2c 100%)" }}
                   >
                     <div className="relative flex-shrink-0">
                       <svg width="100" height="100" viewBox="0 0 120 120">
                         <circle cx="60" cy="60" r="50" fill="none" stroke="#334155" strokeWidth="10" />
                         <circle
-                          cx="60" cy="60" r="50" fill="none" stroke="#F97316" strokeWidth="10"
+                          cx="60" cy="60" r="50" fill="none" stroke="#0E5C46" strokeWidth="10"
                           strokeDasharray={`${(total / 100) * 314} 314`}
                           strokeLinecap="round" transform="rotate(-90 60 60)"
                         />
                       </svg>
                       <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span style={{ color: "#F97316" }} className="text-2xl font-black">{total}</span>
+                        <span style={{ color: "#0E5C46" }} className="text-2xl font-black">{total}</span>
                         <span className="text-slate-400 text-xs">/ 100</span>
                       </div>
                     </div>
                     <div>
-                      <p style={{ color: "#F97316" }} className="text-xs font-bold uppercase tracking-widest">
+                      <p style={{ color: "#0E5C46" }} className="text-xs font-bold uppercase tracking-widest">
                         {total >= 90 ? "Excellent" : total >= 75 ? "Good Standing" : "Building Trust"}
                       </p>
                       <p className="text-white text-base mt-1 leading-relaxed">
@@ -808,7 +808,7 @@ export default function ProviderProfilePage() {
                     ))}
                   </div>
 
-                  <Link to="/about" className="flex items-center gap-1.5 text-sm font-semibold hover:opacity-80 transition-opacity w-fit" style={{ color: "#F97316" }}>
+                  <Link to="/about" className="flex items-center gap-1.5 text-sm font-semibold hover:opacity-80 transition-opacity w-fit" style={{ color: "#0E5C46" }}>
                     Learn how the Trust Score is calculated <ArrowRight size={14} />
                   </Link>
                 </div>
@@ -819,13 +819,13 @@ export default function ProviderProfilePage() {
           {/* Sidebar */}
           <div className="flex flex-col gap-4">
             <div className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col gap-3 sticky top-20">
-              <p style={{ color: "#1E293B" }} className="font-bold">Ready to book?</p>
+              <p style={{ color: "#172420" }} className="font-bold">Ready to book?</p>
               <p className="text-sm text-slate-500">
                 Send a request and {provider.name.split(" ")[0]} will respond in {provider.responseTime}.
               </p>
               <button
                 onClick={() => setShowBooking(true)}
-                style={{ backgroundColor: "#F97316" }}
+                style={{ backgroundColor: "#0E5C46" }}
                 className="text-white font-semibold py-3 rounded-xl hover:opacity-90 transition-opacity"
               >
                 Book Now
@@ -842,12 +842,12 @@ export default function ProviderProfilePage() {
             {/* Similar providers */}
             {similar.length > 0 && (
               <div className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col gap-3">
-                <p style={{ color: "#1E293B" }} className="font-bold text-sm">Similar Providers</p>
+                <p style={{ color: "#172420" }} className="font-bold text-sm">Similar Providers</p>
                 {similar.map((p) => (
                   <Link key={p.id} to={`/providers/${p.id}`} className="flex items-center gap-3 group">
                     <Avatar initials={p.initials} color={p.color} size={40} />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-slate-800 group-hover:text-orange-500 transition-colors truncate">{p.name}</p>
+                      <p className="text-sm font-semibold text-slate-800 group-hover:text-green-700 transition-colors truncate">{p.name}</p>
                       <p className="text-xs text-slate-400 truncate">{p.role} · {p.district}</p>
                     </div>
                     <TrustScoreBadge score={p.trustScore} />
@@ -868,3 +868,5 @@ export default function ProviderProfilePage() {
     </PageTransition>
   );
 }
+
+

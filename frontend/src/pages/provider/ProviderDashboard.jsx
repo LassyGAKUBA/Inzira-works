@@ -1,5 +1,5 @@
-// src/pages/provider/ProviderDashboard.jsx
-// Complete Provider Dashboard — sidebar + all sections in one file
+﻿// src/pages/provider/ProviderDashboard.jsx
+// Complete Provider Dashboard â€” sidebar + all sections in one file
 // Sections: Overview, Bookings, Portfolio, Reviews, Trust Score, Settings
 
 import { useState } from "react";
@@ -12,7 +12,7 @@ import {
   Inbox, CheckCircle,
 } from "lucide-react";
 
-// Build initials from a full name, e.g. "Uwase Clarisse" → "UC"
+// Build initials from a full name, e.g. "Uwase Clarisse" â†’ "UC"
 function initialsFromName(name = "") {
   const parts = name.trim().split(/\s+/);
   if (parts.length === 0 || parts[0] === "") return "?";
@@ -20,14 +20,14 @@ function initialsFromName(name = "") {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-// First name for greetings, e.g. "Uwase Clarisse" → "Uwase"
+// First name for greetings, e.g. "Uwase Clarisse" â†’ "Uwase"
 function firstName(name = "") {
   return name.trim().split(/\s+/)[0] || "there";
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // MOCK DATA
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const PROVIDER = {
   name: "Uwase Clarisse",
   role: "Tailor & Fashion Designer",
@@ -64,23 +64,23 @@ const PORTFOLIO = [
 ];
 
 const REVIEWS = [
-  { id: 1, customer: "Niyomugaba Jean", rating: 5, date: "Jun 10, 2026", text: "Clarisse is incredibly talented. The dress she made for my wife was perfect — exactly as described and delivered on time.", initials: "NJ", color: "#3B82F6" },
+  { id: 1, customer: "Niyomugaba Jean", rating: 5, date: "Jun 10, 2026", text: "Clarisse is incredibly talented. The dress she made for my wife was perfect â€” exactly as described and delivered on time.", initials: "NJ", color: "#3B82F6" },
   { id: 2, customer: "Uwimana Grace", rating: 5, date: "Jun 3, 2026", text: "Professional, punctual, and great attention to detail. I've already recommended her to three friends.", initials: "UG", color: "#F59E0B" },
   { id: 3, customer: "Mukashyaka Rose", rating: 4, date: "May 28, 2026", text: "The uniforms came out beautifully. Slight delay on delivery but the quality made up for it.", initials: "MR", color: "#8B5CF6" },
   { id: 4, customer: "Habimana Eric", rating: 5, date: "May 20, 2026", text: "Best tailor I've found in Kigali. The suit fits perfectly and she understood exactly what I wanted.", initials: "HE", color: "#10B981" },
 ];
 
 const TRUST_FACTORS = [
-  { label: "Customer Ratings", key: "ts_f1", pct: 40, score: 38, max: 40, color: "#F97316" },
+  { label: "Customer Ratings", key: "ts_f1", pct: 40, score: 38, max: 40, color: "#0E5C46" },
   { label: "Completed Jobs", key: "ts_f2", pct: 25, score: 24, max: 25, color: "#8B5CF6" },
   { label: "Profile Completeness", key: "ts_f3", pct: 15, score: 13, max: 15, color: "#10B981" },
   { label: "Response Rate", key: "ts_f4", pct: 10, score: 10, max: 10, color: "#3B82F6" },
   { label: "Verification Status", key: "ts_f5", pct: 10, score: 9, max: 10, color: "#F59E0B" },
 ];
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // DESIGN PRIMITIVES
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function Avatar({ initials, color, size = 40 }) {
   return (
     <div style={{ width: size, height: size, backgroundColor: color + "20", border: `2px solid ${color}`, color, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: size * 0.33, flexShrink: 0 }}>
@@ -97,8 +97,8 @@ function StarRating({ rating }) {
           key={s}
           size={13}
           style={{
-            color: s <= rating ? "#F97316" : "#CBD5E1",
-            fill:  s <= rating ? "#F97316" : "none",
+            color: s <= rating ? "#0E5C46" : "#CBD5E1",
+            fill:  s <= rating ? "#0E5C46" : "none",
           }}
         />
       ))}
@@ -121,7 +121,7 @@ function StatusBadge({ status }) {
   );
 }
 
-function StatCard({ icon, label, value, sub, color = "#F97316" }) {
+function StatCard({ icon, label, value, sub, color = "#0E5C46" }) {
   return (
     <div className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col gap-3">
       <div className="flex items-center justify-between">
@@ -131,16 +131,16 @@ function StatCard({ icon, label, value, sub, color = "#F97316" }) {
         {sub && <span className="text-xs text-green-600 font-medium bg-green-50 px-2 py-0.5 rounded-full">{sub}</span>}
       </div>
       <div>
-        <p className="text-2xl font-black" style={{ color: "#1E293B" }}>{value}</p>
+        <p className="text-2xl font-black" style={{ color: "#172420" }}>{value}</p>
         <p className="text-sm text-slate-500 mt-0.5">{label}</p>
       </div>
     </div>
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // NAV ITEMS
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const NAV_ITEMS = [
   { id: "overview",  Icon: LayoutDashboard, label: "Overview"    },
   { id: "bookings",  Icon: Calendar,        label: "Bookings"    },
@@ -150,22 +150,22 @@ const NAV_ITEMS = [
   { id: "settings",  Icon: Settings,        label: "Settings"    },
 ];
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // SIDEBAR
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function Sidebar({ active, setActive, collapsed, setCollapsed }) {
   return (
     <aside
       className="flex flex-col h-full transition-all duration-200"
       style={{
         width: collapsed ? 64 : 240,
-        backgroundColor: "#1E293B",
+        backgroundColor: "#172420",
         flexShrink: 0,
       }}
     >
       {/* Logo */}
       <div className="flex items-center gap-3 px-4 py-5 border-b border-slate-700">
-        <div style={{ backgroundColor: "#F97316", flexShrink: 0 }} className="w-8 h-8 rounded-lg flex items-center justify-center">
+        <div style={{ backgroundColor: "#0E5C46", flexShrink: 0 }} className="w-8 h-8 rounded-lg flex items-center justify-center">
           <span className="text-white font-black text-sm">IW</span>
         </div>
         {!collapsed && (
@@ -177,11 +177,11 @@ function Sidebar({ active, setActive, collapsed, setCollapsed }) {
       {!collapsed && (
         <div className="px-4 py-4 border-b border-slate-700">
           <div className="flex items-center gap-3">
-            <Avatar initials="UC" color="#F97316" size={36} />
+            <Avatar initials="UC" color="#0E5C46" size={36} />
             <div className="min-w-0">
               <p className="text-white text-sm font-semibold truncate">{PROVIDER.name}</p>
               <div className="flex items-center gap-1 mt-0.5">
-                <span style={{ border: "1.5px solid #10B981", color: "#10B981" }} className="text-xs font-bold px-1.5 py-0.5 rounded-full">✦ {PROVIDER.trustScore}</span>
+                <span style={{ border: "1.5px solid #10B981", color: "#10B981" }} className="text-xs font-bold px-1.5 py-0.5 rounded-full">âœ¦ {PROVIDER.trustScore}</span>
               </div>
             </div>
           </div>
@@ -198,7 +198,7 @@ function Sidebar({ active, setActive, collapsed, setCollapsed }) {
               onClick={() => setActive(item.id)}
               className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 text-left w-full"
               style={{
-                backgroundColor: isActive ? "#F97316" : "transparent",
+                backgroundColor: isActive ? "#0E5C46" : "transparent",
                 color: isActive ? "white" : "#94A3B8",
               }}
               title={collapsed ? item.label : undefined}
@@ -235,9 +235,9 @@ function Sidebar({ active, setActive, collapsed, setCollapsed }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // SECTION: OVERVIEW
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function OverviewSection() {
   const pending = BOOKINGS.filter((b) => b.status === "pending").length;
 
@@ -249,32 +249,32 @@ function OverviewSection() {
         style={{ background: "linear-gradient(135deg, #1E293B 0%, #0F172A 100%)" }}
       >
         <div className="flex flex-col gap-1">
-          <p style={{ color: "#F97316" }} className="text-xs font-bold uppercase tracking-widest">Good morning</p>
+          <p style={{ color: "#0E5C46" }} className="text-xs font-bold uppercase tracking-widest">Good morning</p>
           <h2 className="text-white text-xl font-black">Welcome back, {firstName(PROVIDER.name)}!</h2>
-          <p className="text-slate-400 text-sm">You have <span style={{ color: "#F97316" }} className="font-semibold">{pending} pending booking{pending !== 1 ? "s" : ""}</span> waiting for your response.</p>
+          <p className="text-slate-400 text-sm">You have <span style={{ color: "#0E5C46" }} className="font-semibold">{pending} pending booking{pending !== 1 ? "s" : ""}</span> waiting for your response.</p>
         </div>
         <div
           className="flex-shrink-0 flex flex-col items-center justify-center rounded-2xl px-6 py-4 gap-1"
-          style={{ backgroundColor: "#F9731620", border: "1.5px solid #F9731640" }}
+          style={{ backgroundColor: "#0E5C4620", border: "1.5px solid #0E5C4640" }}
         >
-          <p style={{ color: "#F97316" }} className="text-3xl font-black">{PROVIDER.trustScore}</p>
+          <p style={{ color: "#0E5C46" }} className="text-3xl font-black">{PROVIDER.trustScore}</p>
           <p className="text-slate-400 text-xs font-medium">Trust Score</p>
         </div>
       </div>
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={<Calendar size={18} />} label="Total Bookings" value={BOOKINGS.length} sub="+2 this week" color="#F97316" />
+        <StatCard icon={<Calendar size={18} />} label="Total Bookings" value={BOOKINGS.length} sub="+2 this week" color="#0E5C46" />
         <StatCard icon={<Shield size={18} />} label="Completed Jobs" value={PROVIDER.completedJobs} sub="+5 this month" color="#10B981" />
         <StatCard icon={<Star size={18} />} label="Average Rating" value={PROVIDER.rating} color="#F59E0B" />
-        <StatCard icon={<TrendingUp size={18} />} label="This Month" value={PROVIDER.thisMonth} sub="↑ 12%" color="#8B5CF6" />
+        <StatCard icon={<TrendingUp size={18} />} label="This Month" value={PROVIDER.thisMonth} sub="â†‘ 12%" color="#8B5CF6" />
       </div>
 
       {/* Recent bookings preview */}
       <div className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <h3 style={{ color: "#1E293B" }} className="font-bold">Recent Bookings</h3>
-          <button style={{ color: "#F97316" }} className="text-xs font-semibold hover:underline">View all</button>
+          <h3 style={{ color: "#172420" }} className="font-bold">Recent Bookings</h3>
+          <button style={{ color: "#0E5C46" }} className="text-xs font-semibold hover:underline">View all</button>
         </div>
         <div className="flex flex-col gap-3">
           {BOOKINGS.slice(0, 4).map((b) => (
@@ -295,16 +295,16 @@ function OverviewSection() {
 
       {/* Profile completeness alert */}
       {PROVIDER.profileComplete < 100 && (
-        <div className="bg-orange-50 border border-orange-200 rounded-2xl p-5 flex items-start gap-4">
-          <Zap size={18} className="flex-shrink-0 text-orange-500" />
+        <div className="bg-green-50 border border-green-200 rounded-2xl p-5 flex items-start gap-4">
+          <Zap size={18} className="flex-shrink-0 text-green-700" />
           <div className="flex-1">
-            <p className="font-semibold text-orange-800 text-sm">Complete your profile to boost your Trust Score</p>
-            <p className="text-orange-600 text-xs mt-1">Your profile is {PROVIDER.profileComplete}% complete. Add your bio and more portfolio items to reach 100%.</p>
-            <div className="mt-3 h-2 bg-orange-100 rounded-full overflow-hidden">
-              <div style={{ width: `${PROVIDER.profileComplete}%`, backgroundColor: "#F97316" }} className="h-full rounded-full" />
+            <p className="font-semibold text-green-900 text-sm">Complete your profile to boost your Trust Score</p>
+            <p className="text-green-700 text-xs mt-1">Your profile is {PROVIDER.profileComplete}% complete. Add your bio and more portfolio items to reach 100%.</p>
+            <div className="mt-3 h-2 bg-green-100 rounded-full overflow-hidden">
+              <div style={{ width: `${PROVIDER.profileComplete}%`, backgroundColor: "#0E5C46" }} className="h-full rounded-full" />
             </div>
           </div>
-          <button style={{ backgroundColor: "#F97316" }} className="text-white text-xs font-semibold px-3 py-1.5 rounded-lg flex-shrink-0 hover:opacity-90">
+          <button style={{ backgroundColor: "#0E5C46" }} className="text-white text-xs font-semibold px-3 py-1.5 rounded-lg flex-shrink-0 hover:opacity-90">
             Complete
           </button>
         </div>
@@ -313,9 +313,9 @@ function OverviewSection() {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // SECTION: BOOKINGS
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function BookingsSection() {
   const [filter, setFilter] = useState("all");
   const filters = ["all", "pending", "confirmed", "completed", "cancelled"];
@@ -325,7 +325,7 @@ function BookingsSection() {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center justify-between">
-        <h2 style={{ color: "#1E293B" }} className="text-xl font-black">Bookings</h2>
+        <h2 style={{ color: "#172420" }} className="text-xl font-black">Bookings</h2>
         <span className="text-sm text-slate-500">{filtered.length} {filter === "all" ? "total" : filter}</span>
       </div>
 
@@ -337,7 +337,7 @@ function BookingsSection() {
             onClick={() => setFilter(f)}
             className="px-4 py-1.5 rounded-full text-xs font-semibold capitalize transition-all"
             style={{
-              backgroundColor: filter === f ? "#F97316" : "#F1F5F9",
+              backgroundColor: filter === f ? "#0E5C46" : "#F1F5F9",
               color: filter === f ? "white" : "#64748B",
             }}
           >
@@ -362,14 +362,14 @@ function BookingsSection() {
                 </div>
                 <div className="flex items-center gap-4 mt-3 flex-wrap">
                   <span className="text-xs text-slate-500 flex items-center gap-1">
-                    <Calendar size={11} /> {b.date} · {b.time}
+                    <Calendar size={11} /> {b.date} Â· {b.time}
                   </span>
                   <span className="text-xs font-semibold text-slate-700">{b.amount}</span>
                 </div>
                 {/* Action buttons for pending */}
                 {b.status === "pending" && (
                   <div className="flex gap-2 mt-3">
-                    <button style={{ backgroundColor: "#F97316" }} className="text-white text-xs font-semibold px-4 py-1.5 rounded-lg hover:opacity-90 transition-opacity">
+                    <button style={{ backgroundColor: "#0E5C46" }} className="text-white text-xs font-semibold px-4 py-1.5 rounded-lg hover:opacity-90 transition-opacity">
                       Accept
                     </button>
                     <button className="text-slate-500 text-xs font-semibold px-4 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors">
@@ -404,9 +404,9 @@ function BookingsSection() {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // SECTION: PORTFOLIO
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function PortfolioSection() {
   const [showAdd, setShowAdd] = useState(false);
 
@@ -414,12 +414,12 @@ function PortfolioSection() {
     <div className="flex flex-col gap-5">
       <div className="flex items-center justify-between">
         <div>
-          <h2 style={{ color: "#1E293B" }} className="text-xl font-black">Portfolio</h2>
+          <h2 style={{ color: "#172420" }} className="text-xl font-black">Portfolio</h2>
           <p className="text-slate-500 text-sm mt-0.5">Showcase your best work to attract more customers</p>
         </div>
         <button
           onClick={() => setShowAdd(!showAdd)}
-          style={{ backgroundColor: "#F97316" }}
+          style={{ backgroundColor: "#0E5C46" }}
           className="text-white text-sm font-semibold px-4 py-2 rounded-xl hover:opacity-90 transition-opacity flex items-center gap-2"
         >
           <span>+</span> Add Work
@@ -428,16 +428,16 @@ function PortfolioSection() {
 
       {/* Add work form */}
       {showAdd && (
-        <div className="bg-orange-50 border border-orange-200 rounded-2xl p-5 flex flex-col gap-4">
-          <h3 className="font-semibold text-orange-800 text-sm">Add New Portfolio Item</h3>
+        <div className="bg-green-50 border border-green-200 rounded-2xl p-5 flex flex-col gap-4">
+          <h3 className="font-semibold text-green-900 text-sm">Add New Portfolio Item</h3>
           <div className="grid sm:grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium text-slate-700">Title</label>
-              <input type="text" placeholder="e.g. Wedding Dress Collection" className="px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none focus:border-orange-400 bg-white" />
+              <input type="text" placeholder="e.g. Wedding Dress Collection" className="px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none focus:border-green-400 bg-white" />
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium text-slate-700">Category</label>
-              <select className="px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none focus:border-orange-400 bg-white">
+              <select className="px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none focus:border-green-400 bg-white">
                 {["Formal Wear", "Traditional", "Uniforms", "Kids Wear", "Casual"].map((c) => (
                   <option key={c}>{c}</option>
                 ))}
@@ -445,13 +445,13 @@ function PortfolioSection() {
             </div>
           </div>
           {/* Upload area */}
-          <div className="border-2 border-dashed border-orange-300 rounded-xl p-8 text-center bg-white">
-            <ImageIcon size={28} className="text-orange-300 mx-auto mb-2" />
+          <div className="border-2 border-dashed border-green-300 rounded-xl p-8 text-center bg-white">
+            <ImageIcon size={28} className="text-green-400 mx-auto mb-2" />
             <p className="text-sm font-medium text-slate-600">Click to upload photos</p>
-            <p className="text-xs text-slate-400 mt-1">JPG, PNG up to 5MB each · Max 5 photos</p>
+            <p className="text-xs text-slate-400 mt-1">JPG, PNG up to 5MB each Â· Max 5 photos</p>
           </div>
           <div className="flex gap-2">
-            <button style={{ backgroundColor: "#F97316" }} className="text-white text-sm font-semibold px-4 py-2 rounded-xl hover:opacity-90">Save</button>
+            <button style={{ backgroundColor: "#0E5C46" }} className="text-white text-sm font-semibold px-4 py-2 rounded-xl hover:opacity-90">Save</button>
             <button onClick={() => setShowAdd(false)} className="text-slate-500 text-sm font-semibold px-4 py-2 rounded-xl border border-slate-200 hover:bg-slate-50">Cancel</button>
           </div>
         </div>
@@ -464,7 +464,7 @@ function PortfolioSection() {
             {/* Placeholder image area */}
             <div
               className="h-40 flex items-center justify-center"
-              style={{ backgroundColor: "#F8FAFC" }}
+              style={{ backgroundColor: "#ede9e0" }}
             >
               <ImageIcon size={32} className="text-slate-300" />
             </div>
@@ -473,7 +473,7 @@ function PortfolioSection() {
               <div className="flex items-center justify-between mt-1.5">
                 <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{item.category}</span>
                 <span className="text-xs text-slate-400 flex items-center gap-1">
-                  <Heart size={11} style={{ color: "#F97316", fill: "#F97316" }} /> {item.likes}
+                  <Heart size={11} style={{ color: "#0E5C46", fill: "#0E5C46" }} /> {item.likes}
                 </span>
               </div>
             </div>
@@ -484,9 +484,9 @@ function PortfolioSection() {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // SECTION: REVIEWS
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function ReviewsSection() {
   const avg = (REVIEWS.reduce((a, r) => a + r.rating, 0) / REVIEWS.length).toFixed(1);
   const dist = [5,4,3,2,1].map((r) => ({
@@ -497,12 +497,12 @@ function ReviewsSection() {
 
   return (
     <div className="flex flex-col gap-5">
-      <h2 style={{ color: "#1E293B" }} className="text-xl font-black">Reviews</h2>
+      <h2 style={{ color: "#172420" }} className="text-xl font-black">Reviews</h2>
 
       {/* Summary */}
       <div className="bg-white rounded-2xl border border-slate-100 p-5 grid sm:grid-cols-2 gap-6">
         <div className="flex flex-col items-center justify-center gap-2 text-center">
-          <p style={{ color: "#1E293B" }} className="text-6xl font-black">{avg}</p>
+          <p style={{ color: "#172420" }} className="text-6xl font-black">{avg}</p>
           <StarRating rating={Math.round(avg)} />
           <p className="text-slate-500 text-sm">Based on {REVIEWS.length} reviews</p>
         </div>
@@ -510,9 +510,9 @@ function ReviewsSection() {
           {dist.map((d) => (
             <div key={d.r} className="flex items-center gap-3">
               <span className="text-xs text-slate-500 w-4">{d.r}</span>
-              <Star size={11} style={{ color: "#F97316", fill: "#F97316" }} />
+              <Star size={11} style={{ color: "#0E5C46", fill: "#0E5C46" }} />
               <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
-                <div style={{ width: `${d.pct}%`, backgroundColor: "#F97316" }} className="h-full rounded-full" />
+                <div style={{ width: `${d.pct}%`, backgroundColor: "#0E5C46" }} className="h-full rounded-full" />
               </div>
               <span className="text-xs text-slate-400 w-4">{d.count}</span>
             </div>
@@ -542,17 +542,17 @@ function ReviewsSection() {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // SECTION: TRUST SCORE
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function TrustScoreSection() {
   const total = TRUST_FACTORS.reduce((a, f) => a + f.score, 0);
 
   return (
     <div className="flex flex-col gap-5">
       <div>
-        <h2 style={{ color: "#1E293B" }} className="text-xl font-black">Trust Score</h2>
-        <p className="text-slate-500 text-sm mt-0.5">Your credibility rating — updated in real time</p>
+        <h2 style={{ color: "#172420" }} className="text-xl font-black">Trust Score</h2>
+        <p className="text-slate-500 text-sm mt-0.5">Your credibility rating â€” updated in real time</p>
       </div>
 
       {/* Score hero */}
@@ -567,7 +567,7 @@ function TrustScoreSection() {
             <circle
               cx="60" cy="60" r="50"
               fill="none"
-              stroke="#F97316"
+              stroke="#0E5C46"
               strokeWidth="10"
               strokeDasharray={`${(total / 100) * 314} 314`}
               strokeLinecap="round"
@@ -575,14 +575,14 @@ function TrustScoreSection() {
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span style={{ color: "#F97316" }} className="text-3xl font-black">{total}</span>
+            <span style={{ color: "#0E5C46" }} className="text-3xl font-black">{total}</span>
             <span className="text-slate-400 text-xs">/ 100</span>
           </div>
         </div>
 
         <div className="flex flex-col gap-3 flex-1">
           <div>
-            <p style={{ color: "#F97316" }} className="text-xs font-bold uppercase tracking-widest">Current Score</p>
+            <p style={{ color: "#0E5C46" }} className="text-xs font-bold uppercase tracking-widest">Current Score</p>
             <p className="text-white text-2xl font-black mt-1">
               {total >= 90 ? "Excellent" : total >= 75 ? "Good" : "Building"}
             </p>
@@ -594,7 +594,7 @@ function TrustScoreSection() {
             <div style={{ backgroundColor: "#10B98120", border: "1px solid #10B98140" }} className="px-3 py-1.5 rounded-lg text-xs font-semibold text-green-400 flex items-center gap-1">
               <CheckCircle size={11} /> Verified
             </div>
-            <div style={{ backgroundColor: "#F9731620", border: "1px solid #F9731640" }} className="px-3 py-1.5 rounded-lg text-xs font-semibold text-orange-400 flex items-center gap-1">
+            <div style={{ backgroundColor: "#0E5C4620", border: "1px solid #0E5C4640" }} className="px-3 py-1.5 rounded-lg text-xs font-semibold text-green-600 flex items-center gap-1">
               <Star size={11} style={{ fill: "#FB923C" }} /> Top Rated
             </div>
           </div>
@@ -624,8 +624,8 @@ function TrustScoreSection() {
       </div>
 
       {/* Tips to improve */}
-      <div className="bg-orange-50 border border-orange-100 rounded-2xl p-5 flex flex-col gap-3">
-        <p className="font-bold text-orange-800 text-sm flex items-center gap-2">⚡ Tips to improve your score</p>
+      <div className="bg-green-50 border border-green-100 rounded-2xl p-5 flex flex-col gap-3">
+        <p className="font-bold text-green-900 text-sm flex items-center gap-2">âš¡ Tips to improve your score</p>
         <div className="flex flex-col gap-2">
           {[
             "Complete your profile bio (+2 pts)",
@@ -633,8 +633,8 @@ function TrustScoreSection() {
             "Respond to bookings within 1 hour (+1 pt)",
           ].map((tip) => (
             <div key={tip} className="flex items-start gap-2">
-              <span className="text-orange-400 text-xs mt-0.5">→</span>
-              <span className="text-orange-700 text-sm">{tip}</span>
+              <span className="text-green-600 text-xs mt-0.5">â†’</span>
+              <span className="text-green-800 text-sm">{tip}</span>
             </div>
           ))}
         </div>
@@ -643,9 +643,9 @@ function TrustScoreSection() {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // SECTION: SETTINGS
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function SettingsSection() {
   const [form, setForm] = useState({
     fullName: PROVIDER.name,
@@ -664,7 +664,7 @@ function SettingsSection() {
 
   return (
     <div className="flex flex-col gap-5">
-      <h2 style={{ color: "#1E293B" }} className="text-xl font-black">Settings</h2>
+      <h2 style={{ color: "#172420" }} className="text-xl font-black">Settings</h2>
 
       {/* Profile info */}
       <div className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col gap-5">
@@ -672,9 +672,9 @@ function SettingsSection() {
 
         {/* Avatar */}
         <div className="flex items-center gap-4">
-          <Avatar initials="UC" color="#F97316" size={64} />
+          <Avatar initials="UC" color="#0E5C46" size={64} />
           <div>
-            <button style={{ color: "#F97316" }} className="text-sm font-semibold hover:underline">Change photo</button>
+            <button style={{ color: "#0E5C46" }} className="text-sm font-semibold hover:underline">Change photo</button>
             <p className="text-xs text-slate-400 mt-0.5">JPG or PNG, max 2MB</p>
           </div>
         </div>
@@ -692,7 +692,7 @@ function SettingsSection() {
                 <select
                   value={form[field]}
                   onChange={set(field)}
-                  className="px-3 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 bg-white text-slate-800"
+                  className="px-3 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-green-400 focus:ring-2 focus:ring-orange-100 bg-white text-slate-800"
                 >
                   {options.map((o) => <option key={o}>{o}</option>)}
                 </select>
@@ -702,7 +702,7 @@ function SettingsSection() {
                   value={form[field]}
                   onChange={set(field)}
                   placeholder={placeholder}
-                  className="px-3 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 text-slate-800 bg-white"
+                  className="px-3 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-green-400 focus:ring-2 focus:ring-orange-100 text-slate-800 bg-white"
                 />
               )}
             </div>
@@ -715,13 +715,13 @@ function SettingsSection() {
             value={form.bio}
             onChange={set("bio")}
             rows={4}
-            className="px-3 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 resize-none text-slate-800 bg-white"
+            className="px-3 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-green-400 focus:ring-2 focus:ring-orange-100 resize-none text-slate-800 bg-white"
             placeholder="Tell customers about your skills and experience..."
           />
           <p className="text-xs text-slate-400 text-right">{form.bio.length}/500</p>
         </div>
 
-        <button style={{ backgroundColor: "#F97316" }} className="text-white font-semibold text-sm px-6 py-2.5 rounded-xl hover:opacity-90 transition-opacity w-fit">
+        <button style={{ backgroundColor: "#0E5C46" }} className="text-white font-semibold text-sm px-6 py-2.5 rounded-xl hover:opacity-90 transition-opacity w-fit">
           Save Changes
         </button>
       </div>
@@ -742,7 +742,7 @@ function SettingsSection() {
             <button
               onClick={() => setForm((p) => ({ ...p, [field]: !p[field] }))}
               className="relative w-11 h-6 rounded-full transition-colors flex-shrink-0"
-              style={{ backgroundColor: form[field] ? "#F97316" : "#CBD5E1" }}
+              style={{ backgroundColor: form[field] ? "#0E5C46" : "#CBD5E1" }}
               role="switch"
               aria-checked={form[field]}
             >
@@ -772,9 +772,9 @@ function SettingsSection() {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // TOPBAR
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function Topbar({ active, mobileMenuOpen, setMobileMenuOpen }) {
   const label = NAV_ITEMS.find((n) => n.id === active)?.label || "Dashboard";
   return (
@@ -787,20 +787,20 @@ function Topbar({ active, mobileMenuOpen, setMobileMenuOpen }) {
         >
           <Menu size={20} />
         </button>
-        <h1 style={{ color: "#1E293B" }} className="font-bold text-base">{label}</h1>
+        <h1 style={{ color: "#172420" }} className="font-bold text-base">{label}</h1>
       </div>
       <div className="flex items-center gap-3">
         <LanguageSwitcher compact />
         <div className="w-px h-5 bg-slate-200" />
-        <Avatar initials="UC" color="#F97316" size={32} />
+        <Avatar initials="UC" color="#0E5C46" size={32} />
       </div>
     </header>
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // MOBILE BOTTOM NAV
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function MobileNav({ active, setActive }) {
   return (
     <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 z-40 flex">
@@ -811,7 +811,7 @@ function MobileNav({ active, setActive }) {
             key={item.id}
             onClick={() => setActive(item.id)}
             className="flex-1 flex flex-col items-center gap-0.5 py-2 transition-colors"
-            style={{ color: isActive ? "#F97316" : "#94A3B8" }}
+            style={{ color: isActive ? "#0E5C46" : "#94A3B8" }}
           >
             <item.Icon size={20} />
             <span className="text-xs font-medium">{item.label}</span>
@@ -822,14 +822,14 @@ function MobileNav({ active, setActive }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // DASHBOARD ROOT
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function ProviderDashboard() {
   const { user } = useAuth();
 
   // Overlay the real logged-in provider's identity onto the display object.
-  // (Stats like trust score, ratings, and bookings are still mock for now —
+  // (Stats like trust score, ratings, and bookings are still mock for now â€”
   //  those get wired to live data in a later step.)
   if (user) {
     PROVIDER.name = user.full_name;
@@ -898,3 +898,5 @@ export default function ProviderDashboard() {
     </div>
   );
 }
+
+

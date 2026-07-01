@@ -39,8 +39,8 @@ const ROLES = [
       "Jenga Trust Score yako",
       "Thibitishwa",
     ],
-    color: "#F97316",
-    bgLight: "#FFF7ED",
+    color: "#0E5C46",
+    bgLight: "#e8f3ee",
     badge: "For skilled women",
   },
   {
@@ -73,8 +73,8 @@ const ROLES = [
       "Tuma maombi ya nafasi",
       "Hifadhi watoa huduma unaowapenda",
     ],
-    color: "#3B82F6",
-    bgLight: "#EFF6FF",
+    color: "#b98a22",
+    bgLight: "#f0e8c8",
     badge: "For businesses & individuals",
   },
 ];
@@ -127,14 +127,14 @@ export default function RoleSelectPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#F8FAFC" }}>
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#ede9e0", fontFamily: "'Hanken Grotesk', sans-serif" }}>
       {/* Top bar */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-white">
+      <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid #d4cfc5", backgroundColor: "#ede9e0" }}>
         <div className="flex items-center gap-2">
-          <div style={{ backgroundColor: "#F97316" }} className="w-8 h-8 rounded-lg flex items-center justify-center">
-            <span className="text-white font-black text-sm">IW</span>
-          </div>
-          <span style={{ color: "#1E293B" }} className="font-bold text-lg tracking-tight">Inzira Works</span>
+          <svg width="16" height="20" viewBox="0 0 18 22" fill="none">
+            <path d="M9 2C9 2 3 5.5 3 12C3 16.5 5.5 19 9 19L9 21L13 17.5L9 14L9 16.5C7 16.5 5 15 5 12C5 7.5 9 5 9 5L9 2Z" fill="#0E5C46" />
+          </svg>
+          <span style={{ color: "#172420", fontFamily: "Spectral, serif", fontWeight: 700, fontSize: "1.05rem" }}>Inzira Works</span>
         </div>
         <LanguageSwitcher compact />
       </div>
@@ -152,16 +152,16 @@ export default function RoleSelectPage() {
                 <div
                   className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
                   style={{
-                    backgroundColor: step.done ? "#F97316" : step.active ? "#FFF7ED" : "#E2E8F0",
-                    color: step.done ? "white" : step.active ? "#F97316" : "#94A3B8",
-                    border: step.active ? "2px solid #F97316" : "none",
+                    backgroundColor: step.done ? "#0E5C46" : step.active ? "#e8f3ee" : "#E2E8F0",
+                    color: step.done ? "white" : step.active ? "#0E5C46" : "#94A3B8",
+                    border: step.active ? "2px solid #0E5C46" : "none",
                   }}
                 >
                   {step.done ? <Check size={14} /> : step.n}
                 </div>
                 <span
                   className="text-xs font-medium hidden sm:block"
-                  style={{ color: step.done || step.active ? "#1E293B" : "#94A3B8" }}
+                  style={{ color: step.done || step.active ? "#172420" : "#94A3B8" }}
                 >
                   {step.label}
                 </span>
@@ -177,7 +177,7 @@ export default function RoleSelectPage() {
         <div className="w-full max-w-3xl flex flex-col gap-8">
           {/* Header */}
           <div className="text-center flex flex-col gap-2">
-            <h1 style={{ color: "#1E293B" }} className="text-2xl sm:text-3xl font-black tracking-tight">
+            <h1 style={{ color: "#172420" }} className="text-2xl sm:text-3xl font-black tracking-tight">
               How will you use Inzira Works?
             </h1>
             <p className="text-slate-500 text-sm">
@@ -227,7 +227,7 @@ export default function RoleSelectPage() {
                       <role.Icon size={22} />
                     </div>
                     <div>
-                      <p style={{ color: "#1E293B" }} className="font-bold text-base">{getTitle(role)}</p>
+                      <p style={{ color: "#172420" }} className="font-bold text-base">{getTitle(role)}</p>
                       <p
                         className="text-xs font-medium px-2 py-0.5 rounded-full mt-0.5 w-fit"
                         style={{ backgroundColor: role.bgLight, color: role.color }}
@@ -260,7 +260,7 @@ export default function RoleSelectPage() {
               onClick={handleContinue}
               disabled={!selected || loading}
               style={{
-                backgroundColor: selected ? "#F97316" : "#E2E8F0",
+                backgroundColor: selected ? "#0E5C46" : "#E2E8F0",
                 color: selected ? "white" : "#94A3B8",
                 cursor: selected ? "pointer" : "not-allowed",
               }}

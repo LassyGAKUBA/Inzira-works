@@ -35,7 +35,7 @@ const DISTRICTS = ["Gasabo", "Kicukiro", "Nyarugenge"];
 // The backend (GET /api/providers) returns snake_case rows with numbers as
 // strings. These helpers turn one row into the shape ProviderCard expects.
 // ─────────────────────────────────────────────────────────────────────────────
-const AVATAR_PALETTE = ["#F97316", "#8B5CF6", "#10B981", "#3B82F6", "#EC4899", "#A855F7", "#06B6D4", "#F59E0B"];
+const AVATAR_PALETTE = ["#0E5C46", "#8B5CF6", "#10B981", "#3B82F6", "#EC4899", "#A855F7", "#06B6D4", "#F59E0B"];
 
 function initialsFrom(name = "") {
   return name.trim().split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
@@ -88,7 +88,7 @@ function CategoryIcon({ category, size = 20 }) {
     );
   }
   const Icon = category.Icon;
-  return <Icon size={size * 0.8} style={{ color: "#F97316", flexShrink: 0 }} />;
+  return <Icon size={size * 0.8} style={{ color: "#0E5C46", flexShrink: 0 }} />;
 }
 
 function StarRating({ rating, size = "sm" }) {
@@ -100,8 +100,8 @@ function StarRating({ rating, size = "sm" }) {
           key={s}
           size={px}
           style={{
-            color: s <= Math.round(rating) ? "#F97316" : "#CBD5E1",
-            fill:  s <= Math.round(rating) ? "#F97316" : "none",
+            color: s <= Math.round(rating) ? "#0E5C46" : "#CBD5E1",
+            fill:  s <= Math.round(rating) ? "#0E5C46" : "none",
           }}
         />
       ))}
@@ -110,7 +110,7 @@ function StarRating({ rating, size = "sm" }) {
 }
 
 function TrustScoreBadge({ score }) {
-  const color = score >= 90 ? "#10B981" : score >= 75 ? "#F97316" : "#64748B";
+  const color = score >= 90 ? "#10B981" : score >= 75 ? "#0E5C46" : "#64748B";
   return (
     <div style={{ border: `2px solid ${color}`, color }} className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold bg-white">
       <span>✦</span> {score}
@@ -140,7 +140,7 @@ function ProviderCard({ provider }) {
             <p className="text-xs text-slate-500 mt-0.5">{provider.role}</p>
           </div>
         </div>
-        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 flex-shrink-0">
+        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-green-50 text-green-700 flex-shrink-0">
           {provider.badge}
         </span>
       </div>
@@ -176,7 +176,7 @@ function ProviderCard({ provider }) {
         <Link
           to={`/providers/${provider.id}`}
           className="text-xs font-semibold flex items-center gap-1 hover:opacity-80 transition-opacity"
-          style={{ color: "#F97316" }}
+          style={{ color: "#0E5C46" }}
         >
           View Profile <ArrowRight size={12} />
         </Link>
@@ -211,10 +211,10 @@ function SkeletonCard() {
 function Footer() {
   const { t } = useLang();
   return (
-    <footer style={{ backgroundColor: "#0F172A" }} className="py-10 mt-12">
+    <footer style={{ backgroundColor: "#0a3d2c" }} className="py-10 mt-12">
       <div className="px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-2">
-          <div style={{ backgroundColor: "#F97316" }} className="w-7 h-7 rounded-lg flex items-center justify-center">
+          <div style={{ backgroundColor: "#0E5C46" }} className="w-7 h-7 rounded-lg flex items-center justify-center">
             <span className="text-white font-black text-xs">IW</span>
           </div>
           <span className="text-white font-bold text-sm">Inzira Works</span>
@@ -258,10 +258,10 @@ function FiltersSidebar({ filters, setFilters, onClose }) {
   return (
     <div className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col gap-6 sticky top-20">
       <div className="flex items-center justify-between">
-        <h3 style={{ color: "#1E293B" }} className="font-bold">Filters</h3>
+        <h3 style={{ color: "#172420" }} className="font-bold">Filters</h3>
         <div className="flex items-center gap-2">
           {activeCount > 0 && (
-            <button onClick={clearAll} style={{ color: "#F97316" }} className="text-xs font-semibold hover:underline">
+            <button onClick={clearAll} style={{ color: "#0E5C46" }} className="text-xs font-semibold hover:underline">
               Clear ({activeCount})
             </button>
           )}
@@ -284,7 +284,7 @@ function FiltersSidebar({ filters, setFilters, onClose }) {
                 name="district"
                 checked={filters.district === d}
                 onChange={() => setFilter("district", d)}
-                className="accent-orange-500"
+                className="accent-green-700"
               />
               <span className="text-sm text-slate-600">{d === "all" ? "All Districts" : d}</span>
             </label>
@@ -302,7 +302,7 @@ function FiltersSidebar({ filters, setFilters, onClose }) {
                 type="checkbox"
                 checked={filters.categories.includes(cat.label)}
                 onChange={() => toggleCategory(cat.label)}
-                className="accent-orange-500"
+                className="accent-green-700"
               />
               <CategoryIcon category={cat} size={18} />
               <span className="text-sm text-slate-600 flex-1">{cat.label}</span>
@@ -322,7 +322,7 @@ function FiltersSidebar({ filters, setFilters, onClose }) {
               onClick={() => setFilter("minRating", r)}
               className="flex-1 text-xs font-semibold py-1.5 rounded-lg transition-all"
               style={{
-                backgroundColor: filters.minRating === r ? "#F97316" : "#F1F5F9",
+                backgroundColor: filters.minRating === r ? "#0E5C46" : "#F1F5F9",
                 color: filters.minRating === r ? "white" : "#64748B",
               }}
             >
@@ -343,11 +343,11 @@ function FiltersSidebar({ filters, setFilters, onClose }) {
             step="5"
             value={filters.minTrust}
             onChange={(e) => setFilter("minTrust", Number(e.target.value))}
-            className="w-full accent-orange-500"
+            className="w-full accent-green-700"
           />
           <div className="flex justify-between text-xs text-slate-400">
             <span>Any</span>
-            <span style={{ color: "#F97316" }} className="font-bold">{filters.minTrust}+</span>
+            <span style={{ color: "#0E5C46" }} className="font-bold">{filters.minTrust}+</span>
             <span>95</span>
           </div>
         </div>
@@ -359,7 +359,7 @@ function FiltersSidebar({ filters, setFilters, onClose }) {
           type="checkbox"
           checked={filters.verifiedOnly}
           onChange={(e) => setFilter("verifiedOnly", e.target.checked)}
-          className="accent-orange-500"
+          className="accent-green-700"
         />
         <span className="text-sm text-slate-600 flex items-center gap-1.5">
           <CheckCircle size={14} className="text-emerald-500" /> Verified providers only
@@ -456,17 +456,17 @@ export default function ProviderDirectory() {
 
   return (
     <PageTransition>
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#F8FAFC" }}>
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#ede9e0" }}>
       <Navbar />
 
       {/* Header / Search */}
       <section
-        style={{ background: "linear-gradient(135deg, #FFF7ED 0%, #FFECD2 60%, #FFF7ED 100%)" }}
+        style={{ background: "linear-gradient(135deg, #e8f3ee 0%, #FFECD2 60%, #e8f3ee 100%)" }}
         className="py-10"
       >
         <div className="px-4 sm:px-6 flex flex-col gap-5">
           <div>
-            <h1 style={{ color: "#1E293B" }} className="text-2xl sm:text-3xl font-black tracking-tight">
+            <h1 style={{ color: "#172420" }} className="text-2xl sm:text-3xl font-black tracking-tight">
               Browse Skilled Women in Kigali
             </h1>
             <p className="text-slate-500 text-sm mt-1">
@@ -483,7 +483,7 @@ export default function ProviderDirectory() {
               placeholder="Search by name, skill, or service (e.g. Tailor, Braiding)..."
               className="flex-1 px-4 py-2 text-sm text-slate-700 outline-none bg-transparent placeholder-slate-400"
             />
-            <button style={{ backgroundColor: "#F97316" }} className="text-white font-semibold text-sm px-5 py-2 rounded-xl hover:opacity-90 transition-opacity whitespace-nowrap">
+            <button style={{ backgroundColor: "#0E5C46" }} className="text-white font-semibold text-sm px-5 py-2 rounded-xl hover:opacity-90 transition-opacity whitespace-nowrap">
               Search
             </button>
           </div>
@@ -501,9 +501,9 @@ export default function ProviderDirectory() {
                   }))}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors flex-shrink-0"
                   style={{
-                    backgroundColor: isActive ? "#F97316" : "white",
+                    backgroundColor: isActive ? "#0E5C46" : "white",
                     color: isActive ? "white" : "#64748B",
-                    border: isActive ? "1px solid #F97316" : "1px solid #E2E8F0",
+                    border: isActive ? "1px solid #0E5C46" : "1px solid #E2E8F0",
                   }}
                 >
                   <CategoryIcon category={cat} size={16} rounded={4} /> {cat.label}
@@ -530,7 +530,7 @@ export default function ProviderDirectory() {
                 onClick={() => setMobileFiltersOpen(true)}
                 className="lg:hidden flex items-center gap-2 text-sm font-semibold text-slate-600 border border-slate-200 bg-white px-4 py-2 rounded-xl"
               >
-                <SlidersHorizontal size={15} /> Filters {activeFilterCount > 0 && <span style={{ backgroundColor: "#F97316" }} className="text-white text-xs rounded-full px-1.5">{activeFilterCount}</span>}
+                <SlidersHorizontal size={15} /> Filters {activeFilterCount > 0 && <span style={{ backgroundColor: "#0E5C46" }} className="text-white text-xs rounded-full px-1.5">{activeFilterCount}</span>}
               </button>
 
               <p className="text-sm text-slate-500 hidden sm:block">
@@ -555,31 +555,31 @@ export default function ProviderDirectory() {
             {activeFilterCount > 0 && (
               <div className="flex items-center gap-2 flex-wrap">
                 {filters.categories.map((cat) => (
-                  <span key={cat} className="flex items-center gap-1.5 text-xs font-medium bg-orange-50 text-orange-600 px-3 py-1 rounded-full">
+                  <span key={cat} className="flex items-center gap-1.5 text-xs font-medium bg-green-50 text-green-700 px-3 py-1 rounded-full">
                     {cat}
                     <button onClick={() => setFilters((p) => ({ ...p, categories: p.categories.filter((c) => c !== cat) }))}><X size={11} /></button>
                   </span>
                 ))}
                 {filters.district !== "all" && (
-                  <span className="flex items-center gap-1.5 text-xs font-medium bg-orange-50 text-orange-600 px-3 py-1 rounded-full">
+                  <span className="flex items-center gap-1.5 text-xs font-medium bg-green-50 text-green-700 px-3 py-1 rounded-full">
                     <MapPin size={11} /> {filters.district}
                     <button onClick={() => setFilters((p) => ({ ...p, district: "all" }))}><X size={11} /></button>
                   </span>
                 )}
                 {filters.minRating > 0 && (
-                  <span className="flex items-center gap-1.5 text-xs font-medium bg-orange-50 text-orange-600 px-3 py-1 rounded-full">
+                  <span className="flex items-center gap-1.5 text-xs font-medium bg-green-50 text-green-700 px-3 py-1 rounded-full">
                     {filters.minRating}+ <Star size={11} style={{ fill: "#EA580C" }} />
                     <button onClick={() => setFilters((p) => ({ ...p, minRating: 0 }))}><X size={11} /></button>
                   </span>
                 )}
                 {filters.minTrust > 0 && (
-                  <span className="flex items-center gap-1.5 text-xs font-medium bg-orange-50 text-orange-600 px-3 py-1 rounded-full">
+                  <span className="flex items-center gap-1.5 text-xs font-medium bg-green-50 text-green-700 px-3 py-1 rounded-full">
                     Trust {filters.minTrust}+
                     <button onClick={() => setFilters((p) => ({ ...p, minTrust: 0 }))}><X size={11} /></button>
                   </span>
                 )}
                 {filters.verifiedOnly && (
-                  <span className="flex items-center gap-1.5 text-xs font-medium bg-orange-50 text-orange-600 px-3 py-1 rounded-full">
+                  <span className="flex items-center gap-1.5 text-xs font-medium bg-green-50 text-green-700 px-3 py-1 rounded-full">
                     <CheckCircle size={11} /> Verified only
                     <button onClick={() => setFilters((p) => ({ ...p, verifiedOnly: false }))}><X size={11} /></button>
                   </span>
@@ -609,7 +609,7 @@ export default function ProviderDirectory() {
                 <p className="text-sm text-slate-400">Try removing some filters or searching a different term.</p>
                 <button
                   onClick={() => { setSearch(""); setFilters({ categories: [], district: "all", minRating: 0, minTrust: 0, verifiedOnly: false }); }}
-                  style={{ backgroundColor: "#F97316" }}
+                  style={{ backgroundColor: "#0E5C46" }}
                   className="text-white text-sm font-semibold px-5 py-2 rounded-xl hover:opacity-90 transition-opacity mt-1"
                 >
                   Reset Filters
@@ -633,7 +633,7 @@ export default function ProviderDirectory() {
                     onClick={() => setPage(i + 1)}
                     className="w-9 h-9 rounded-lg text-sm font-semibold transition-colors"
                     style={{
-                      backgroundColor: page === i + 1 ? "#F97316" : "white",
+                      backgroundColor: page === i + 1 ? "#0E5C46" : "white",
                       color: page === i + 1 ? "white" : "#64748B",
                       border: page === i + 1 ? "none" : "1px solid #E2E8F0",
                     }}
@@ -662,7 +662,7 @@ export default function ProviderDirectory() {
             <FiltersSidebar filters={filters} setFilters={setFilters} onClose={() => setMobileFiltersOpen(false)} />
             <button
               onClick={() => setMobileFiltersOpen(false)}
-              style={{ backgroundColor: "#F97316" }}
+              style={{ backgroundColor: "#0E5C46" }}
               className="w-full text-white font-semibold py-3 rounded-xl mt-4 hover:opacity-90 transition-opacity"
             >
               Show {filtered.length} Results
@@ -676,3 +676,5 @@ export default function ProviderDirectory() {
     </PageTransition>
   );
 }
+
+

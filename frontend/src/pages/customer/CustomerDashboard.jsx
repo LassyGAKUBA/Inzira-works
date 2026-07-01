@@ -1,5 +1,5 @@
-// src/pages/customer/CustomerDashboard.jsx
-// Complete Customer Dashboard — sidebar + all sections in one file
+﻿// src/pages/customer/CustomerDashboard.jsx
+// Complete Customer Dashboard â€” sidebar + all sections in one file
 // Sections: Overview, Browse Providers, My Bookings, Saved Providers, Reviews, Settings
 
 import { useState } from "react";
@@ -12,7 +12,7 @@ import {
   Scissors, Sparkles, Package, ChefHat, Palette, Layers, Inbox, CheckCircle,
 } from "lucide-react";
 
-// Build initials from a full name, e.g. "Niyomugaba Jean" → "NJ"
+// Build initials from a full name, e.g. "Niyomugaba Jean" â†’ "NJ"
 function initialsFromName(name = "") {
   const parts = name.trim().split(/\s+/);
   if (parts.length === 0 || parts[0] === "") return "?";
@@ -20,14 +20,14 @@ function initialsFromName(name = "") {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-// First name for greetings, e.g. "Niyomugaba Jean" → "Niyomugaba"
+// First name for greetings, e.g. "Niyomugaba Jean" â†’ "Niyomugaba"
 function firstName(name = "") {
   return name.trim().split(/\s+/)[0] || "there";
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // MOCK DATA
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const CUSTOMER = {
   name: "Niyomugaba Jean",
   initials: "NJ",
@@ -41,7 +41,7 @@ const CUSTOMER = {
 };
 
 const PROVIDERS = [
-  { id: 1, name: "Uwase Clarisse", role: "Tailor & Fashion Designer", district: "Gasabo", trustScore: 94, rating: 4.9, reviews: 38, completedJobs: 112, badge: "Top Rated", skills: ["Dresses", "Uniforms", "Alterations"], initials: "UC", color: "#F97316", saved: true },
+  { id: 1, name: "Uwase Clarisse", role: "Tailor & Fashion Designer", district: "Gasabo", trustScore: 94, rating: 4.9, reviews: 38, completedJobs: 112, badge: "Top Rated", skills: ["Dresses", "Uniforms", "Alterations"], initials: "UC", color: "#0E5C46", saved: true },
   { id: 2, name: "Mukamana Diane", role: "Professional Hairdresser", district: "Kicukiro", trustScore: 88, rating: 4.7, reviews: 55, completedJobs: 203, badge: "Verified", skills: ["Braiding", "Natural Hair", "Styling"], initials: "MD", color: "#8B5CF6", saved: true },
   { id: 3, name: "Ingabire Alice", role: "Handcraft & Basket Weaving", district: "Nyarugenge", trustScore: 91, rating: 4.8, reviews: 27, completedJobs: 89, badge: "Verified", skills: ["Agaseke", "Sisal Crafts", "Export Quality"], initials: "IA", color: "#10B981", saved: false },
   { id: 4, name: "Mukashyaka Rose", role: "Caterer & Event Chef", district: "Gasabo", trustScore: 86, rating: 4.6, reviews: 41, completedJobs: 78, badge: "Verified", skills: ["Local Cuisine", "Event Catering", "Buffet"], initials: "MR", color: "#3B82F6", saved: false },
@@ -50,7 +50,7 @@ const PROVIDERS = [
 ];
 
 const BOOKINGS = [
-  { id: 1, provider: "Uwase Clarisse", role: "Tailor", service: "Wedding Dress Alteration", date: "Jun 14, 2026", time: "10:00 AM", status: "pending", amount: "RWF 15,000", initials: "UC", color: "#F97316" },
+  { id: 1, provider: "Uwase Clarisse", role: "Tailor", service: "Wedding Dress Alteration", date: "Jun 14, 2026", time: "10:00 AM", status: "pending", amount: "RWF 15,000", initials: "UC", color: "#0E5C46" },
   { id: 2, provider: "Uwimana Grace", role: "Event Decorator", service: "Birthday Party Decoration", date: "Jun 20, 2026", time: "8:00 AM", status: "confirmed", amount: "RWF 60,000", initials: "UG", color: "#F59E0B" },
   { id: 3, provider: "Mukamana Diane", role: "Hairdresser", service: "Braiding Session", date: "Jun 5, 2026", time: "1:00 PM", status: "completed", amount: "RWF 8,000", initials: "MD", color: "#8B5CF6" },
   { id: 4, provider: "Mukashyaka Rose", role: "Caterer", service: "Office Lunch Catering (20 ppl)", date: "May 28, 2026", time: "12:00 PM", status: "completed", amount: "RWF 90,000", initials: "MR", color: "#3B82F6" },
@@ -71,9 +71,9 @@ const MY_REVIEWS = [
   { id: 2, provider: "Mukashyaka Rose", rating: 4, date: "May 29, 2026", text: "Food was delicious and arrived on time. Would have liked more variety in the buffet.", initials: "MR", color: "#3B82F6", editable: true },
 ];
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // DESIGN PRIMITIVES
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function Avatar({ initials, color, size = 40 }) {
   return (
     <div style={{ width: size, height: size, backgroundColor: color + "20", border: `2px solid ${color}`, color, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: size * 0.33, flexShrink: 0 }}>
@@ -91,8 +91,8 @@ function StarRating({ rating, size = "sm" }) {
           key={s}
           size={px}
           style={{
-            color: s <= Math.round(rating) ? "#F97316" : "#CBD5E1",
-            fill:  s <= Math.round(rating) ? "#F97316" : "none",
+            color: s <= Math.round(rating) ? "#0E5C46" : "#CBD5E1",
+            fill:  s <= Math.round(rating) ? "#0E5C46" : "none",
           }}
         />
       ))}
@@ -101,10 +101,10 @@ function StarRating({ rating, size = "sm" }) {
 }
 
 function TrustScoreBadge({ score }) {
-  const color = score >= 90 ? "#10B981" : score >= 75 ? "#F97316" : "#64748B";
+  const color = score >= 90 ? "#10B981" : score >= 75 ? "#0E5C46" : "#64748B";
   return (
     <div style={{ border: `2px solid ${color}`, color }} className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold bg-white">
-      <span>✦</span> {score}
+      <span>âœ¦</span> {score}
     </div>
   );
 }
@@ -124,7 +124,7 @@ function StatusBadge({ status }) {
   );
 }
 
-function StatCard({ icon, label, value, sub, color = "#F97316" }) {
+function StatCard({ icon, label, value, sub, color = "#0E5C46" }) {
   return (
     <div className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col gap-3">
       <div className="flex items-center justify-between">
@@ -134,16 +134,16 @@ function StatCard({ icon, label, value, sub, color = "#F97316" }) {
         {sub && <span className="text-xs text-slate-400 font-medium">{sub}</span>}
       </div>
       <div>
-        <p className="text-2xl font-black" style={{ color: "#1E293B" }}>{value}</p>
+        <p className="text-2xl font-black" style={{ color: "#172420" }}>{value}</p>
         <p className="text-sm text-slate-500 mt-0.5">{label}</p>
       </div>
     </div>
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // PROVIDER CARD (for Browse + Saved sections)
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function ProviderCard({ provider, savedIds, toggleSave }) {
   const isSaved = savedIds.includes(provider.id);
   return (
@@ -160,9 +160,9 @@ function ProviderCard({ provider, savedIds, toggleSave }) {
           onClick={() => toggleSave(provider.id)}
           className="text-lg flex-shrink-0 transition-transform hover:scale-110"
           aria-label={isSaved ? "Unsave provider" : "Save provider"}
-          style={{ color: isSaved ? "#F97316" : "#CBD5E1" }}
+          style={{ color: isSaved ? "#0E5C46" : "#CBD5E1" }}
         >
-          <Heart size={18} style={{ fill: isSaved ? "#F97316" : "none" }} />
+          <Heart size={18} style={{ fill: isSaved ? "#0E5C46" : "none" }} />
         </button>
       </div>
 
@@ -182,9 +182,9 @@ function ProviderCard({ provider, savedIds, toggleSave }) {
 
       <div className="flex items-center justify-between pt-1 border-t border-slate-100">
         <div className="flex items-center gap-1.5 text-slate-400">
-          <MapPin size={12} /><span className="text-xs">{provider.district} · {provider.completedJobs} jobs</span>
+          <MapPin size={12} /><span className="text-xs">{provider.district} Â· {provider.completedJobs} jobs</span>
         </div>
-        <button style={{ backgroundColor: "#F97316" }} className="text-white text-xs font-medium px-3 py-1.5 rounded-lg hover:opacity-90 transition-opacity">
+        <button style={{ backgroundColor: "#0E5C46" }} className="text-white text-xs font-medium px-3 py-1.5 rounded-lg hover:opacity-90 transition-opacity">
           Book Now
         </button>
       </div>
@@ -192,9 +192,9 @@ function ProviderCard({ provider, savedIds, toggleSave }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // NAV ITEMS
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const NAV_ITEMS = [
   { id: "overview", Icon: LayoutDashboard, label: "Overview" },
   { id: "browse",   Icon: Search,          label: "Browse"   },
@@ -204,18 +204,18 @@ const NAV_ITEMS = [
   { id: "settings", Icon: Settings,        label: "Settings" },
 ];
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // SIDEBAR
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function Sidebar({ active, setActive, collapsed, setCollapsed }) {
   return (
     <aside
       className="flex flex-col h-full transition-all duration-200"
-      style={{ width: collapsed ? 64 : 240, backgroundColor: "#1E293B", flexShrink: 0 }}
+      style={{ width: collapsed ? 64 : 240, backgroundColor: "#172420", flexShrink: 0 }}
     >
       {/* Logo */}
       <div className="flex items-center gap-3 px-4 py-5 border-b border-slate-700">
-        <div style={{ backgroundColor: "#F97316", flexShrink: 0 }} className="w-8 h-8 rounded-lg flex items-center justify-center">
+        <div style={{ backgroundColor: "#0E5C46", flexShrink: 0 }} className="w-8 h-8 rounded-lg flex items-center justify-center">
           <span className="text-white font-black text-sm">IW</span>
         </div>
         {!collapsed && <span className="text-white font-bold text-base tracking-tight whitespace-nowrap">Inzira Works</span>}
@@ -243,7 +243,7 @@ function Sidebar({ active, setActive, collapsed, setCollapsed }) {
               key={item.id}
               onClick={() => setActive(item.id)}
               className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 text-left w-full"
-              style={{ backgroundColor: isActive ? "#F97316" : "transparent", color: isActive ? "white" : "#94A3B8" }}
+              style={{ backgroundColor: isActive ? "#0E5C46" : "transparent", color: isActive ? "white" : "#94A3B8" }}
               title={collapsed ? item.label : undefined}
             >
               <item.Icon size={18} className="flex-shrink-0" />
@@ -276,9 +276,9 @@ function Sidebar({ active, setActive, collapsed, setCollapsed }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // SECTION: OVERVIEW
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function OverviewSection({ savedIds, toggleSave, setActive }) {
   const upcoming = BOOKINGS.filter((b) => b.status === "pending" || b.status === "confirmed");
   const recommended = PROVIDERS.slice(0, 3);
@@ -291,15 +291,15 @@ function OverviewSection({ savedIds, toggleSave, setActive }) {
         style={{ background: "linear-gradient(135deg, #1E293B 0%, #0F172A 100%)" }}
       >
         <div className="flex flex-col gap-1">
-          <p style={{ color: "#F97316" }} className="text-xs font-bold uppercase tracking-widest">Good morning</p>
+          <p style={{ color: "#0E5C46" }} className="text-xs font-bold uppercase tracking-widest">Good morning</p>
           <h2 className="text-white text-xl font-black">Welcome back, {firstName(CUSTOMER.name)}!</h2>
           <p className="text-slate-400 text-sm">
-            You have <span style={{ color: "#F97316" }} className="font-semibold">{upcoming.length} upcoming booking{upcoming.length !== 1 ? "s" : ""}</span>.
+            You have <span style={{ color: "#0E5C46" }} className="font-semibold">{upcoming.length} upcoming booking{upcoming.length !== 1 ? "s" : ""}</span>.
           </p>
         </div>
         <button
           onClick={() => setActive("browse")}
-          style={{ backgroundColor: "#F97316" }}
+          style={{ backgroundColor: "#0E5C46" }}
           className="text-white font-semibold text-sm px-5 py-2.5 rounded-xl hover:opacity-90 transition-opacity flex-shrink-0"
         >
           Find a Provider
@@ -308,7 +308,7 @@ function OverviewSection({ savedIds, toggleSave, setActive }) {
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={<Calendar size={18} />} label="Total Bookings" value={CUSTOMER.totalBookings} color="#F97316" />
+        <StatCard icon={<Calendar size={18} />} label="Total Bookings" value={CUSTOMER.totalBookings} color="#0E5C46" />
         <StatCard icon={<TrendingUp size={18} />} label="Active Bookings" value={CUSTOMER.activeBookings} color="#3B82F6" />
         <StatCard icon={<Heart size={18} />} label="Saved Providers" value={CUSTOMER.savedCount} color="#EC4899" />
         <StatCard icon={<Star size={18} />} label="Reviews Given" value={MY_REVIEWS.length} color="#F59E0B" />
@@ -317,8 +317,8 @@ function OverviewSection({ savedIds, toggleSave, setActive }) {
       {/* Upcoming bookings */}
       <div className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <h3 style={{ color: "#1E293B" }} className="font-bold">Upcoming Bookings</h3>
-          <button onClick={() => setActive("bookings")} style={{ color: "#F97316" }} className="text-xs font-semibold hover:underline">View all</button>
+          <h3 style={{ color: "#172420" }} className="font-bold">Upcoming Bookings</h3>
+          <button onClick={() => setActive("bookings")} style={{ color: "#0E5C46" }} className="text-xs font-semibold hover:underline">View all</button>
         </div>
         {upcoming.length === 0 ? (
           <p className="text-sm text-slate-400 text-center py-6">No upcoming bookings yet.</p>
@@ -344,8 +344,8 @@ function OverviewSection({ savedIds, toggleSave, setActive }) {
       {/* Recommended providers */}
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <h3 style={{ color: "#1E293B" }} className="font-bold">Recommended for You</h3>
-          <button onClick={() => setActive("browse")} style={{ color: "#F97316" }} className="text-xs font-semibold hover:underline">Browse all</button>
+          <h3 style={{ color: "#172420" }} className="font-bold">Recommended for You</h3>
+          <button onClick={() => setActive("browse")} style={{ color: "#0E5C46" }} className="text-xs font-semibold hover:underline">Browse all</button>
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {recommended.map((p) => (
@@ -357,9 +357,9 @@ function OverviewSection({ savedIds, toggleSave, setActive }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // SECTION: BROWSE PROVIDERS
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function BrowseSection({ savedIds, toggleSave }) {
   const [search, setSearch] = useState("");
   const [districtFilter, setDistrictFilter] = useState("all");
@@ -386,7 +386,7 @@ function BrowseSection({ savedIds, toggleSave }) {
   return (
     <div className="flex flex-col gap-5">
       <div>
-        <h2 style={{ color: "#1E293B" }} className="text-xl font-black">Browse Providers</h2>
+        <h2 style={{ color: "#172420" }} className="text-xl font-black">Browse Providers</h2>
         <p className="text-slate-500 text-sm mt-0.5">Find skilled women professionals across Kigali</p>
       </div>
 
@@ -410,7 +410,7 @@ function BrowseSection({ savedIds, toggleSave }) {
               onClick={() => setDistrictFilter(d)}
               className="px-4 py-1.5 rounded-full text-xs font-semibold capitalize transition-all"
               style={{
-                backgroundColor: districtFilter === d ? "#F97316" : "#F1F5F9",
+                backgroundColor: districtFilter === d ? "#0E5C46" : "#F1F5F9",
                 color: districtFilter === d ? "white" : "#64748B",
               }}
             >
@@ -437,7 +437,7 @@ function BrowseSection({ savedIds, toggleSave }) {
         {CATEGORIES.map((cat) => (
           <button
             key={cat.label}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-slate-600 border border-slate-200 bg-white hover:border-orange-300 hover:text-orange-600 transition-colors flex-shrink-0"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-slate-600 border border-slate-200 bg-white hover:border-green-300 hover:text-green-700 transition-colors flex-shrink-0"
           >
             <cat.Icon size={14} /> {cat.label}
           </button>
@@ -464,9 +464,9 @@ function BrowseSection({ savedIds, toggleSave }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // SECTION: MY BOOKINGS
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function BookingsSection() {
   const [filter, setFilter] = useState("all");
   const filters = ["all", "pending", "confirmed", "completed", "cancelled"];
@@ -476,7 +476,7 @@ function BookingsSection() {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center justify-between">
-        <h2 style={{ color: "#1E293B" }} className="text-xl font-black">My Bookings</h2>
+        <h2 style={{ color: "#172420" }} className="text-xl font-black">My Bookings</h2>
         <span className="text-sm text-slate-500">{filtered.length} {filter === "all" ? "total" : filter}</span>
       </div>
 
@@ -487,7 +487,7 @@ function BookingsSection() {
             key={f}
             onClick={() => setFilter(f)}
             className="px-4 py-1.5 rounded-full text-xs font-semibold capitalize transition-all"
-            style={{ backgroundColor: filter === f ? "#F97316" : "#F1F5F9", color: filter === f ? "white" : "#64748B" }}
+            style={{ backgroundColor: filter === f ? "#0E5C46" : "#F1F5F9", color: filter === f ? "white" : "#64748B" }}
           >
             {f}
           </button>
@@ -510,7 +510,7 @@ function BookingsSection() {
                   <StatusBadge status={b.status} />
                 </div>
                 <div className="flex items-center gap-4 mt-3 flex-wrap">
-                  <span className="text-xs text-slate-500 flex items-center gap-1"><Calendar size={11} /> {b.date} · {b.time}</span>
+                  <span className="text-xs text-slate-500 flex items-center gap-1"><Calendar size={11} /> {b.date} Â· {b.time}</span>
                   <span className="text-xs font-semibold text-slate-700">{b.amount}</span>
                 </div>
 
@@ -524,7 +524,7 @@ function BookingsSection() {
                 )}
                 {b.status === "confirmed" && (
                   <div className="flex gap-2 mt-3">
-                    <button style={{ backgroundColor: "#F97316" }} className="text-white text-xs font-semibold px-4 py-1.5 rounded-lg hover:opacity-90 transition-opacity">
+                    <button style={{ backgroundColor: "#0E5C46" }} className="text-white text-xs font-semibold px-4 py-1.5 rounded-lg hover:opacity-90 transition-opacity">
                       Message Provider
                     </button>
                     <button className="text-slate-500 text-xs font-semibold px-4 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50">
@@ -534,7 +534,7 @@ function BookingsSection() {
                 )}
                 {b.status === "completed" && (
                   <div className="flex gap-2 mt-3">
-                    <button style={{ backgroundColor: "#F97316" }} className="text-white text-xs font-semibold px-4 py-1.5 rounded-lg hover:opacity-90 transition-opacity">
+                    <button style={{ backgroundColor: "#0E5C46" }} className="text-white text-xs font-semibold px-4 py-1.5 rounded-lg hover:opacity-90 transition-opacity">
                       Leave a Review
                     </button>
                     <button className="text-slate-500 text-xs font-semibold px-4 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50">
@@ -559,16 +559,16 @@ function BookingsSection() {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // SECTION: SAVED PROVIDERS
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function SavedSection({ savedIds, toggleSave, setActive }) {
   const saved = PROVIDERS.filter((p) => savedIds.includes(p.id));
 
   return (
     <div className="flex flex-col gap-5">
       <div>
-        <h2 style={{ color: "#1E293B" }} className="text-xl font-black">Saved Providers</h2>
+        <h2 style={{ color: "#172420" }} className="text-xl font-black">Saved Providers</h2>
         <p className="text-slate-500 text-sm mt-0.5">Providers you've bookmarked for later</p>
       </div>
 
@@ -579,7 +579,7 @@ function SavedSection({ savedIds, toggleSave, setActive }) {
           <p className="text-sm text-slate-400">Tap the heart icon on any provider to save them here.</p>
           <button
             onClick={() => setActive("browse")}
-            style={{ backgroundColor: "#F97316" }}
+            style={{ backgroundColor: "#0E5C46" }}
             className="text-white text-sm font-semibold px-5 py-2 rounded-xl hover:opacity-90 transition-opacity mt-1"
           >
             Browse Providers
@@ -596,20 +596,20 @@ function SavedSection({ savedIds, toggleSave, setActive }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // SECTION: MY REVIEWS
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function ReviewsSection() {
   return (
     <div className="flex flex-col gap-5">
       <div>
-        <h2 style={{ color: "#1E293B" }} className="text-xl font-black">My Reviews</h2>
+        <h2 style={{ color: "#172420" }} className="text-xl font-black">My Reviews</h2>
         <p className="text-slate-500 text-sm mt-0.5">Reviews you've left for service providers</p>
       </div>
 
       {MY_REVIEWS.length === 0 ? (
         <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center">
-          <p className="text-3xl mb-3">⭐</p>
+          <p className="text-3xl mb-3">â­</p>
           <p className="font-semibold text-slate-700">No reviews yet</p>
           <p className="text-sm text-slate-400 mt-1">After a completed booking, you can leave a review.</p>
         </div>
@@ -630,7 +630,7 @@ function ReviewsSection() {
               <p className="text-sm text-slate-600 leading-relaxed">{r.text}</p>
               {r.editable && (
                 <div className="flex gap-2 pt-1 border-t border-slate-50">
-                  <button style={{ color: "#F97316" }} className="text-xs font-semibold hover:underline pt-2">Edit</button>
+                  <button style={{ color: "#0E5C46" }} className="text-xs font-semibold hover:underline pt-2">Edit</button>
                   <button className="text-xs font-semibold text-slate-400 hover:text-red-500 pt-2">Delete</button>
                 </div>
               )}
@@ -642,9 +642,9 @@ function ReviewsSection() {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // SECTION: SETTINGS
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function SettingsSection() {
   const [form, setForm] = useState({
     fullName: CUSTOMER.name,
@@ -662,7 +662,7 @@ function SettingsSection() {
 
   return (
     <div className="flex flex-col gap-5">
-      <h2 style={{ color: "#1E293B" }} className="text-xl font-black">Settings</h2>
+      <h2 style={{ color: "#172420" }} className="text-xl font-black">Settings</h2>
 
       {/* Profile info */}
       <div className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col gap-5">
@@ -671,7 +671,7 @@ function SettingsSection() {
         <div className="flex items-center gap-4">
           <Avatar initials={CUSTOMER.initials} color="#3B82F6" size={64} />
           <div>
-            <button style={{ color: "#F97316" }} className="text-sm font-semibold hover:underline">Change photo</button>
+            <button style={{ color: "#0E5C46" }} className="text-sm font-semibold hover:underline">Change photo</button>
             <p className="text-xs text-slate-400 mt-0.5">JPG or PNG, max 2MB</p>
           </div>
         </div>
@@ -689,7 +689,7 @@ function SettingsSection() {
                 <select
                   value={form[field]}
                   onChange={set(field)}
-                  className="px-3 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 bg-white text-slate-800"
+                  className="px-3 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-green-400 focus:ring-2 focus:ring-orange-100 bg-white text-slate-800"
                 >
                   {options.map((o) => <option key={o}>{o}</option>)}
                 </select>
@@ -698,14 +698,14 @@ function SettingsSection() {
                   type="text"
                   value={form[field]}
                   onChange={set(field)}
-                  className="px-3 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 text-slate-800 bg-white"
+                  className="px-3 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-green-400 focus:ring-2 focus:ring-orange-100 text-slate-800 bg-white"
                 />
               )}
             </div>
           ))}
         </div>
 
-        <button style={{ backgroundColor: "#F97316" }} className="text-white font-semibold text-sm px-6 py-2.5 rounded-xl hover:opacity-90 transition-opacity w-fit">
+        <button style={{ backgroundColor: "#0E5C46" }} className="text-white font-semibold text-sm px-6 py-2.5 rounded-xl hover:opacity-90 transition-opacity w-fit">
           Save Changes
         </button>
       </div>
@@ -725,7 +725,7 @@ function SettingsSection() {
             <button
               onClick={() => setForm((p) => ({ ...p, [field]: !p[field] }))}
               className="relative w-11 h-6 rounded-full transition-colors flex-shrink-0"
-              style={{ backgroundColor: form[field] ? "#F97316" : "#CBD5E1" }}
+              style={{ backgroundColor: form[field] ? "#0E5C46" : "#CBD5E1" }}
               role="switch"
               aria-checked={form[field]}
             >
@@ -755,9 +755,9 @@ function SettingsSection() {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // TOPBAR
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function Topbar({ active, mobileMenuOpen, setMobileMenuOpen }) {
   const label = NAV_ITEMS.find((n) => n.id === active)?.label || "Dashboard";
   return (
@@ -769,7 +769,7 @@ function Topbar({ active, mobileMenuOpen, setMobileMenuOpen }) {
         >
           <Menu size={20} />
         </button>
-        <h1 style={{ color: "#1E293B" }} className="font-bold text-base">{label}</h1>
+        <h1 style={{ color: "#172420" }} className="font-bold text-base">{label}</h1>
       </div>
       <div className="flex items-center gap-3">
         <LanguageSwitcher compact />
@@ -780,9 +780,9 @@ function Topbar({ active, mobileMenuOpen, setMobileMenuOpen }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // MOBILE BOTTOM NAV
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function MobileNav({ active, setActive }) {
   return (
     <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 z-40 flex">
@@ -793,7 +793,7 @@ function MobileNav({ active, setActive }) {
             key={item.id}
             onClick={() => setActive(item.id)}
             className="flex-1 flex flex-col items-center gap-0.5 py-2 transition-colors"
-            style={{ color: isActive ? "#F97316" : "#94A3B8" }}
+            style={{ color: isActive ? "#0E5C46" : "#94A3B8" }}
           >
             <item.Icon size={20} />
             <span className="text-xs font-medium">{item.label}</span>
@@ -804,9 +804,9 @@ function MobileNav({ active, setActive }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // DASHBOARD ROOT
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function CustomerDashboard() {
   const { user } = useAuth();
 
@@ -882,3 +882,5 @@ export default function CustomerDashboard() {
     </div>
   );
 }
+
+
