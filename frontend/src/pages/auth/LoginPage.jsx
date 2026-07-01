@@ -213,7 +213,7 @@ export default function LoginPage() {
 
             <p style={{ textAlign: "center", fontSize: "0.875rem", color: "#5c7068" }}>
               {t("auth_no_account")}{" "}
-              <Link to="/signup" style={{ color: G, fontWeight: 600, textDecoration: "none" }} className="hover:underline">
+              <Link to="/role-select" style={{ color: G, fontWeight: 600, textDecoration: "none" }} className="hover:underline">
                 {t("auth_signup_link")}
               </Link>
             </p>
