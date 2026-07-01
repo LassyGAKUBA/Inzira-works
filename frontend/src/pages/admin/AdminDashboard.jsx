@@ -178,8 +178,8 @@ function VerificationQueue({ queue, onApprove }) {
                   {p.headline || "No headline"} · {p.district || "—"}
                 </p>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
-                  <span style={{ backgroundColor: DARK, color: GOLD, borderRadius: 99, padding: "2px 8px", fontSize: "0.65rem", fontWeight: 700 }}>
-                    ◆ {Math.round(p.trust_score || 0)}
+                  <span style={{ backgroundColor: DARK, color: GOLD, borderRadius: 99, padding: "2px 8px", fontSize: "0.65rem", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4 }}>
+                    <span style={{ width: 5, height: 5, borderRadius: "50%", backgroundColor: GOLD, display: "inline-block" }} /> {Math.round(p.trust_score || 0)}
                   </span>
                   <span style={{ backgroundColor: "#e8f3ee", color: G, borderRadius: 99, padding: "2px 10px", fontSize: "0.65rem", fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
                     <FileText size={10} /> National ID
