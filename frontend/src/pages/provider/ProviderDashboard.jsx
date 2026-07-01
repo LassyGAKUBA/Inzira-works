@@ -269,34 +269,88 @@ function MyProfile({ user, profile, onSave }) {
     about:    profile?.bio      || "",
     district: profile?.district || "",
   });
-  const [saving,   setSaving]   = useState(false);
-  const [saveMsg,  setSaveMsg]  = useState("");
+  const [saving,  setSaving]  = useState(false);
+  const [saveMsg, setSaveMsg] = useState("");
 
-  // Sync if profile loads after mount
+  // Specialties
+  const [specialties, setSpecialties] = useState([]);
+  const [tagInput,    setTagInput]    = useState("");
+
+  // Services
+  const [services,     setServices]     = useState([]);
+  const [showSvcForm,  setShowSvcForm]  = useState(false);
+  const [svcForm,      setSvcForm]      = useState({ title: "", price: "", price_type: "fixed" });
+  const [svcSaving,    setSvcSaving]    = useState(false);
+
   useEffect(() => {
-    if (profile) setForm({ business: profile.headline || "", about: profile.bio || "", district: profile.district || "" });
+    if (profile) {
+      setForm({ business: profile.headline || "", about: profile.bio || "", district: profile.district || "" });
+      loadExtras();
+    }
   }, [profile]);
 
+  const loadExtras = async () => {
+    if (!profile?.id) return;
+    const [specRes, svcRes] = await Promise.all([
+      supabase.from("provider_specialties").select("id, label").eq("provider_id", profile.id),
+      supabase.from("services").select("id, title, price, price_type").eq("provider_id", profile.id).eq("is_active", true).order("created_at"),
+    ]);
+    setSpecialties(specRes.data || []);
+    setServices(svcRes.data   || []);
+  };
+
   const handleSave = async () => {
-    setSaving(true);
-    setSaveMsg("");
+    setSaving(true); setSaveMsg("");
     try {
-      const { error } = await supabase
-        .from("provider_profiles")
+      const { error } = await supabase.from("provider_profiles")
         .update({ headline: form.business, bio: form.about, district: form.district })
         .eq("user_id", user.id);
       if (error) throw error;
       setSaveMsg("Saved!");
       if (onSave) onSave({ ...profile, headline: form.business, bio: form.about, district: form.district });
-    } catch {
-      setSaveMsg("Could not save. Please try again.");
-    } finally {
-      setSaving(false);
-      setTimeout(() => setSaveMsg(""), 3000);
+    } catch { setSaveMsg("Could not save. Please try again."); }
+    finally { setSaving(false); setTimeout(() => setSaveMsg(""), 3000); }
+  };
+
+  const addTag = async () => {
+    const label = tagInput.trim();
+    if (!label || !profile?.id) return;
+    const { data, error } = await supabase.from("provider_specialties").insert({ provider_id: profile.id, label }).select("id, label").single();
+    if (!error && data) { setSpecialties(s => [...s, data]); setTagInput(""); }
+  };
+
+  const removeTag = async (id) => {
+    await supabase.from("provider_specialties").delete().eq("id", id);
+    setSpecialties(s => s.filter(t => t.id !== id));
+  };
+
+  const addService = async () => {
+    if (!svcForm.title.trim() || !profile?.id) return;
+    setSvcSaving(true);
+    const { data, error } = await supabase.from("services").insert({
+      provider_id: profile.id,
+      title:       svcForm.title.trim(),
+      price:       svcForm.price ? Number(svcForm.price) : null,
+      price_type:  svcForm.price_type,
+    }).select("id, title, price, price_type").single();
+    setSvcSaving(false);
+    if (!error && data) {
+      setServices(s => [...s, data]);
+      setSvcForm({ title: "", price: "", price_type: "fixed" });
+      setShowSvcForm(false);
     }
   };
 
+  const removeService = async (id) => {
+    await supabase.from("services").update({ is_active: false }).eq("id", id);
+    setServices(s => s.filter(sv => sv.id !== id));
+  };
+
   const completeness = profile?.profile_completeness ?? 0;
+
+  const inputStyle = { width: "100%", padding: "10px 14px", border: "1px solid #e8e2d8", borderRadius: 10, fontFamily: SANS, fontSize: "0.875rem", color: DARK, outline: "none", boxSizing: "border-box", backgroundColor: "white" };
+  const labelStyle = { color: MUTED, fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 6 };
+  const sectionDiv = { borderTop: "1px solid #f0ece4", paddingTop: 20, marginTop: 4 };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -311,50 +365,138 @@ function MyProfile({ user, profile, onSave }) {
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 280px", gap: 16 }}>
-        <div style={{ ...CARD, padding: 24 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 24 }}>
-            <div style={{ width: 60, height: 60, borderRadius: "50%", border: "1.5px dashed #c8c0b0", backgroundColor: "#f5f0e8", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, flexShrink: 0 }}>
-              <ImageIcon size={16} style={{ color: "#c8c0b0" }} />
-              <span style={{ color: "#c8c0b0", fontSize: "0.6rem" }}>Photo</span>
+        {/* ── Left column ── */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+
+          {/* Basic info */}
+          <div style={{ ...CARD, padding: 24 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
+              <div style={{ width: 52, height: 52, borderRadius: "50%", border: "1.5px dashed #c8c0b0", backgroundColor: "#f5f0e8", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, flexShrink: 0 }}>
+                <ImageIcon size={14} style={{ color: "#c8c0b0" }} />
+                <span style={{ color: "#c8c0b0", fontSize: "0.55rem" }}>Photo</span>
+              </div>
+              <div>
+                <p style={{ color: DARK, fontWeight: 700, fontSize: "0.95rem" }}>{user?.fullName || "Your name"}</p>
+                <p style={{ color: MUTED, fontSize: "0.78rem", marginTop: 1 }}>{form.business || "Headline"}</p>
+              </div>
             </div>
-            <div>
-              <p style={{ color: DARK, fontWeight: 700, fontSize: "1rem" }}>{user?.fullName || "Your name"}</p>
-              <p style={{ color: MUTED, fontSize: "0.8rem", marginTop: 2 }}>{form.business || "Headline"}</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div>
+                <label style={labelStyle}>Headline</label>
+                <input value={form.business} onChange={e => setForm(f => ({ ...f, business: e.target.value }))}
+                  placeholder="e.g. Tailor & Fashion Designer" style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>About</label>
+                <textarea value={form.about} onChange={e => setForm(f => ({ ...f, about: e.target.value }))} rows={4}
+                  placeholder="Tell customers about your skills and experience…"
+                  style={{ ...inputStyle, resize: "vertical" }} />
+              </div>
+              <div>
+                <label style={labelStyle}>District</label>
+                <select value={form.district} onChange={e => setForm(f => ({ ...f, district: e.target.value }))} style={inputStyle}>
+                  <option value="">Select district</option>
+                  {["Gasabo", "Kicukiro", "Nyarugenge"].map(d => <option key={d} value={d}>{d}</option>)}
+                </select>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <button onClick={handleSave} disabled={saving}
+                  style={{ backgroundColor: saving ? "#3d8a6e" : G, color: "white", border: "none", borderRadius: 10, padding: "10px 22px", fontFamily: SANS, fontWeight: 600, fontSize: "0.875rem", cursor: saving ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: 8 }}>
+                  {saving && <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} />}
+                  {saving ? "Saving…" : "Save changes"}
+                </button>
+                {saveMsg && <span style={{ color: saveMsg === "Saved!" ? G : "#e05c5c", fontSize: "0.8rem" }}>{saveMsg}</span>}
+              </div>
             </div>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div>
-              <label style={{ color: MUTED, fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 6 }}>Headline</label>
-              <input value={form.business} onChange={e => setForm(f => ({ ...f, business: e.target.value }))}
-                placeholder="e.g. Tailor & Fashion Designer"
-                style={{ width: "100%", padding: "10px 14px", border: "1px solid #e8e2d8", borderRadius: 10, fontFamily: SANS, fontSize: "0.875rem", color: DARK, outline: "none", boxSizing: "border-box" }} />
+          {/* Specialties */}
+          <div style={{ ...CARD, padding: 20 }}>
+            <p style={{ color: DARK, fontSize: "0.875rem", fontWeight: 700, marginBottom: 12 }}>Skills & specialties</p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
+              {specialties.map((t) => (
+                <span key={t.id} style={{ backgroundColor: "#e8f3ee", color: G, borderRadius: 99, padding: "5px 12px", fontSize: "0.78rem", fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
+                  {t.label}
+                  <button onClick={() => removeTag(t.id)} style={{ background: "none", border: "none", cursor: "pointer", color: G, padding: 0, lineHeight: 1, fontSize: "0.9rem" }}>×</button>
+                </span>
+              ))}
+              {specialties.length === 0 && <p style={{ color: MUTED, fontSize: "0.8rem" }}>No specialties yet.</p>}
             </div>
-            <div>
-              <label style={{ color: MUTED, fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 6 }}>About</label>
-              <textarea value={form.about} onChange={e => setForm(f => ({ ...f, about: e.target.value }))} rows={4}
-                placeholder="Tell customers about your skills and experience…"
-                style={{ width: "100%", padding: "10px 14px", border: "1px solid #e8e2d8", borderRadius: 10, fontFamily: SANS, fontSize: "0.875rem", color: DARK, outline: "none", resize: "vertical", boxSizing: "border-box" }} />
-            </div>
-            <div>
-              <label style={{ color: MUTED, fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 6 }}>District</label>
-              <select value={form.district} onChange={e => setForm(f => ({ ...f, district: e.target.value }))}
-                style={{ width: "100%", padding: "10px 14px", border: "1px solid #e8e2d8", borderRadius: 10, fontFamily: SANS, fontSize: "0.875rem", color: DARK, outline: "none", backgroundColor: "white", boxSizing: "border-box" }}>
-                <option value="">Select district</option>
-                {["Gasabo", "Kicukiro", "Nyarugenge"].map(d => <option key={d} value={d}>{d}</option>)}
-              </select>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <button onClick={handleSave} disabled={saving}
-                style={{ backgroundColor: saving ? "#3d8a6e" : G, color: "white", border: "none", borderRadius: 10, padding: "11px 24px", fontFamily: SANS, fontWeight: 600, fontSize: "0.875rem", cursor: saving ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: 8 }}>
-                {saving && <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} />}
-                {saving ? "Saving…" : "Save changes"}
+            <div style={{ display: "flex", gap: 8 }}>
+              <input
+                value={tagInput}
+                onChange={e => setTagInput(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && (e.preventDefault(), addTag())}
+                placeholder="e.g. Wedding dresses, Agaseke…"
+                style={{ ...inputStyle, flex: 1, padding: "8px 12px" }}
+              />
+              <button onClick={addTag} style={{ backgroundColor: G, color: "white", border: "none", borderRadius: 10, padding: "8px 16px", fontFamily: SANS, fontWeight: 600, fontSize: "0.8rem", cursor: "pointer", flexShrink: 0 }}>
+                Add
               </button>
-              {saveMsg && <span style={{ color: saveMsg === "Saved!" ? G : "#e05c5c", fontSize: "0.8rem" }}>{saveMsg}</span>}
             </div>
           </div>
+
+          {/* Services */}
+          <div style={{ ...CARD, padding: 20 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+              <p style={{ color: DARK, fontSize: "0.875rem", fontWeight: 700 }}>Services offered</p>
+              <button onClick={() => setShowSvcForm(v => !v)}
+                style={{ backgroundColor: showSvcForm ? "#f0ece4" : G, color: showSvcForm ? DARK : "white", border: "none", borderRadius: 8, padding: "6px 14px", fontFamily: SANS, fontWeight: 600, fontSize: "0.78rem", cursor: "pointer" }}>
+                {showSvcForm ? "Cancel" : "+ Add service"}
+              </button>
+            </div>
+
+            {showSvcForm && (
+              <div style={{ backgroundColor: "#faf8f4", borderRadius: 10, padding: 16, marginBottom: 14, display: "flex", flexDirection: "column", gap: 10 }}>
+                <input value={svcForm.title} onChange={e => setSvcForm(f => ({ ...f, title: e.target.value }))}
+                  placeholder="Service title (e.g. Custom dress alteration)"
+                  style={{ ...inputStyle, padding: "9px 12px" }} />
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input value={svcForm.price} onChange={e => setSvcForm(f => ({ ...f, price: e.target.value }))}
+                    placeholder="Price (RWF, optional)" type="number" min="0"
+                    style={{ ...inputStyle, flex: 1, padding: "9px 12px" }} />
+                  <select value={svcForm.price_type} onChange={e => setSvcForm(f => ({ ...f, price_type: e.target.value }))}
+                    style={{ ...inputStyle, width: 130, padding: "9px 12px" }}>
+                    <option value="fixed">Fixed</option>
+                    <option value="starting">Starting at</option>
+                    <option value="hourly">Per hour</option>
+                  </select>
+                </div>
+                <button onClick={addService} disabled={svcSaving || !svcForm.title.trim()}
+                  style={{ backgroundColor: G, color: "white", border: "none", borderRadius: 8, padding: "9px 0", fontFamily: SANS, fontWeight: 600, fontSize: "0.82rem", cursor: svcSaving ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                  {svcSaving && <Loader2 size={13} style={{ animation: "spin 1s linear infinite" }} />}
+                  {svcSaving ? "Adding…" : "Add service"}
+                </button>
+              </div>
+            )}
+
+            {services.length === 0 ? (
+              <p style={{ color: MUTED, fontSize: "0.8rem" }}>No services yet. Add one so customers can book you.</p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                {services.map((sv, i) => (
+                  <div key={sv.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 0", borderTop: i > 0 ? "1px solid #f0ece4" : "none" }}>
+                    <div style={{ flex: 1 }}>
+                      <p style={{ color: DARK, fontSize: "0.85rem", fontWeight: 600 }}>{sv.title}</p>
+                      {sv.price != null && (
+                        <p style={{ color: MUTED, fontSize: "0.75rem", marginTop: 2 }}>
+                          {sv.price_type === "starting" ? "From " : ""}{Number(sv.price).toLocaleString()} RWF{sv.price_type === "hourly" ? "/hr" : ""}
+                        </p>
+                      )}
+                    </div>
+                    <button onClick={() => removeService(sv.id)}
+                      style={{ background: "none", border: "1px solid #e8e2d8", borderRadius: 6, padding: "4px 10px", color: "#e05c5c", fontFamily: SANS, fontSize: "0.72rem", cursor: "pointer" }}>
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
         </div>
 
+        {/* ── Right column ── */}
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div style={{ ...CARD, padding: 18 }}>
             <p style={{ color: DARK, fontSize: "0.8rem", fontWeight: 600, marginBottom: 12 }}>Profile completeness</p>
