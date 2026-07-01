@@ -28,9 +28,8 @@ export default function ProtectedRoute({ children, role }) {
   }
 
   if (role && user.role !== role) {
-    // Logged in but trying to access the wrong dashboard → send home.
-    const home = user.role === "provider" ? "/provider/dashboard" : "/customer/dashboard";
-    return <Navigate to={home} replace />;
+    const HOME = { provider: "/provider/dashboard", customer: "/customer/dashboard", admin: "/admin/dashboard" };
+    return <Navigate to={HOME[user.role] || "/"} replace />;
   }
 
   return children;

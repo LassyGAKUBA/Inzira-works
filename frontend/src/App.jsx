@@ -45,7 +45,14 @@ const router = createBrowserRouter([
     ),
   },
 
-  { path: "/admin/dashboard", element: <AdminDashboard /> },
+  {
+    path: "/admin/dashboard",
+    element: (
+      <ProtectedRoute role="admin">
+        <AdminDashboard />
+      </ProtectedRoute>
+    ),
+  },
 
   { path: "/providers", element: <ProviderDirectory /> },
   { path: "/about", element: <AboutPage /> },
