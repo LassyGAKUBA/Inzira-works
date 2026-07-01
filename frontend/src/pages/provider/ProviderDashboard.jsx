@@ -124,7 +124,7 @@ function Overview({ user, profile, pending, onAccept, onDecline, statsLoading })
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       <div>
         <h1 style={{ fontFamily: SERIF, color: DARK, fontSize: "1.75rem", fontWeight: 700, letterSpacing: "-0.02em" }}>
-          Muraho, {firstName} 👋
+          Welcome back, {firstName}
         </h1>
         <p style={{ color: MUTED, fontSize: "0.875rem", marginTop: 4 }}>Here's how your business is doing this month.</p>
       </div>

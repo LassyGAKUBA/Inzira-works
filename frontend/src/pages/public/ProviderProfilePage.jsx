@@ -14,7 +14,7 @@ import { useAuth } from "../../context/AuthContext";
 import {
   MapPin, Star, CheckCircle, ArrowRight,
   X, Heart, Share2, MessageCircle, Lock,
-  Search, Image as ImageIcon,
+  Search, Image as ImageIcon, Shield,
 } from "lucide-react";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -182,8 +182,8 @@ function TrustScoreBadge({ score, size = "md" }) {
   const color = score >= 90 ? "#10B981" : score >= 75 ? "#0E5C46" : "#64748B";
   const px = size === "lg" ? "text-base px-3 py-1" : "text-xs px-2 py-0.5";
   return (
-    <div style={{ border: `2px solid ${color}`, color }} className={`inline-flex items-center gap-1 rounded-full font-bold bg-white ${px}`}>
-      <span>✦</span> {score}
+    <div style={{ border: `2px solid ${color}`, color }} className={`inline-flex items-center gap-1.5 rounded-full font-bold bg-white ${px}`}>
+      <Shield size={11} fill={color} stroke="none" /> {score}
     </div>
   );
 }

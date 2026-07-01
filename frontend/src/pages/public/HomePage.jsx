@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import {
   Scissors, Sparkles, ChefHat, Package, Home, Layers,
-  ChevronDown, Star, ArrowRight, MapPin,
+  ChevronDown, Star, ArrowRight, MapPin, CheckCircle,
 } from "lucide-react";
 import Navbar from "../../components/shared/Navbar";
 import PageTransition from "../../components/shared/PageTransition";
@@ -28,10 +28,10 @@ const CATEGORIES = [
 ];
 
 const PROVIDERS = [
-  { id: 1, name: "Esperance Nyiransabimana", title: "Caterer & Pastry Chef",      category: "Baking & Catering",   district: "Gasabo",     score: 96, rating: 5.0, reviews: 188 },
-  { id: 2, name: "Solange Mukamana",         title: "Bespoke Tailor & Designer",  category: "Tailoring & Fashion", district: "Gasabo",     score: 94, rating: 4.9, reviews: 127 },
-  { id: 3, name: "Diane Ingabire",           title: "Baker — Cakes & Events",     category: "Baking & Catering",   district: "Nyarugenge", score: 91, rating: 4.9, reviews: 110 },
-  { id: 4, name: "Chantal Uwimana",          title: "Home Cleaning & Laundry",    category: "Home & Cleaning",     district: "Kicukiro",   score: 90, rating: 4.8, reviews: 132 },
+  { id: 1, name: "Esperance Nyiransabimana", title: "Caterer & Pastry Chef",     category: "Baking & Catering",   Icon: ChefHat,   iconBg: "#fef3c7", iconColor: "#92700a", district: "Gasabo",     score: 96, rating: 5.0, reviews: 188 },
+  { id: 2, name: "Solange Mukamana",         title: "Bespoke Tailor & Designer", category: "Tailoring & Fashion", Icon: Scissors,  iconBg: "#e8f3ee", iconColor: "#0E5C46", district: "Gasabo",     score: 94, rating: 4.9, reviews: 127 },
+  { id: 3, name: "Diane Ingabire",           title: "Baker — Cakes & Events",    category: "Baking & Catering",   Icon: ChefHat,   iconBg: "#fef3c7", iconColor: "#92700a", district: "Nyarugenge", score: 91, rating: 4.9, reviews: 110 },
+  { id: 4, name: "Chantal Uwimana",          title: "Home Cleaning & Laundry",   category: "Home & Cleaning",     Icon: Home,      iconBg: "#eff6ff", iconColor: "#3b82f6", district: "Kicukiro",   score: 90, rating: 4.8, reviews: 132 },
 ];
 
 // ── Shared primitives ─────────────────────────────────────────────────────────
@@ -218,75 +218,64 @@ function Hero() {
             </div>
           </div>
 
-          {/* Right — photo collage placeholder */}
+          {/* Right — App UI preview */}
           <div className="hidden md:flex items-center justify-end py-8">
             <div style={{ position: "relative", width: 380, height: 400 }}>
-              {/* Large photo placeholder */}
-              <div
-                style={{
-                  width: 290, height: 265,
-                  border: "1.5px dashed #c8c0b0",
-                  borderRadius: 16,
-                  backgroundColor: "#f5f0e8",
-                  position: "absolute", top: 0, right: 0,
-                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8,
-                }}
-              >
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c0b89c" strokeWidth="1.5">
-                  <rect x="3" y="3" width="18" height="18" rx="2" />
-                  <circle cx="8.5" cy="8.5" r="1.5" />
-                  <path d="m21 15-5-5L5 21" />
-                </svg>
-                <p style={{ color: "#c0b89c", fontSize: "0.7rem", textAlign: "center", lineHeight: 1.4 }}>
-                  Drop a photo — a woman at work<br />(tailor, baker...)
-                </p>
+
+              {/* Large card — provider profile preview */}
+              <div style={{ width: 290, borderRadius: 16, backgroundColor: "white", border: "1px solid #e8e2d8", boxShadow: "0 8px 32px rgba(23,36,32,0.1)", position: "absolute", top: 0, right: 0, overflow: "hidden" }}>
+                <div style={{ backgroundColor: G, padding: "14px 16px", display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{ width: 38, height: 38, borderRadius: "50%", backgroundColor: "rgba(255,255,255,0.18)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "0.8rem", flexShrink: 0 }}>SN</div>
+                  <div>
+                    <p style={{ color: "white", fontWeight: 700, fontSize: "0.85rem", fontFamily: SANS }}>Solange Niyonkuru</p>
+                    <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.7rem", fontFamily: SANS }}>Tailor & Fashion Designer</p>
+                  </div>
+                </div>
+                <div style={{ padding: "12px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span style={{ color: MUTED, fontSize: "0.7rem", display: "flex", alignItems: "center", gap: 3, fontFamily: SANS }}><MapPin size={10} /> Gasabo</span>
+                    <span style={{ backgroundColor: DARK, color: GOLD, borderRadius: 99, padding: "2px 8px", fontSize: "0.65rem", fontWeight: 700, fontFamily: SANS }}>Trust 94</span>
+                  </div>
+                  <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+                    {["Wedding dresses", "Suits", "Alterations"].map(tag => (
+                      <span key={tag} style={{ backgroundColor: "#f0ece4", color: MUTED, borderRadius: 99, padding: "3px 9px", fontSize: "0.65rem", fontFamily: SANS }}>{tag}</span>
+                    ))}
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                    {[1,2,3,4,5].map(s => <Star key={s} size={11} style={{ color: GOLD }} fill={GOLD} />)}
+                    <span style={{ color: MUTED, fontSize: "0.68rem", fontFamily: SANS }}>4.9 · 127 reviews</span>
+                  </div>
+                  <div style={{ backgroundColor: G, borderRadius: 8, padding: "8px 0", textAlign: "center", color: "white", fontFamily: SANS, fontWeight: 600, fontSize: "0.78rem" }}>Book Now</div>
+                </div>
               </div>
 
-              {/* Small photo placeholder */}
-              <div
-                style={{
-                  width: 200, height: 175,
-                  border: "1.5px dashed #c8c0b0",
-                  borderRadius: 16,
-                  backgroundColor: "#f5f0e8",
-                  position: "absolute", bottom: 0, left: 0,
-                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8,
-                }}
-              >
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c0b89c" strokeWidth="1.5">
-                  <rect x="3" y="3" width="18" height="18" rx="2" />
-                  <circle cx="8.5" cy="8.5" r="1.5" />
-                  <path d="m21 15-5-5L5 21" />
-                </svg>
-                <p style={{ color: "#c0b89c", fontSize: "0.7rem" }}>Portfolio / product photo</p>
+              {/* Small card — recent booking confirmation */}
+              <div style={{ width: 196, borderRadius: 14, backgroundColor: "white", border: "1px solid #e8e2d8", boxShadow: "0 6px 24px rgba(23,36,32,0.08)", position: "absolute", bottom: 0, left: 0, padding: 14 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                  <div style={{ width: 32, height: 32, borderRadius: "50%", backgroundColor: "#e8f3ee", color: G, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "0.7rem" }}>EN</div>
+                  <div>
+                    <p style={{ color: DARK, fontWeight: 700, fontSize: "0.78rem", fontFamily: SANS }}>Esperance N.</p>
+                    <p style={{ color: MUTED, fontSize: "0.65rem", fontFamily: SANS }}>Caterer & Baker</p>
+                  </div>
+                </div>
+                <div style={{ backgroundColor: "#e8f3ee", borderRadius: 8, padding: "6px 10px", display: "flex", alignItems: "center", gap: 6 }}>
+                  <CheckCircle size={13} style={{ color: G, flexShrink: 0 }} />
+                  <span style={{ color: G, fontSize: "0.7rem", fontWeight: 600, fontFamily: SANS }}>Booking confirmed</span>
+                </div>
+                <p style={{ color: MUTED, fontSize: "0.65rem", marginTop: 6, fontFamily: SANS }}>Sat 14 Jun · 11:00 am</p>
               </div>
 
               {/* Trust Score floating chip */}
-              <div
-                style={{
-                  position: "absolute", bottom: 24, right: -8,
-                  backgroundColor: "white",
-                  borderRadius: 12,
-                  padding: "10px 14px",
-                  boxShadow: "0 4px 20px rgba(0,0,0,0.12)",
-                  display: "flex", alignItems: "center", gap: 10,
-                  border: "1px solid #ece7de",
-                }}
-              >
-                <div
-                  style={{
-                    width: 40, height: 40, borderRadius: "50%",
-                    border: `3px solid ${GOLD}`,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                  }}
-                >
+              <div style={{ position: "absolute", bottom: 24, right: -8, backgroundColor: "white", borderRadius: 12, padding: "10px 14px", boxShadow: "0 4px 20px rgba(0,0,0,0.12)", display: "flex", alignItems: "center", gap: 10, border: "1px solid #ece7de" }}>
+                <div style={{ width: 40, height: 40, borderRadius: "50%", border: `3px solid ${GOLD}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <span style={{ color: GOLD, fontWeight: 700, fontSize: 13, fontFamily: SANS }}>96</span>
                 </div>
                 <div>
-                  <p style={{ color: "#9aab9e", fontSize: "0.65rem", fontWeight: 500 }}>Trust Score</p>
-                  <p style={{ color: DARK, fontSize: "0.75rem", fontWeight: 600 }}>Esperance N. · Caterer</p>
+                  <p style={{ color: "#9aab9e", fontSize: "0.65rem", fontWeight: 500, fontFamily: SANS }}>Trust Score</p>
+                  <p style={{ color: DARK, fontSize: "0.75rem", fontWeight: 600, fontFamily: SANS }}>Esperance N. · Caterer</p>
                 </div>
               </div>
+
             </div>
           </div>
         </div>
@@ -474,18 +463,18 @@ function TopRated() {
               }}
               className="hover:border-[#0E5C46] transition-colors"
             >
-              {/* Photo placeholder */}
+              {/* Category visual */}
               <div
                 style={{
-                  backgroundColor: "#f5f0e8",
+                  backgroundColor: p.iconBg,
                   margin: 10,
                   borderRadius: 10,
-                  border: "1.5px dashed #c8c0b0",
                   height: 130,
-                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 5,
+                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8,
                 }}
               >
-                <p style={{ color: "#c8c0b0", fontSize: "0.7rem" }}>{p.category}</p>
+                <p.Icon size={32} style={{ color: p.iconColor }} strokeWidth={1.5} />
+                <p style={{ color: p.iconColor, fontSize: "0.72rem", fontWeight: 600, fontFamily: SANS }}>{p.category}</p>
               </div>
 
               {/* Info */}

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { supabase } from "../../lib/supabase";
-import { Calendar, Image as ImageIcon, Star, X, Loader2 } from "lucide-react";
+import { Calendar, Image as ImageIcon, Star, X, Loader2, CheckCircle, Clock, Shield } from "lucide-react";
 
 // ── Tokens ────────────────────────────────────────────────────────────────────
 const G     = "#0E5C46";
@@ -104,8 +104,8 @@ function BookingCard({ row, onReviewClick }) {
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
           <p style={{ color: DARK, fontWeight: 700, fontSize: "0.9rem" }}>{prov.name}</p>
           {prov.trustScore > 0 && (
-            <span style={{ backgroundColor: DARK, color: GOLD, borderRadius: 99, padding: "2px 8px", fontSize: "0.65rem", fontWeight: 700 }}>
-              ◆ {prov.trustScore}
+            <span style={{ backgroundColor: DARK, color: GOLD, borderRadius: 99, padding: "2px 8px", fontSize: "0.65rem", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 3 }}>
+              <span style={{ width: 5, height: 5, borderRadius: "50%", backgroundColor: GOLD, display: "inline-block" }} /> {prov.trustScore}
             </span>
           )}
         </div>
@@ -117,10 +117,10 @@ function BookingCard({ row, onReviewClick }) {
 
       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 10 }}>
         {isUpcoming && row.status === "confirmed" && (
-          <span style={{ border: `1px solid ${G}`, color: G, borderRadius: 99, padding: "3px 10px", fontSize: "0.7rem", fontWeight: 600 }}>✓ Confirmed</span>
+          <span style={{ border: `1px solid ${G}`, color: G, borderRadius: 99, padding: "3px 10px", fontSize: "0.7rem", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 4 }}><CheckCircle size={11} /> Confirmed</span>
         )}
         {isUpcoming && row.status === "pending" && (
-          <span style={{ border: `1px solid ${GOLD}`, color: GOLD, borderRadius: 99, padding: "3px 10px", fontSize: "0.7rem", fontWeight: 600 }}>⌛ Awaiting reply</span>
+          <span style={{ border: `1px solid ${GOLD}`, color: GOLD, borderRadius: 99, padding: "3px 10px", fontSize: "0.7rem", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 4 }}><Clock size={11} /> Awaiting reply</span>
         )}
         {!isUpcoming && (
           <span style={{ backgroundColor: "#f0ece4", color: MUTED, borderRadius: 99, padding: "3px 10px", fontSize: "0.7rem", fontWeight: 600 }}>Completed</span>
@@ -133,7 +133,7 @@ function BookingCard({ row, onReviewClick }) {
           </button>
         )}
         {!isUpcoming && hasReview && (
-          <span style={{ color: G, fontSize: "0.75rem", fontWeight: 600 }}>★ Reviewed</span>
+          <span style={{ color: G, fontSize: "0.75rem", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 4 }}><Star size={11} fill={G} /> Reviewed</span>
         )}
         {isUpcoming && (
           <div style={{ display: "flex", gap: 8 }}>
