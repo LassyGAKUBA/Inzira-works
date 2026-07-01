@@ -1,112 +1,185 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
-import { useLang } from "../../i18n/LangContext";
-import LanguageSwitcher from "./LanguageSwitcher";
+
+const G     = "#0E5C46";
+const CREAM = "#ede9e0";
+const DARK  = "#172420";
 
 const NAV_LINKS = [
-  { key: "nav_browse",  to: "/providers" },
-  { key: "nav_about",  to: "/about" },
-  { key: "nav_contact", to: "/contact" },
+  { label: "Find a provider", to: "/providers" },
+  { label: "For providers",   to: "/signup"    },
+  { label: "How it works",    to: "/about"     },
 ];
 
+function LogoMark() {
+  return (
+    <svg width="18" height="22" viewBox="0 0 18 22" fill="none" aria-hidden="true">
+      <path
+        d="M9 2C9 2 3 5.5 3 12C3 16.5 5.5 19 9 19L9 21L13 17.5L9 14L9 16.5C7 16.5 5 15 5 12C5 7.5 9 5 9 5L9 2Z"
+        fill={G}
+      />
+    </svg>
+  );
+}
+
 export default function Navbar() {
-  const { t } = useLang();
   const { pathname } = useLocation();
-  const [scrolled, setScrolled] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled,  setScrolled]  = useState(false);
+  const [menuOpen,  setMenuOpen]  = useState(false);
 
   useEffect(() => {
-    const handler = () => setScrolled(window.scrollY > 10);
-    window.addEventListener("scroll", handler);
+    const handler = () => setScrolled(window.scrollY > 8);
+    window.addEventListener("scroll", handler, { passive: true });
     return () => window.removeEventListener("scroll", handler);
   }, []);
 
-  const isActive = (to) => {
-    if (to === "/providers") return pathname === "/providers" || pathname.startsWith("/providers/");
-    if (to.startsWith("/#")) return false;
-    return pathname === to;
-  };
+  const isActive = (to) =>
+    to === "/providers"
+      ? pathname === "/providers" || pathname.startsWith("/providers/")
+      : pathname === to;
 
   return (
-    <nav className={`sticky top-0 z-50 bg-white transition-all duration-200 ${scrolled ? "shadow-sm" : "border-b border-slate-100"}`}>
-      <div className="px-4 sm:px-6 h-16 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2 flex-shrink-0">
-          <div style={{ backgroundColor: "#F97316" }} className="w-8 h-8 rounded-lg flex items-center justify-center">
-            <span className="text-white font-black text-sm">IW</span>
-          </div>
-          <span style={{ color: "#1E293B" }} className="font-bold text-lg tracking-tight">Inzira Works</span>
+    <nav
+      style={{
+        backgroundColor: CREAM,
+        borderBottom: scrolled ? "1px solid #d4cfc5" : "1px solid transparent",
+        position: "sticky",
+        top: 0,
+        zIndex: 50,
+        transition: "border-color 0.2s",
+      }}
+    >
+      <div
+        style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px", height: 64 }}
+        className="flex items-center justify-between"
+      >
+        {/* Logo */}
+        <Link to="/" className="flex items-center gap-2 flex-shrink-0" style={{ textDecoration: "none" }}>
+          <LogoMark />
+          <span
+            style={{
+              color: DARK,
+              fontFamily: "Spectral, serif",
+              fontWeight: 700,
+              fontSize: "1.1rem",
+              letterSpacing: "-0.01em",
+            }}
+          >
+            Inzira Works
+          </span>
         </Link>
 
+        {/* Desktop links */}
         <div className="hidden md:flex items-center gap-8">
-          {NAV_LINKS.map(({ key, to }) => (
+          {NAV_LINKS.map(({ label, to }) => (
             <Link
-              key={key}
+              key={to}
               to={to}
-              style={isActive(to) ? { color: "#F97316" } : {}}
-              className={`text-sm transition-colors hover:text-orange-500 ${
-                isActive(to) ? "font-semibold" : "font-medium text-slate-600"
-              }`}
+              style={{
+                color: isActive(to) ? G : "#3c4a44",
+                fontWeight: isActive(to) ? 600 : 500,
+                fontSize: "0.875rem",
+                textDecoration: "none",
+              }}
+              className="hover:opacity-70 transition-opacity"
             >
-              {t(key)}
+              {label}
             </Link>
           ))}
         </div>
 
-        <div className="hidden md:flex items-center gap-3">
-          <LanguageSwitcher compact />
-          <div className="w-px h-5 bg-slate-200" />
-          <Link to="/login" style={{ color: "#1E293B" }} className="text-sm font-medium hover:text-orange-500 transition-colors">
-            {t("nav_login")}
+        {/* Right actions */}
+        <div className="hidden md:flex items-center gap-5">
+          <Link
+            to="/login"
+            style={{ color: DARK, fontWeight: 500, fontSize: "0.875rem", textDecoration: "none" }}
+            className="hover:opacity-70 transition-opacity"
+          >
+            Sign in
           </Link>
           <Link
             to="/signup"
-            style={{ backgroundColor: "#F97316" }}
-            className="text-sm font-semibold text-white px-4 py-2 rounded-xl hover:opacity-90 transition-opacity"
+            style={{
+              backgroundColor: G,
+              color: "white",
+              borderRadius: 8,
+              fontWeight: 600,
+              fontSize: "0.875rem",
+              padding: "8px 18px",
+              textDecoration: "none",
+            }}
+            className="hover:opacity-90 transition-opacity"
           >
-            {t("nav_getstarted")}
+            Join Inzira
           </Link>
         </div>
 
+        {/* Mobile burger */}
         <button
           onClick={() => setMenuOpen(!menuOpen)}
-          className="md:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors"
+          className="md:hidden p-2 rounded-lg transition-colors"
+          style={{ color: DARK }}
           aria-label="Toggle menu"
         >
           {menuOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
       </div>
 
+      {/* Mobile drawer */}
       {menuOpen && (
-        <div className="md:hidden bg-white border-t border-slate-100 px-4 py-4 flex flex-col gap-4">
-          {NAV_LINKS.map(({ key, to }) => (
+        <div
+          style={{
+            backgroundColor: CREAM,
+            borderTop: "1px solid #d4cfc5",
+            padding: "16px 24px",
+          }}
+          className="md:hidden flex flex-col gap-4"
+        >
+          {NAV_LINKS.map(({ label, to }) => (
             <Link
-              key={key}
+              key={to}
               to={to}
               onClick={() => setMenuOpen(false)}
-              className={`text-sm font-medium ${
-                isActive(to) ? "text-orange-500 font-semibold" : "text-slate-700 hover:text-orange-500"
-              }`}
+              style={{ color: "#3c4a44", fontWeight: 500, fontSize: "0.875rem", textDecoration: "none" }}
             >
-              {t(key)}
+              {label}
             </Link>
           ))}
-          <LanguageSwitcher />
-          <div className="flex gap-3 pt-2 border-t border-slate-100">
+          <div className="flex gap-3 pt-3" style={{ borderTop: "1px solid #d4cfc5" }}>
             <Link
               to="/login"
               onClick={() => setMenuOpen(false)}
-              className="text-sm font-medium text-slate-700 border border-slate-200 px-4 py-2 rounded-xl flex-1 text-center"
+              style={{
+                border: "1px solid #d4cfc5",
+                borderRadius: 8,
+                padding: "9px 16px",
+                color: DARK,
+                fontWeight: 500,
+                fontSize: "0.875rem",
+                textDecoration: "none",
+                textAlign: "center",
+                flex: 1,
+              }}
             >
-              {t("nav_login")}
+              Sign in
             </Link>
             <Link
               to="/signup"
               onClick={() => setMenuOpen(false)}
-              style={{ backgroundColor: "#F97316" }}
-              className="text-sm font-semibold text-white px-4 py-2 rounded-xl flex-1 text-center"
+              style={{
+                backgroundColor: G,
+                borderRadius: 8,
+                padding: "9px 16px",
+                color: "white",
+                fontWeight: 600,
+                fontSize: "0.875rem",
+                textDecoration: "none",
+                textAlign: "center",
+                flex: 1,
+              }}
             >
-              {t("nav_getstarted")}
+              Join Inzira
             </Link>
           </div>
         </div>

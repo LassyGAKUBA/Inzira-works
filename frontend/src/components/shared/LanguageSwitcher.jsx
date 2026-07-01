@@ -24,7 +24,7 @@ export default function LanguageSwitcher({ compact = false }) {
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label="Switch language"
-        className="flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-orange-500 transition-colors px-2 py-1.5 rounded-lg hover:bg-orange-50"
+        className="flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-green-700 transition-colors px-2 py-1.5 rounded-lg hover:bg-green-50"
       >
         <span>{compact ? current.short : current.label}</span>
         <ChevronDown
@@ -58,13 +58,13 @@ export default function LanguageSwitcher({ compact = false }) {
                   onClick={() => { setLang(opt.code); setOpen(false); }}
                   className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left
                     ${isActive
-                      ? "bg-orange-50 text-orange-600 font-semibold"
+                      ? "bg-green-50 text-green-800 font-semibold"
                       : "text-slate-600 hover:bg-slate-50"
                     }`}
                 >
                   <span>{opt.label}</span>
                   {isActive && (
-                    <Check size={14} className="ml-auto text-orange-500" aria-hidden="true" />
+                    <Check size={14} className="ml-auto text-green-700" aria-hidden="true" />
                   )}
                 </button>
               </li>

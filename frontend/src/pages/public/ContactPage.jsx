@@ -17,10 +17,10 @@ import {
 function Footer() {
   const { t } = useLang();
   return (
-    <footer style={{ backgroundColor: "#0F172A" }} className="py-10 mt-12">
+    <footer style={{ backgroundColor: "#0a3d2c" }} className="py-10 mt-12">
       <div className="px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-2">
-          <div style={{ backgroundColor: "#F97316" }} className="w-7 h-7 rounded-lg flex items-center justify-center">
+          <div style={{ backgroundColor: "#0E5C46" }} className="w-7 h-7 rounded-lg flex items-center justify-center">
             <span className="text-white font-black text-xs">IW</span>
           </div>
           <span className="text-white font-bold text-sm">Inzira Works</span>
@@ -88,7 +88,7 @@ function FAQItem({ faq, isOpen, onToggle }) {
         <span className="font-semibold text-slate-800 text-sm">{faq.q}</span>
         <ChevronDown
           size={16}
-          style={{ color: "#F97316", transition: "transform 0.2s", transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", flexShrink: 0 }}
+          style={{ color: "#0E5C46", transition: "transform 0.2s", transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", flexShrink: 0 }}
         />
       </button>
       {isOpen && (
@@ -148,14 +148,14 @@ function ContactForm() {
           <CheckCircle size={30} style={{ color: "#10B981" }} />
         </div>
         <div>
-          <h3 style={{ color: "#1E293B" }} className="text-xl font-black">Message sent!</h3>
+          <h3 style={{ color: "#172420" }} className="text-xl font-black">Message sent!</h3>
           <p className="text-slate-500 text-sm mt-2 leading-relaxed">
             Thanks for reaching out. Our team typically responds within 24–48 hours.
           </p>
         </div>
         <button
           onClick={() => setSent(false)}
-          style={{ color: "#F97316" }}
+          style={{ color: "#0E5C46" }}
           className="text-sm font-semibold hover:underline"
         >
           Send another message
@@ -167,7 +167,7 @@ function ContactForm() {
   return (
     <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 sm:p-8 flex flex-col gap-5">
       <div>
-        <h3 style={{ color: "#1E293B" }} className="text-xl font-black">Send us a message</h3>
+        <h3 style={{ color: "#172420" }} className="text-xl font-black">Send us a message</h3>
         <p className="text-slate-500 text-sm mt-1">We'd love to hear from you. Fill out the form below.</p>
       </div>
 
@@ -181,7 +181,7 @@ function ContactForm() {
               onChange={set("name")}
               placeholder="Your name"
               className={`w-full px-4 py-3 rounded-xl border text-sm text-slate-800 outline-none transition-all placeholder-slate-400 bg-white
-                ${errors.name ? "border-red-400 focus:ring-2 focus:ring-red-100" : "border-slate-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100"}`}
+                ${errors.name ? "border-red-400 focus:ring-2 focus:ring-red-100" : "border-slate-200 focus:border-green-400 focus:ring-2 focus:ring-orange-100"}`}
             />
             {errors.name && <p className="text-xs text-red-500">{errors.name}</p>}
           </div>
@@ -194,7 +194,7 @@ function ContactForm() {
               onChange={set("email")}
               placeholder="you@example.com"
               className={`w-full px-4 py-3 rounded-xl border text-sm text-slate-800 outline-none transition-all placeholder-slate-400 bg-white
-                ${errors.email ? "border-red-400 focus:ring-2 focus:ring-red-100" : "border-slate-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100"}`}
+                ${errors.email ? "border-red-400 focus:ring-2 focus:ring-red-100" : "border-slate-200 focus:border-green-400 focus:ring-2 focus:ring-orange-100"}`}
             />
             {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
           </div>
@@ -205,7 +205,7 @@ function ContactForm() {
           <select
             value={form.subject}
             onChange={set("subject")}
-            className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm text-slate-800 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 bg-white"
+            className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm text-slate-800 outline-none focus:border-green-400 focus:ring-2 focus:ring-orange-100 bg-white"
           >
             {SUBJECTS.map((s) => <option key={s}>{s}</option>)}
           </select>
@@ -219,7 +219,7 @@ function ContactForm() {
             rows={5}
             placeholder="Tell us how we can help..."
             className={`w-full px-4 py-3 rounded-xl border text-sm text-slate-800 outline-none transition-all placeholder-slate-400 resize-none bg-white
-              ${errors.message ? "border-red-400 focus:ring-2 focus:ring-red-100" : "border-slate-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100"}`}
+              ${errors.message ? "border-red-400 focus:ring-2 focus:ring-red-100" : "border-slate-200 focus:border-green-400 focus:ring-2 focus:ring-orange-100"}`}
           />
           <div className="flex justify-between">
             {errors.message ? <p className="text-xs text-red-500">{errors.message}</p> : <span />}
@@ -230,7 +230,7 @@ function ContactForm() {
         <button
           type="submit"
           disabled={loading}
-          style={{ backgroundColor: loading ? "#FDA96B" : "#F97316" }}
+          style={{ backgroundColor: loading ? "#3d8a6e" : "#0E5C46" }}
           className="text-white font-semibold py-3 rounded-xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
         >
           {loading && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
@@ -249,19 +249,19 @@ export default function ContactPage() {
 
   return (
     <PageTransition>
-    <div className="min-h-screen" style={{ backgroundColor: "#F8FAFC" }}>
+    <div className="min-h-screen" style={{ backgroundColor: "#ede9e0" }}>
       <Navbar />
 
       {/* Hero */}
       <section
-        style={{ background: "linear-gradient(135deg, #FFF7ED 0%, #FFECD2 50%, #FFF7ED 100%)" }}
+        style={{ background: "linear-gradient(135deg, #e8f3ee 0%, #FFECD2 50%, #e8f3ee 100%)" }}
         className="py-14"
       >
         <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center flex flex-col gap-3">
-          <div className="inline-flex items-center gap-2 bg-orange-100 text-orange-700 text-xs font-semibold px-3 py-1.5 rounded-full w-fit mx-auto">
+          <div className="inline-flex items-center gap-2 bg-green-100 text-green-800 text-xs font-semibold px-3 py-1.5 rounded-full w-fit mx-auto">
             <MessageCircle size={13} /> We're here to help
           </div>
-          <h1 style={{ color: "#1E293B" }} className="text-3xl sm:text-4xl font-black tracking-tight">Get in Touch</h1>
+          <h1 style={{ color: "#172420" }} className="text-3xl sm:text-4xl font-black tracking-tight">Get in Touch</h1>
           <p className="text-slate-500 text-base max-w-xl mx-auto">
             Questions, feedback, or partnership ideas — our team usually responds within 24–48 hours.
           </p>
@@ -273,7 +273,7 @@ export default function ContactPage() {
         <div className="px-4 sm:px-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {CONTACT_INFO.map((info) => (
             <div key={info.label} className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col gap-2">
-              <div style={{ backgroundColor: "#FFF7ED", color: "#F97316" }} className="w-10 h-10 rounded-xl flex items-center justify-center">
+              <div style={{ backgroundColor: "#e8f3ee", color: "#0E5C46" }} className="w-10 h-10 rounded-xl flex items-center justify-center">
                 <info.Icon size={18} />
               </div>
               <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">{info.label}</p>
@@ -301,14 +301,14 @@ export default function ContactPage() {
 
             {/* Quick help links */}
             <div className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col gap-3">
-              <p style={{ color: "#1E293B" }} className="font-bold text-sm">Quick Links</p>
+              <p style={{ color: "#172420" }} className="font-bold text-sm">Quick Links</p>
               {[
                 { label: "Help Center",      Icon: HelpCircle },
                 { label: "Become a Provider", Icon: Briefcase  },
                 { label: "Trust & Safety",   Icon: Shield      },
                 { label: "Terms of Use",     Icon: FileText    },
               ].map((link) => (
-                <a key={link.label} href="#" className="flex items-center gap-3 text-sm text-slate-600 hover:text-orange-500 transition-colors">
+                <a key={link.label} href="#" className="flex items-center gap-3 text-sm text-slate-600 hover:text-green-700 transition-colors">
                   <link.Icon size={15} /> {link.label}
                 </a>
               ))}
@@ -318,11 +318,11 @@ export default function ContactPage() {
       </section>
 
       {/* FAQ */}
-      <section style={{ backgroundColor: "#FFF7ED" }} className="py-16">
+      <section style={{ backgroundColor: "#e8f3ee" }} className="py-16">
         <div className="max-w-3xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-10">
-            <p style={{ color: "#F97316" }} className="text-xs font-bold uppercase tracking-widest mb-3">FAQ</p>
-            <h2 style={{ color: "#1E293B" }} className="text-3xl font-black tracking-tight">Frequently Asked Questions</h2>
+            <p style={{ color: "#0E5C46" }} className="text-xs font-bold uppercase tracking-widest mb-3">FAQ</p>
+            <h2 style={{ color: "#172420" }} className="text-3xl font-black tracking-tight">Frequently Asked Questions</h2>
           </div>
           <div className="flex flex-col gap-3">
             {FAQS.map((faq, i) => (
@@ -342,3 +342,5 @@ export default function ContactPage() {
     </PageTransition>
   );
 }
+
+
