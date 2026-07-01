@@ -1,640 +1,209 @@
-﻿// src/pages/provider/ProviderDashboard.jsx
-// Complete Provider Dashboard â€” sidebar + all sections in one file
-// Sections: Overview, Bookings, Portfolio, Reviews, Trust Score, Settings
-
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import LanguageSwitcher from "../../components/shared/LanguageSwitcher";
 import {
-  LayoutDashboard, Calendar, Image as ImageIcon, Star, Shield, Settings,
-  ChevronRight, ChevronLeft, LogOut, Zap, TrendingUp, Heart, Menu,
-  Inbox, CheckCircle,
+  Shield, CheckCircle, Banknote, MessageCircle,
+  Calendar, MapPin, Image as ImageIcon, ExternalLink,
 } from "lucide-react";
 
-// Build initials from a full name, e.g. "Uwase Clarisse" â†’ "UC"
-function initialsFromName(name = "") {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 0 || parts[0] === "") return "?";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
+// ── Tokens ────────────────────────────────────────────────────────────────────
+const G      = "#0E5C46";
+const G_DARK = "#0a3d2c";
+const CREAM  = "#ede9e0";
+const DARK   = "#172420";
+const GOLD   = "#b98a22";
+const MUTED  = "#5c7068";
+const SERIF  = "Spectral, serif";
+const SANS   = "'Hanken Grotesk', sans-serif";
+const CARD   = { backgroundColor: "white", borderRadius: 14, border: "1px solid #e8e2d8" };
 
-// First name for greetings, e.g. "Uwase Clarisse" â†’ "Uwase"
-function firstName(name = "") {
-  return name.trim().split(/\s+/)[0] || "there";
-}
-
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// MOCK DATA
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-const PROVIDER = {
-  name: "Uwase Clarisse",
-  role: "Tailor & Fashion Designer",
-  district: "Gasabo",
-  initials: "UC",
-  trustScore: 94,
-  rating: 4.9,
-  reviews: 38,
-  completedJobs: 112,
-  responseRate: 97,
-  profileComplete: 85,
-  verified: true,
-  memberSince: "January 2024",
-  earnings: "RWF 340,000",
-  thisMonth: "RWF 72,000",
-};
-
-const BOOKINGS = [
-  { id: 1, customer: "Niyomugaba Jean", service: "Wedding Dress Alteration", date: "Jun 14, 2026", time: "10:00 AM", status: "pending", amount: "RWF 15,000", initials: "NJ", color: "#3B82F6" },
-  { id: 2, customer: "Mukashyaka Rose", service: "School Uniform (x3)", date: "Jun 15, 2026", time: "2:00 PM", status: "confirmed", amount: "RWF 24,000", initials: "MR", color: "#8B5CF6" },
-  { id: 3, customer: "Habimana Eric", service: "Office Suit Tailoring", date: "Jun 18, 2026", time: "9:00 AM", status: "confirmed", amount: "RWF 45,000", initials: "HE", color: "#10B981" },
-  { id: 4, customer: "Uwimana Grace", service: "Dress (Traditional)", date: "Jun 10, 2026", time: "11:00 AM", status: "completed", amount: "RWF 18,000", initials: "UG", color: "#F59E0B" },
-  { id: 5, customer: "Ingabire Alice", service: "Blouse & Skirt Set", date: "Jun 8, 2026", time: "3:00 PM", status: "completed", amount: "RWF 12,000", initials: "IA", color: "#EF4444" },
-  { id: 6, customer: "Manzi Patrick", service: "Suit Alteration", date: "Jun 5, 2026", time: "10:00 AM", status: "cancelled", amount: "RWF 8,000", initials: "MP", color: "#64748B" },
+// ── Mock data (matches design screenshots) ────────────────────────────────────
+const STATS = [
+  { Icon: Shield,         color: GOLD,      label: "Trust Score", value: "96 / 100", note: "↑ 2 this month",  noteGreen: true  },
+  { Icon: CheckCircle,    color: G,         label: "Jobs done",   value: "12",        note: "this month",      noteGreen: false },
+  { Icon: Banknote,       color: "#e05c5c", label: "Earned",      value: "380,000",   note: "RWF · this month",noteGreen: false },
+  { Icon: MessageCircle,  color: MUTED,     label: "Response",    value: "98%",       note: "Excellent",       noteGreen: true  },
 ];
 
-const PORTFOLIO = [
-  { id: 1, title: "Wedding Dress Collection", category: "Formal Wear",  likes: 24 },
-  { id: 2, title: "School Uniforms Batch",    category: "Uniforms",     likes: 18 },
-  { id: 3, title: "Traditional Imishanana",   category: "Traditional",  likes: 31 },
-  { id: 4, title: "Office Suit Series",        category: "Formal Wear",  likes: 15 },
-  { id: 5, title: "Children's Clothing Set",  category: "Kids Wear",    likes: 22 },
-  { id: 6, title: "Casual Dress Line",         category: "Casual",       likes: 19 },
+const PENDING = [
+  { id: 1, initials: "AK", name: "Aline K.",     service: "Event catering — 40 guests",  datetime: "Sat 14 Jun · 12:00", location: "Kacyiru, Gasabo",    note: "Cocktail + main course for a birthday.", timeAgo: "2 hours ago" },
+  { id: 2, initials: "JM", name: "Jean-Paul M.", service: "Custom celebration cake",       datetime: "Fri 20 Jun · 10:00", location: "Pickup at workshop", note: "Two-tier, chocolate, \"Happy 30th\".",     timeAgo: "5 hours ago" },
 ];
 
-const REVIEWS = [
-  { id: 1, customer: "Niyomugaba Jean", rating: 5, date: "Jun 10, 2026", text: "Clarisse is incredibly talented. The dress she made for my wife was perfect â€” exactly as described and delivered on time.", initials: "NJ", color: "#3B82F6" },
-  { id: 2, customer: "Uwimana Grace", rating: 5, date: "Jun 3, 2026", text: "Professional, punctual, and great attention to detail. I've already recommended her to three friends.", initials: "UG", color: "#F59E0B" },
-  { id: 3, customer: "Mukashyaka Rose", rating: 4, date: "May 28, 2026", text: "The uniforms came out beautifully. Slight delay on delivery but the quality made up for it.", initials: "MR", color: "#8B5CF6" },
-  { id: 4, customer: "Habimana Eric", rating: 5, date: "May 20, 2026", text: "Best tailor I've found in Kigali. The suit fits perfectly and she understood exactly what I wanted.", initials: "HE", color: "#10B981" },
+const PENDING_LIST = [
+  { id: 1, initials: "AK", service: "Event catering — 40 guests", customer: "Aline K.",     datetime: "Sat 14 Jun · 12:00 · Kacyiru, Gasabo"    },
+  { id: 2, initials: "JM", service: "Custom celebration cake",     customer: "Jean-Paul M.", datetime: "Fri 20 Jun · 10:00 · Pickup at workshop"  },
+  { id: 3, initials: "DU", service: "Pastry & snack trays",        customer: "Divine U.",    datetime: "Wed 11 Jun · 15:00 · Remera, Gasabo"      },
 ];
 
-const TRUST_FACTORS = [
-  { label: "Customer Ratings", key: "ts_f1", pct: 40, score: 38, max: 40, color: "#0E5C46" },
-  { label: "Completed Jobs", key: "ts_f2", pct: 25, score: 24, max: 25, color: "#8B5CF6" },
-  { label: "Profile Completeness", key: "ts_f3", pct: 15, score: 13, max: 15, color: "#10B981" },
-  { label: "Response Rate", key: "ts_f4", pct: 10, score: 10, max: 10, color: "#3B82F6" },
-  { label: "Verification Status", key: "ts_f5", pct: 10, score: 9, max: 10, color: "#F59E0B" },
+const CONFIRMED = [
+  { id: 1, service: "Custom celebration cake", customer: "Sandra I.",  datetime: "Tue 10 Jun · 09:00" },
+  { id: 2, service: "Weekly meal prep",         customer: "Patrick R.", datetime: "Mon 09 Jun · 08:00" },
 ];
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// DESIGN PRIMITIVES
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-function Avatar({ initials, color, size = 40 }) {
+// ── Shared primitives ─────────────────────────────────────────────────────────
+function InitialsCircle({ initials, size = 36 }) {
   return (
-    <div style={{ width: size, height: size, backgroundColor: color + "20", border: `2px solid ${color}`, color, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: size * 0.33, flexShrink: 0 }}>
+    <div style={{ width: size, height: size, borderRadius: "50%", backgroundColor: "#e8f3ee", color: G, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: size * 0.33, flexShrink: 0 }}>
       {initials}
     </div>
   );
 }
 
-function StarRating({ rating }) {
-  return (
-    <span className="flex gap-0.5">
-      {[1, 2, 3, 4, 5].map((s) => (
-        <Star
-          key={s}
-          size={13}
-          style={{
-            color: s <= rating ? "#0E5C46" : "#CBD5E1",
-            fill:  s <= rating ? "#0E5C46" : "none",
-          }}
-        />
-      ))}
-    </span>
-  );
-}
+// ── Sidebar ───────────────────────────────────────────────────────────────────
+function Sidebar({ tab, setTab, user }) {
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+  const name = user?.fullName || user?.email?.split("@")[0] || "Provider";
+  const firstName = name.split(" ")[0];
 
-function StatusBadge({ status }) {
-  const map = {
-    pending:   { bg: "#FEF3C7", color: "#D97706", label: "Pending" },
-    confirmed: { bg: "#DCFCE7", color: "#16A34A", label: "Confirmed" },
-    completed: { bg: "#EFF6FF", color: "#2563EB", label: "Completed" },
-    cancelled: { bg: "#FEE2E2", color: "#DC2626", label: "Cancelled" },
-  };
-  const s = map[status] || map.pending;
-  return (
-    <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ backgroundColor: s.bg, color: s.color }}>
-      {s.label}
-    </span>
-  );
-}
+  const navItems = [
+    { id: "overview",  label: "Overview"    },
+    { id: "bookings",  label: "Bookings",  badge: 3 },
+    { id: "profile",   label: "My profile" },
+  ];
 
-function StatCard({ icon, label, value, sub, color = "#0E5C46" }) {
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ backgroundColor: color + "15" }}>
-          {icon}
-        </div>
-        {sub && <span className="text-xs text-green-600 font-medium bg-green-50 px-2 py-0.5 rounded-full">{sub}</span>}
-      </div>
-      <div>
-        <p className="text-2xl font-black" style={{ color: "#172420" }}>{value}</p>
-        <p className="text-sm text-slate-500 mt-0.5">{label}</p>
-      </div>
-    </div>
-  );
-}
-
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// NAV ITEMS
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-const NAV_ITEMS = [
-  { id: "overview",  Icon: LayoutDashboard, label: "Overview"    },
-  { id: "bookings",  Icon: Calendar,        label: "Bookings"    },
-  { id: "portfolio", Icon: ImageIcon,       label: "Portfolio"   },
-  { id: "reviews",   Icon: Star,            label: "Reviews"     },
-  { id: "trust",     Icon: Shield,          label: "Trust Score" },
-  { id: "settings",  Icon: Settings,        label: "Settings"    },
-];
-
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// SIDEBAR
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-function Sidebar({ active, setActive, collapsed, setCollapsed }) {
-  return (
-    <aside
-      className="flex flex-col h-full transition-all duration-200"
-      style={{
-        width: collapsed ? 64 : 240,
-        backgroundColor: "#172420",
-        flexShrink: 0,
-      }}
-    >
+    <aside style={{ width: 220, backgroundColor: G, flexShrink: 0, display: "flex", flexDirection: "column", minHeight: "100vh", fontFamily: SANS }}>
       {/* Logo */}
-      <div className="flex items-center gap-3 px-4 py-5 border-b border-slate-700">
-        <div style={{ backgroundColor: "#0E5C46", flexShrink: 0 }} className="w-8 h-8 rounded-lg flex items-center justify-center">
-          <span className="text-white font-black text-sm">IW</span>
-        </div>
-        {!collapsed && (
-          <span className="text-white font-bold text-base tracking-tight whitespace-nowrap">Inzira Works</span>
-        )}
+      <div style={{ padding: "20px 20px 0" }}>
+        <Link to="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 8 }}>
+          <svg width="16" height="20" viewBox="0 0 18 22" fill="none">
+            <path d="M9 2C9 2 3 5.5 3 12C3 16.5 5.5 19 9 19L9 21L13 17.5L9 14L9 16.5C7 16.5 5 15 5 12C5 7.5 9 5 9 5L9 2Z" fill="white" />
+          </svg>
+          <span style={{ fontFamily: SERIF, color: "white", fontWeight: 700, fontSize: "1rem" }}>Inzira Works</span>
+        </Link>
       </div>
 
-      {/* Provider mini profile */}
-      {!collapsed && (
-        <div className="px-4 py-4 border-b border-slate-700">
-          <div className="flex items-center gap-3">
-            <Avatar initials="UC" color="#0E5C46" size={36} />
-            <div className="min-w-0">
-              <p className="text-white text-sm font-semibold truncate">{PROVIDER.name}</p>
-              <div className="flex items-center gap-1 mt-0.5">
-                <span style={{ border: "1.5px solid #10B981", color: "#10B981" }} className="text-xs font-bold px-1.5 py-0.5 rounded-full">âœ¦ {PROVIDER.trustScore}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Section label */}
+      <p style={{ color: "#9ed3bf", fontSize: "0.6rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", padding: "24px 20px 8px" }}>
+        PROVIDER
+      </p>
 
       {/* Nav */}
-      <nav className="flex-1 py-4 flex flex-col gap-1 px-2">
-        {NAV_ITEMS.map((item) => {
-          const isActive = active === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => setActive(item.id)}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 text-left w-full"
-              style={{
-                backgroundColor: isActive ? "#0E5C46" : "transparent",
-                color: isActive ? "white" : "#94A3B8",
-              }}
-              title={collapsed ? item.label : undefined}
-            >
-              <item.Icon size={18} className="flex-shrink-0" />
-              {!collapsed && (
-                <span className="text-sm font-medium whitespace-nowrap">{item.label}</span>
-              )}
-            </button>
-          );
-        })}
+      <nav style={{ display: "flex", flexDirection: "column", gap: 2, padding: "0 10px" }}>
+        {navItems.map(({ id, label, badge }) => (
+          <button
+            key={id}
+            onClick={() => setTab(id)}
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              width: "100%", padding: "9px 12px",
+              borderRadius: 8, border: "none", cursor: "pointer",
+              backgroundColor: tab === id ? "rgba(255,255,255,0.14)" : "transparent",
+              color: tab === id ? "white" : "rgba(255,255,255,0.65)",
+              fontFamily: SANS, fontSize: "0.875rem", fontWeight: tab === id ? 600 : 400,
+              textAlign: "left",
+            }}
+          >
+            {label}
+            {badge && (
+              <span style={{ backgroundColor: "#e05c5c", color: "white", borderRadius: 99, padding: "1px 7px", fontSize: "0.7rem", fontWeight: 700 }}>
+                {badge}
+              </span>
+            )}
+          </button>
+        ))}
       </nav>
 
-      {/* Bottom actions */}
-      <div className="px-2 py-4 border-t border-slate-700 flex flex-col gap-1">
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-500 hover:text-slate-300 hover:bg-slate-700 transition-colors w-full"
-          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-          {!collapsed && <span className="text-xs font-medium">Collapse</span>}
-        </button>
-        <Link
-          to="/"
-          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-500 hover:text-red-400 hover:bg-slate-700 transition-colors"
-          title={collapsed ? "Log out" : undefined}
-        >
-          <LogOut size={18} />
-          {!collapsed && <span className="text-sm font-medium">Log out</span>}
-        </Link>
+      {/* Spacer */}
+      <div style={{ flex: 1 }} />
+
+      {/* Bottom profile */}
+      <div style={{ padding: 16, borderTop: "1px solid rgba(255,255,255,0.1)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", backgroundColor: "rgba(255,255,255,0.08)", borderRadius: 10, marginBottom: 12 }}>
+          <div style={{ width: 36, height: 36, borderRadius: "50%", border: "1.5px dashed rgba(255,255,255,0.4)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <ImageIcon size={14} style={{ color: "rgba(255,255,255,0.4)" }} />
+          </div>
+          <div>
+            <p style={{ color: "white", fontSize: "0.8rem", fontWeight: 600 }}>{firstName}</p>
+            <p style={{ color: GOLD, fontSize: "0.7rem", fontWeight: 500 }}>Trust 96</p>
+          </div>
+        </div>
+
+        {/* Role switcher */}
+        <div style={{ display: "flex", gap: 6 }}>
+          {["Customer", "Admin"].map((role) => (
+            <Link
+              key={role}
+              to={role === "Customer" ? "/customer/dashboard" : "#"}
+              style={{ flex: 1, textAlign: "center", padding: "5px 0", border: "1px solid rgba(255,255,255,0.3)", borderRadius: 6, color: "rgba(255,255,255,0.7)", fontSize: "0.72rem", textDecoration: "none" }}
+            >
+              {role}
+            </Link>
+          ))}
+        </div>
       </div>
     </aside>
   );
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// SECTION: OVERVIEW
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-function OverviewSection() {
-  const pending = BOOKINGS.filter((b) => b.status === "pending").length;
+// ── Overview tab ──────────────────────────────────────────────────────────────
+function Overview({ user }) {
+  const firstName = (user?.fullName || "Provider").split(" ")[0];
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Welcome banner */}
-      <div
-        className="rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
-        style={{ background: "linear-gradient(135deg, #1E293B 0%, #0F172A 100%)" }}
-      >
-        <div className="flex flex-col gap-1">
-          <p style={{ color: "#0E5C46" }} className="text-xs font-bold uppercase tracking-widest">Good morning</p>
-          <h2 className="text-white text-xl font-black">Welcome back, {firstName(PROVIDER.name)}!</h2>
-          <p className="text-slate-400 text-sm">You have <span style={{ color: "#0E5C46" }} className="font-semibold">{pending} pending booking{pending !== 1 ? "s" : ""}</span> waiting for your response.</p>
-        </div>
-        <div
-          className="flex-shrink-0 flex flex-col items-center justify-center rounded-2xl px-6 py-4 gap-1"
-          style={{ backgroundColor: "#0E5C4620", border: "1.5px solid #0E5C4640" }}
-        >
-          <p style={{ color: "#0E5C46" }} className="text-3xl font-black">{PROVIDER.trustScore}</p>
-          <p className="text-slate-400 text-xs font-medium">Trust Score</p>
-        </div>
+    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      {/* Greeting */}
+      <div>
+        <h1 style={{ fontFamily: SERIF, color: DARK, fontSize: "1.75rem", fontWeight: 700, letterSpacing: "-0.02em" }}>
+          Muraho, {firstName} 👋
+        </h1>
+        <p style={{ color: MUTED, fontSize: "0.875rem", marginTop: 4 }}>Here's how your business is doing this month.</p>
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={<Calendar size={18} />} label="Total Bookings" value={BOOKINGS.length} sub="+2 this week" color="#0E5C46" />
-        <StatCard icon={<Shield size={18} />} label="Completed Jobs" value={PROVIDER.completedJobs} sub="+5 this month" color="#10B981" />
-        <StatCard icon={<Star size={18} />} label="Average Rating" value={PROVIDER.rating} color="#F59E0B" />
-        <StatCard icon={<TrendingUp size={18} />} label="This Month" value={PROVIDER.thisMonth} sub="â†‘ 12%" color="#8B5CF6" />
-      </div>
-
-      {/* Recent bookings preview */}
-      <div className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <h3 style={{ color: "#172420" }} className="font-bold">Recent Bookings</h3>
-          <button style={{ color: "#0E5C46" }} className="text-xs font-semibold hover:underline">View all</button>
-        </div>
-        <div className="flex flex-col gap-3">
-          {BOOKINGS.slice(0, 4).map((b) => (
-            <div key={b.id} className="flex items-center gap-3 py-2 border-b border-slate-50 last:border-0">
-              <Avatar initials={b.initials} color={b.color} size={36} />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-slate-800 truncate">{b.customer}</p>
-                <p className="text-xs text-slate-500 truncate">{b.service}</p>
-              </div>
-              <div className="text-right flex-shrink-0">
-                <StatusBadge status={b.status} />
-                <p className="text-xs text-slate-400 mt-1">{b.date}</p>
-              </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12 }}>
+        {STATS.map(({ Icon, color, label, value, note, noteGreen }) => (
+          <div key={label} style={{ ...CARD, padding: 18 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+              <Icon size={16} style={{ color }} />
+              <span style={{ color: MUTED, fontSize: "0.75rem", fontWeight: 500 }}>{label}</span>
             </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Profile completeness alert */}
-      {PROVIDER.profileComplete < 100 && (
-        <div className="bg-green-50 border border-green-200 rounded-2xl p-5 flex items-start gap-4">
-          <Zap size={18} className="flex-shrink-0 text-green-700" />
-          <div className="flex-1">
-            <p className="font-semibold text-green-900 text-sm">Complete your profile to boost your Trust Score</p>
-            <p className="text-green-700 text-xs mt-1">Your profile is {PROVIDER.profileComplete}% complete. Add your bio and more portfolio items to reach 100%.</p>
-            <div className="mt-3 h-2 bg-green-100 rounded-full overflow-hidden">
-              <div style={{ width: `${PROVIDER.profileComplete}%`, backgroundColor: "#0E5C46" }} className="h-full rounded-full" />
-            </div>
-          </div>
-          <button style={{ backgroundColor: "#0E5C46" }} className="text-white text-xs font-semibold px-3 py-1.5 rounded-lg flex-shrink-0 hover:opacity-90">
-            Complete
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// SECTION: BOOKINGS
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-function BookingsSection() {
-  const [filter, setFilter] = useState("all");
-  const filters = ["all", "pending", "confirmed", "completed", "cancelled"];
-
-  const filtered = filter === "all" ? BOOKINGS : BOOKINGS.filter((b) => b.status === filter);
-
-  return (
-    <div className="flex flex-col gap-5">
-      <div className="flex items-center justify-between">
-        <h2 style={{ color: "#172420" }} className="text-xl font-black">Bookings</h2>
-        <span className="text-sm text-slate-500">{filtered.length} {filter === "all" ? "total" : filter}</span>
-      </div>
-
-      {/* Filter tabs */}
-      <div className="flex gap-2 flex-wrap">
-        {filters.map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className="px-4 py-1.5 rounded-full text-xs font-semibold capitalize transition-all"
-            style={{
-              backgroundColor: filter === f ? "#0E5C46" : "#F1F5F9",
-              color: filter === f ? "white" : "#64748B",
-            }}
-          >
-            {f}
-          </button>
-        ))}
-      </div>
-
-      {/* Bookings list */}
-      <div className="flex flex-col gap-3">
-        {filtered.map((b) => (
-          <div key={b.id} className="bg-white rounded-2xl border border-slate-100 p-5">
-            <div className="flex items-start gap-4">
-              <Avatar initials={b.initials} color={b.color} size={44} />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <p className="font-semibold text-slate-800">{b.customer}</p>
-                    <p className="text-sm text-slate-500 mt-0.5">{b.service}</p>
-                  </div>
-                  <StatusBadge status={b.status} />
-                </div>
-                <div className="flex items-center gap-4 mt-3 flex-wrap">
-                  <span className="text-xs text-slate-500 flex items-center gap-1">
-                    <Calendar size={11} /> {b.date} Â· {b.time}
-                  </span>
-                  <span className="text-xs font-semibold text-slate-700">{b.amount}</span>
-                </div>
-                {/* Action buttons for pending */}
-                {b.status === "pending" && (
-                  <div className="flex gap-2 mt-3">
-                    <button style={{ backgroundColor: "#0E5C46" }} className="text-white text-xs font-semibold px-4 py-1.5 rounded-lg hover:opacity-90 transition-opacity">
-                      Accept
-                    </button>
-                    <button className="text-slate-500 text-xs font-semibold px-4 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors">
-                      Decline
-                    </button>
-                  </div>
-                )}
-                {b.status === "confirmed" && (
-                  <div className="flex gap-2 mt-3">
-                    <button style={{ backgroundColor: "#10B981" }} className="text-white text-xs font-semibold px-4 py-1.5 rounded-lg hover:opacity-90 transition-opacity">
-                      Mark Complete
-                    </button>
-                    <button className="text-slate-500 text-xs font-semibold px-4 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50">
-                      Message
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
-
-        {filtered.length === 0 && (
-          <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center">
-            <Inbox size={28} className="text-slate-300 mx-auto mb-3" />
-            <p className="font-semibold text-slate-700">No {filter} bookings</p>
-            <p className="text-sm text-slate-400 mt-1">They'll appear here when customers book you.</p>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// SECTION: PORTFOLIO
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-function PortfolioSection() {
-  const [showAdd, setShowAdd] = useState(false);
-
-  return (
-    <div className="flex flex-col gap-5">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 style={{ color: "#172420" }} className="text-xl font-black">Portfolio</h2>
-          <p className="text-slate-500 text-sm mt-0.5">Showcase your best work to attract more customers</p>
-        </div>
-        <button
-          onClick={() => setShowAdd(!showAdd)}
-          style={{ backgroundColor: "#0E5C46" }}
-          className="text-white text-sm font-semibold px-4 py-2 rounded-xl hover:opacity-90 transition-opacity flex items-center gap-2"
-        >
-          <span>+</span> Add Work
-        </button>
-      </div>
-
-      {/* Add work form */}
-      {showAdd && (
-        <div className="bg-green-50 border border-green-200 rounded-2xl p-5 flex flex-col gap-4">
-          <h3 className="font-semibold text-green-900 text-sm">Add New Portfolio Item</h3>
-          <div className="grid sm:grid-cols-2 gap-3">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-slate-700">Title</label>
-              <input type="text" placeholder="e.g. Wedding Dress Collection" className="px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none focus:border-green-400 bg-white" />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-slate-700">Category</label>
-              <select className="px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none focus:border-green-400 bg-white">
-                {["Formal Wear", "Traditional", "Uniforms", "Kids Wear", "Casual"].map((c) => (
-                  <option key={c}>{c}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-          {/* Upload area */}
-          <div className="border-2 border-dashed border-green-300 rounded-xl p-8 text-center bg-white">
-            <ImageIcon size={28} className="text-green-400 mx-auto mb-2" />
-            <p className="text-sm font-medium text-slate-600">Click to upload photos</p>
-            <p className="text-xs text-slate-400 mt-1">JPG, PNG up to 5MB each Â· Max 5 photos</p>
-          </div>
-          <div className="flex gap-2">
-            <button style={{ backgroundColor: "#0E5C46" }} className="text-white text-sm font-semibold px-4 py-2 rounded-xl hover:opacity-90">Save</button>
-            <button onClick={() => setShowAdd(false)} className="text-slate-500 text-sm font-semibold px-4 py-2 rounded-xl border border-slate-200 hover:bg-slate-50">Cancel</button>
-          </div>
-        </div>
-      )}
-
-      {/* Portfolio grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-        {PORTFOLIO.map((item) => (
-          <div key={item.id} className="bg-white rounded-2xl border border-slate-100 overflow-hidden group hover:shadow-md transition-shadow">
-            {/* Placeholder image area */}
-            <div
-              className="h-40 flex items-center justify-center"
-              style={{ backgroundColor: "#ede9e0" }}
-            >
-              <ImageIcon size={32} className="text-slate-300" />
-            </div>
-            <div className="p-3">
-              <p className="text-sm font-semibold text-slate-800 leading-tight">{item.title}</p>
-              <div className="flex items-center justify-between mt-1.5">
-                <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{item.category}</span>
-                <span className="text-xs text-slate-400 flex items-center gap-1">
-                  <Heart size={11} style={{ color: "#0E5C46", fill: "#0E5C46" }} /> {item.likes}
-                </span>
-              </div>
-            </div>
+            <p style={{ fontFamily: SERIF, color: DARK, fontSize: "1.5rem", fontWeight: 700, lineHeight: 1 }}>{value}</p>
+            <p style={{ color: noteGreen ? G : MUTED, fontSize: "0.72rem", marginTop: 6 }}>{note}</p>
           </div>
         ))}
       </div>
-    </div>
-  );
-}
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// SECTION: REVIEWS
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-function ReviewsSection() {
-  const avg = (REVIEWS.reduce((a, r) => a + r.rating, 0) / REVIEWS.length).toFixed(1);
-  const dist = [5,4,3,2,1].map((r) => ({
-    r,
-    count: REVIEWS.filter((rv) => rv.rating === r).length,
-    pct: (REVIEWS.filter((rv) => rv.rating === r).length / REVIEWS.length) * 100,
-  }));
-
-  return (
-    <div className="flex flex-col gap-5">
-      <h2 style={{ color: "#172420" }} className="text-xl font-black">Reviews</h2>
-
-      {/* Summary */}
-      <div className="bg-white rounded-2xl border border-slate-100 p-5 grid sm:grid-cols-2 gap-6">
-        <div className="flex flex-col items-center justify-center gap-2 text-center">
-          <p style={{ color: "#172420" }} className="text-6xl font-black">{avg}</p>
-          <StarRating rating={Math.round(avg)} />
-          <p className="text-slate-500 text-sm">Based on {REVIEWS.length} reviews</p>
-        </div>
-        <div className="flex flex-col gap-2 justify-center">
-          {dist.map((d) => (
-            <div key={d.r} className="flex items-center gap-3">
-              <span className="text-xs text-slate-500 w-4">{d.r}</span>
-              <Star size={11} style={{ color: "#0E5C46", fill: "#0E5C46" }} />
-              <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
-                <div style={{ width: `${d.pct}%`, backgroundColor: "#0E5C46" }} className="h-full rounded-full" />
-              </div>
-              <span className="text-xs text-slate-400 w-4">{d.count}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Review list */}
-      <div className="flex flex-col gap-3">
-        {REVIEWS.map((r) => (
-          <div key={r.id} className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col gap-3">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <Avatar initials={r.initials} color={r.color} size={38} />
-                <div>
-                  <p className="font-semibold text-slate-800 text-sm">{r.customer}</p>
-                  <p className="text-xs text-slate-400">{r.date}</p>
-                </div>
-              </div>
-              <StarRating rating={r.rating} />
-            </div>
-            <p className="text-sm text-slate-600 leading-relaxed">{r.text}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// SECTION: TRUST SCORE
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-function TrustScoreSection() {
-  const total = TRUST_FACTORS.reduce((a, f) => a + f.score, 0);
-
-  return (
-    <div className="flex flex-col gap-5">
+      {/* Booking requests */}
       <div>
-        <h2 style={{ color: "#172420" }} className="text-xl font-black">Trust Score</h2>
-        <p className="text-slate-500 text-sm mt-0.5">Your credibility rating â€” updated in real time</p>
-      </div>
-
-      {/* Score hero */}
-      <div
-        className="rounded-2xl p-6 flex flex-col sm:flex-row items-center gap-6"
-        style={{ background: "linear-gradient(135deg, #1E293B 0%, #0F172A 100%)" }}
-      >
-        {/* Circle score */}
-        <div className="relative flex-shrink-0">
-          <svg width="120" height="120" viewBox="0 0 120 120">
-            <circle cx="60" cy="60" r="50" fill="none" stroke="#334155" strokeWidth="10" />
-            <circle
-              cx="60" cy="60" r="50"
-              fill="none"
-              stroke="#0E5C46"
-              strokeWidth="10"
-              strokeDasharray={`${(total / 100) * 314} 314`}
-              strokeLinecap="round"
-              transform="rotate(-90 60 60)"
-            />
-          </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span style={{ color: "#0E5C46" }} className="text-3xl font-black">{total}</span>
-            <span className="text-slate-400 text-xs">/ 100</span>
-          </div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+          <h2 style={{ fontFamily: SERIF, color: DARK, fontSize: "1.125rem", fontWeight: 700 }}>New booking requests</h2>
+          <span style={{ backgroundColor: "#fee2e2", color: "#e05c5c", borderRadius: 99, padding: "3px 10px", fontSize: "0.72rem", fontWeight: 600 }}>
+            {PENDING.length} pending
+          </span>
         </div>
-
-        <div className="flex flex-col gap-3 flex-1">
-          <div>
-            <p style={{ color: "#0E5C46" }} className="text-xs font-bold uppercase tracking-widest">Current Score</p>
-            <p className="text-white text-2xl font-black mt-1">
-              {total >= 90 ? "Excellent" : total >= 75 ? "Good" : "Building"}
-            </p>
-            <p className="text-slate-400 text-sm mt-1">
-              You're in the top 15% of providers on Inzira Works.
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <div style={{ backgroundColor: "#10B98120", border: "1px solid #10B98140" }} className="px-3 py-1.5 rounded-lg text-xs font-semibold text-green-400 flex items-center gap-1">
-              <CheckCircle size={11} /> Verified
-            </div>
-            <div style={{ backgroundColor: "#0E5C4620", border: "1px solid #0E5C4640" }} className="px-3 py-1.5 rounded-lg text-xs font-semibold text-green-600 flex items-center gap-1">
-              <Star size={11} style={{ fill: "#FB923C" }} /> Top Rated
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Factor breakdown */}
-      <div className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col gap-5">
-        <h3 className="font-bold text-slate-800">Score Breakdown</h3>
-        {TRUST_FACTORS.map((f) => (
-          <div key={f.label} className="flex flex-col gap-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="font-medium text-slate-700">{f.label}</span>
-              <div className="flex items-center gap-2">
-                <span className="text-slate-500 text-xs">{f.score}/{f.max} pts</span>
-                <span className="font-bold text-slate-800">{f.pct}%</span>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {PENDING.map((b) => (
+            <div key={b.id} style={{ ...CARD, padding: 18 }}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                <InitialsCircle initials={b.initials} size={38} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <p style={{ color: DARK, fontWeight: 700, fontSize: "0.9rem" }}>{b.name}</p>
+                    <span style={{ color: MUTED, fontSize: "0.72rem" }}>{b.timeAgo}</span>
+                  </div>
+                  <p style={{ color: DARK, fontSize: "0.875rem", fontWeight: 600, marginTop: 2 }}>{b.service}</p>
+                  <p style={{ color: MUTED, fontSize: "0.75rem", marginTop: 4, display: "flex", alignItems: "center", gap: 8 }}>
+                    <Calendar size={11} /> {b.datetime} &nbsp; <MapPin size={11} /> {b.location}
+                  </p>
+                  <p style={{ backgroundColor: "#f5f2ea", borderRadius: 8, padding: "8px 12px", marginTop: 10, color: "#5c7068", fontSize: "0.8rem", fontStyle: "italic" }}>
+                    "{b.note}"
+                  </p>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 14 }}>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button style={{ backgroundColor: G, color: "white", border: "none", borderRadius: 8, padding: "8px 20px", fontFamily: SANS, fontWeight: 600, fontSize: "0.8rem", cursor: "pointer" }}>
+                        Accept
+                      </button>
+                      <button style={{ backgroundColor: "white", color: DARK, border: "1px solid #e8e2d8", borderRadius: 8, padding: "8px 20px", fontFamily: SANS, fontWeight: 500, fontSize: "0.8rem", cursor: "pointer" }}>
+                        Decline
+                      </button>
+                    </div>
+                    <button style={{ background: "none", border: "none", color: MUTED, fontFamily: SANS, fontSize: "0.8rem", cursor: "pointer" }}>Message</button>
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
-              <div
-                style={{ width: `${(f.score / f.max) * 100}%`, backgroundColor: f.color }}
-                className="h-full rounded-full transition-all duration-700"
-              />
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Tips to improve */}
-      <div className="bg-green-50 border border-green-100 rounded-2xl p-5 flex flex-col gap-3">
-        <p className="font-bold text-green-900 text-sm flex items-center gap-2">âš¡ Tips to improve your score</p>
-        <div className="flex flex-col gap-2">
-          {[
-            "Complete your profile bio (+2 pts)",
-            "Add 2 more portfolio items (+3 pts)",
-            "Respond to bookings within 1 hour (+1 pt)",
-          ].map((tip) => (
-            <div key={tip} className="flex items-start gap-2">
-              <span className="text-green-600 text-xs mt-0.5">â†’</span>
-              <span className="text-green-800 text-sm">{tip}</span>
             </div>
           ))}
         </div>
@@ -643,260 +212,173 @@ function TrustScoreSection() {
   );
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// SECTION: SETTINGS
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-function SettingsSection() {
+// ── Bookings tab ──────────────────────────────────────────────────────────────
+function Bookings() {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      <div>
+        <h1 style={{ fontFamily: SERIF, color: DARK, fontSize: "1.75rem", fontWeight: 700, letterSpacing: "-0.02em" }}>Bookings</h1>
+        <p style={{ color: MUTED, fontSize: "0.875rem", marginTop: 4 }}>Manage incoming requests and confirmed jobs.</p>
+      </div>
+
+      {/* Pending */}
+      <div style={{ ...CARD, padding: 20 }}>
+        <h2 style={{ color: DARK, fontSize: "0.95rem", fontWeight: 700, marginBottom: 16 }}>
+          Pending requests · {PENDING_LIST.length}
+        </h2>
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          {PENDING_LIST.map((b, i) => (
+            <div key={b.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 0", borderTop: i > 0 ? "1px solid #f0ece4" : "none" }}>
+              <InitialsCircle initials={b.initials} size={34} />
+              <div style={{ flex: 1 }}>
+                <p style={{ color: DARK, fontWeight: 600, fontSize: "0.875rem" }}>{b.service}</p>
+                <p style={{ color: MUTED, fontSize: "0.75rem", marginTop: 2 }}>{b.customer} · {b.datetime}</p>
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button style={{ backgroundColor: G, color: "white", border: "none", borderRadius: 8, padding: "7px 18px", fontFamily: SANS, fontWeight: 600, fontSize: "0.8rem", cursor: "pointer" }}>
+                  Accept
+                </button>
+                <button style={{ backgroundColor: "white", color: DARK, border: "1px solid #e8e2d8", borderRadius: 8, padding: "7px 18px", fontFamily: SANS, fontWeight: 500, fontSize: "0.8rem", cursor: "pointer" }}>
+                  Decline
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Confirmed */}
+      <div style={{ ...CARD, padding: 20 }}>
+        <h2 style={{ color: DARK, fontSize: "0.95rem", fontWeight: 700, marginBottom: 16 }}>Confirmed jobs</h2>
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          {CONFIRMED.map((b, i) => (
+            <div key={b.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 0", borderTop: i > 0 ? "1px solid #f0ece4" : "none" }}>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: G, flexShrink: 0, marginLeft: 4 }} />
+              <div style={{ flex: 1 }}>
+                <p style={{ color: DARK, fontWeight: 600, fontSize: "0.875rem" }}>{b.service}</p>
+                <p style={{ color: MUTED, fontSize: "0.75rem", marginTop: 1 }}>for {b.customer}</p>
+              </div>
+              <span style={{ color: MUTED, fontSize: "0.75rem" }}>{b.datetime}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── My profile tab ────────────────────────────────────────────────────────────
+function MyProfile() {
   const [form, setForm] = useState({
-    fullName: PROVIDER.name,
-    role: PROVIDER.role,
-    district: PROVIDER.district,
-    phone: "0781 234 567",
-    bio: "I am a professional tailor based in Gasabo with over 7 years of experience in fashion design and alterations. I specialize in wedding dresses, traditional Rwandan attire, and office wear.",
-    notifications: true,
-    publicProfile: true,
+    business: "Esperance's Kitchen",
+    about: "Caterer & pastry chef in Remera with 240+ completed jobs. Known for reliable, beautiful work for events large and small.",
+    category: "Baking & Catering",
+    district: "Gasabo",
   });
 
-  const set = (field) => (e) => {
-    const val = e.target.type === "checkbox" ? e.target.checked : e.target.value;
-    setForm((prev) => ({ ...prev, [field]: val }));
-  };
-
   return (
-    <div className="flex flex-col gap-5">
-      <h2 style={{ color: "#172420" }} className="text-xl font-black">Settings</h2>
-
-      {/* Profile info */}
-      <div className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col gap-5">
-        <h3 className="font-bold text-slate-800 text-sm border-b border-slate-100 pb-3">Profile Information</h3>
-
-        {/* Avatar */}
-        <div className="flex items-center gap-4">
-          <Avatar initials="UC" color="#0E5C46" size={64} />
-          <div>
-            <button style={{ color: "#0E5C46" }} className="text-sm font-semibold hover:underline">Change photo</button>
-            <p className="text-xs text-slate-400 mt-0.5">JPG or PNG, max 2MB</p>
-          </div>
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+        <div>
+          <h1 style={{ fontFamily: SERIF, color: DARK, fontSize: "1.75rem", fontWeight: 700, letterSpacing: "-0.02em" }}>My profile</h1>
+          <p style={{ color: MUTED, fontSize: "0.875rem", marginTop: 4 }}>This is what customers see. Keep it complete to rank higher.</p>
         </div>
-
-        <div className="grid sm:grid-cols-2 gap-4">
-          {[
-            { label: "Full Name", field: "fullName", placeholder: "Your full name" },
-            { label: "Service / Role", field: "role", placeholder: "e.g. Tailor & Fashion Designer" },
-            { label: "Phone Number", field: "phone", placeholder: "0781 234 567" },
-            { label: "District", field: "district", type: "select", options: ["Gasabo", "Kicukiro", "Nyarugenge"] },
-          ].map(({ label, field, placeholder, type, options }) => (
-            <div key={field} className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-slate-700">{label}</label>
-              {type === "select" ? (
-                <select
-                  value={form[field]}
-                  onChange={set(field)}
-                  className="px-3 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-green-400 focus:ring-2 focus:ring-orange-100 bg-white text-slate-800"
-                >
-                  {options.map((o) => <option key={o}>{o}</option>)}
-                </select>
-              ) : (
-                <input
-                  type="text"
-                  value={form[field]}
-                  onChange={set(field)}
-                  placeholder={placeholder}
-                  className="px-3 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-green-400 focus:ring-2 focus:ring-orange-100 text-slate-800 bg-white"
-                />
-              )}
-            </div>
-          ))}
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-medium text-slate-700">Bio</label>
-          <textarea
-            value={form.bio}
-            onChange={set("bio")}
-            rows={4}
-            className="px-3 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-green-400 focus:ring-2 focus:ring-orange-100 resize-none text-slate-800 bg-white"
-            placeholder="Tell customers about your skills and experience..."
-          />
-          <p className="text-xs text-slate-400 text-right">{form.bio.length}/500</p>
-        </div>
-
-        <button style={{ backgroundColor: "#0E5C46" }} className="text-white font-semibold text-sm px-6 py-2.5 rounded-xl hover:opacity-90 transition-opacity w-fit">
-          Save Changes
+        <button style={{ border: "1px solid #d4cfc5", backgroundColor: "white", borderRadius: 8, padding: "8px 16px", fontFamily: SANS, fontSize: "0.8rem", fontWeight: 500, color: DARK, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+          <ExternalLink size={13} /> Preview public page
         </button>
       </div>
 
-      {/* Preferences */}
-      <div className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col gap-4">
-        <h3 className="font-bold text-slate-800 text-sm border-b border-slate-100 pb-3">Preferences</h3>
-
-        {[
-          { label: "Email & SMS Notifications", desc: "Receive alerts for new bookings and messages", field: "notifications" },
-          { label: "Public Profile", desc: "Allow customers to find and view your profile", field: "publicProfile" },
-        ].map(({ label, desc, field }) => (
-          <div key={field} className="flex items-center justify-between gap-4">
-            <div>
-              <p className="text-sm font-medium text-slate-700">{label}</p>
-              <p className="text-xs text-slate-400 mt-0.5">{desc}</p>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 280px", gap: 16 }}>
+        {/* Main form */}
+        <div style={{ ...CARD, padding: 24 }}>
+          {/* Photo + name */}
+          <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 24 }}>
+            <div style={{ width: 60, height: 60, borderRadius: "50%", border: "1.5px dashed #c8c0b0", backgroundColor: "#f5f0e8", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, flexShrink: 0, cursor: "pointer" }}>
+              <ImageIcon size={16} style={{ color: "#c8c0b0" }} />
+              <span style={{ color: "#c8c0b0", fontSize: "0.6rem" }}>Photo</span>
             </div>
-            <button
-              onClick={() => setForm((p) => ({ ...p, [field]: !p[field] }))}
-              className="relative w-11 h-6 rounded-full transition-colors flex-shrink-0"
-              style={{ backgroundColor: form[field] ? "#0E5C46" : "#CBD5E1" }}
-              role="switch"
-              aria-checked={form[field]}
-            >
-              <span
-                className="absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform"
-                style={{ transform: form[field] ? "translateX(20px)" : "translateX(2px)" }}
-              />
+            <div>
+              <p style={{ color: DARK, fontWeight: 700, fontSize: "1rem" }}>Esperance Nyiransabimana</p>
+              <p style={{ color: MUTED, fontSize: "0.8rem", marginTop: 2 }}>Caterer & Pastry Chef</p>
+            </div>
+          </div>
+
+          {/* Fields */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div>
+              <label style={{ color: MUTED, fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 6 }}>Business name</label>
+              <input value={form.business} onChange={e => setForm(f => ({ ...f, business: e.target.value }))}
+                style={{ width: "100%", padding: "10px 14px", border: "1px solid #e8e2d8", borderRadius: 10, fontFamily: SANS, fontSize: "0.875rem", color: DARK, outline: "none", boxSizing: "border-box" }} />
+            </div>
+            <div>
+              <label style={{ color: MUTED, fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 6 }}>About</label>
+              <textarea value={form.about} onChange={e => setForm(f => ({ ...f, about: e.target.value }))} rows={4}
+                style={{ width: "100%", padding: "10px 14px", border: "1px solid #e8e2d8", borderRadius: 10, fontFamily: SANS, fontSize: "0.875rem", color: DARK, outline: "none", resize: "vertical", boxSizing: "border-box" }} />
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div>
+                <label style={{ color: MUTED, fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 6 }}>Category</label>
+                <input value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
+                  style={{ width: "100%", padding: "10px 14px", border: "1px solid #e8e2d8", borderRadius: 10, fontFamily: SANS, fontSize: "0.875rem", color: DARK, outline: "none", boxSizing: "border-box" }} />
+              </div>
+              <div>
+                <label style={{ color: MUTED, fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: 6 }}>District</label>
+                <input value={form.district} onChange={e => setForm(f => ({ ...f, district: e.target.value }))}
+                  style={{ width: "100%", padding: "10px 14px", border: "1px solid #e8e2d8", borderRadius: 10, fontFamily: SANS, fontSize: "0.875rem", color: DARK, outline: "none", boxSizing: "border-box" }} />
+              </div>
+            </div>
+            <button style={{ alignSelf: "flex-start", backgroundColor: G, color: "white", border: "none", borderRadius: 10, padding: "11px 24px", fontFamily: SANS, fontWeight: 600, fontSize: "0.875rem", cursor: "pointer" }}>
+              Save changes
             </button>
           </div>
-        ))}
-      </div>
+        </div>
 
-      {/* Danger zone */}
-      <div className="bg-white rounded-2xl border border-red-100 p-5 flex flex-col gap-3">
-        <h3 className="font-bold text-red-600 text-sm">Danger Zone</h3>
-        <p className="text-xs text-slate-500">These actions are permanent and cannot be undone.</p>
-        <div className="flex gap-3 flex-wrap">
-          <button className="text-red-500 text-sm font-semibold px-4 py-2 rounded-xl border border-red-200 hover:bg-red-50 transition-colors">
-            Deactivate Account
-          </button>
-          <button className="text-red-600 text-sm font-semibold px-4 py-2 rounded-xl border border-red-300 hover:bg-red-50 transition-colors">
-            Delete Account
-          </button>
+        {/* Right sidebar */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {/* Profile completeness */}
+          <div style={{ ...CARD, padding: 18 }}>
+            <p style={{ color: DARK, fontSize: "0.8rem", fontWeight: 600, marginBottom: 12 }}>Profile completeness</p>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+              <div style={{ flex: 1, height: 6, backgroundColor: "#e8e2d8", borderRadius: 99 }}>
+                <div style={{ width: "100%", height: "100%", backgroundColor: G, borderRadius: 99 }} />
+              </div>
+              <span style={{ color: G, fontSize: "0.8rem", fontWeight: 700 }}>100%</span>
+            </div>
+            <p style={{ color: MUTED, fontSize: "0.72rem" }}>Great — complete profiles rank higher in search.</p>
+          </div>
+
+          {/* Portfolio */}
+          <div style={{ ...CARD, padding: 18 }}>
+            <p style={{ color: DARK, fontSize: "0.8rem", fontWeight: 600, marginBottom: 12 }}>Portfolio</p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              {[1, 2, 3, 4].map((n) => (
+                <div key={n} style={{ aspectRatio: "1", border: "1.5px dashed #c8c0b0", borderRadius: 10, backgroundColor: "#f5f0e8", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, cursor: "pointer" }}>
+                  <ImageIcon size={18} style={{ color: "#c8c0b0" }} />
+                  <span style={{ color: "#c8c0b0", fontSize: "0.65rem" }}>Add</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// TOPBAR
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-function Topbar({ active, mobileMenuOpen, setMobileMenuOpen }) {
-  const label = NAV_ITEMS.find((n) => n.id === active)?.label || "Dashboard";
-  return (
-    <header className="h-14 bg-white border-b border-slate-100 flex items-center justify-between px-4 sm:px-6 flex-shrink-0">
-      <div className="flex items-center gap-3">
-        {/* Mobile menu button */}
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="lg:hidden p-1.5 rounded-lg text-slate-500 hover:bg-slate-100"
-        >
-          <Menu size={20} />
-        </button>
-        <h1 style={{ color: "#172420" }} className="font-bold text-base">{label}</h1>
-      </div>
-      <div className="flex items-center gap-3">
-        <LanguageSwitcher compact />
-        <div className="w-px h-5 bg-slate-200" />
-        <Avatar initials="UC" color="#0E5C46" size={32} />
-      </div>
-    </header>
-  );
-}
-
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// MOBILE BOTTOM NAV
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-function MobileNav({ active, setActive }) {
-  return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 z-40 flex">
-      {NAV_ITEMS.slice(0, 5).map((item) => {
-        const isActive = active === item.id;
-        return (
-          <button
-            key={item.id}
-            onClick={() => setActive(item.id)}
-            className="flex-1 flex flex-col items-center gap-0.5 py-2 transition-colors"
-            style={{ color: isActive ? "#0E5C46" : "#94A3B8" }}
-          >
-            <item.Icon size={20} />
-            <span className="text-xs font-medium">{item.label}</span>
-          </button>
-        );
-      })}
-    </nav>
-  );
-}
-
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// DASHBOARD ROOT
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Page root ─────────────────────────────────────────────────────────────────
 export default function ProviderDashboard() {
   const { user } = useAuth();
-
-  // Overlay the real logged-in provider's identity onto the display object.
-  // (Stats like trust score, ratings, and bookings are still mock for now â€”
-  //  those get wired to live data in a later step.)
-  if (user) {
-    PROVIDER.name = user.full_name;
-    PROVIDER.initials = initialsFromName(user.full_name);
-    if (user.district) PROVIDER.district = user.district;
-  }
-
-  const [active, setActive] = useState("overview");
-  const [collapsed, setCollapsed] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  const SECTIONS = {
-    overview:  <OverviewSection />,
-    bookings:  <BookingsSection />,
-    portfolio: <PortfolioSection />,
-    reviews:   <ReviewsSection />,
-    trust:     <TrustScoreSection />,
-    settings:  <SettingsSection />,
-  };
+  const [tab, setTab] = useState("overview");
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50">
-      {/* Desktop sidebar */}
-      <div className="hidden lg:flex">
-        <Sidebar
-          active={active}
-          setActive={setActive}
-          collapsed={collapsed}
-          setCollapsed={setCollapsed}
-        />
-      </div>
+    <div style={{ display: "flex", minHeight: "100vh", fontFamily: SANS, backgroundColor: CREAM }}>
+      <Sidebar tab={tab} setTab={setTab} user={user} />
 
-      {/* Mobile sidebar overlay */}
-      {mobileMenuOpen && (
-        <>
-          <div className="fixed inset-0 bg-black/40 z-40 lg:hidden" onClick={() => setMobileMenuOpen(false)} />
-          <div className="fixed left-0 top-0 bottom-0 z-50 lg:hidden">
-            <Sidebar
-              active={active}
-              setActive={(id) => { setActive(id); setMobileMenuOpen(false); }}
-              collapsed={false}
-              setCollapsed={() => {}}
-            />
-          </div>
-        </>
-      )}
-
-      {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Topbar
-          active={active}
-          mobileMenuOpen={mobileMenuOpen}
-          setMobileMenuOpen={setMobileMenuOpen}
-        />
-
-        {/* Scrollable content area */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 pb-24 lg:pb-6">
-          <div className="max-w-4xl mx-auto">
-            {SECTIONS[active]}
-          </div>
-        </main>
-      </div>
-
-      {/* Mobile bottom nav */}
-      <MobileNav active={active} setActive={setActive} />
+      <main style={{ flex: 1, padding: 32, overflowY: "auto" }}>
+        {tab === "overview"  && <Overview user={user} />}
+        {tab === "bookings"  && <Bookings />}
+        {tab === "profile"   && <MyProfile />}
+      </main>
     </div>
   );
 }
-
-
