@@ -310,6 +310,7 @@ function CustomerFlow({ form, setField, errors, apiError, loading, onBack, onFin
         <Field label="Full name"     placeholder="e.g. Solange Mukamana" value={form.fullName} onChange={setField("fullName")} error={errors.fullName} />
         <Field label="Email address" type="email" placeholder="you@example.com" value={form.email} onChange={setField("email")} error={errors.email} />
         <Field label="Phone number"  type="tel" placeholder="07XX XXX XXX" value={form.phone} onChange={setField("phone")} error={errors.phone} />
+        <Field label="Address"       placeholder="e.g. Kimihurura, Kigali" value={form.address} onChange={setField("address")} error={errors.address} />
         <Field label="Password"      type="password" placeholder="Create a password" value={form.password} onChange={setField("password")} error={errors.password} />
         <StepFooter onBack={onBack} onNext={onFinish} loading={loading} nextLabel="Finish & go to dashboard" />
       </div>
@@ -338,6 +339,7 @@ export default function RoleSelectPage() {
     email:    seed.email    || "",
     phone:    seed.phone    || "",
     password: seed.password || "",
+    address:  seed.address  || "",
     category: "Tailoring & Fashion",
     district: seed.district || "Gasabo",
     bio:      "",
@@ -382,6 +384,7 @@ export default function RoleSelectPage() {
         fullName: form.fullName,
         email:    form.email,
         phone:    form.phone,
+        address:  form.address || "",
         district: form.district,
         password: form.password,
         role,
