@@ -25,8 +25,9 @@ function LogoMark() {
 
 export default function Navbar() {
   const { pathname } = useLocation();
-  const [scrolled,  setScrolled]  = useState(false);
-  const [menuOpen,  setMenuOpen]  = useState(false);
+  const [scrolled,   setScrolled]   = useState(false);
+  const [menuOpen,   setMenuOpen]   = useState(false);
+  const [joinHover,  setJoinHover]  = useState(false);
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 8);
@@ -100,6 +101,8 @@ export default function Navbar() {
           </Link>
           <Link
             to="/signup"
+            onMouseEnter={() => setJoinHover(true)}
+            onMouseLeave={() => setJoinHover(false)}
             style={{
               backgroundColor: G,
               color: "white",
@@ -108,8 +111,9 @@ export default function Navbar() {
               fontSize: "0.875rem",
               padding: "8px 18px",
               textDecoration: "none",
+              opacity: joinHover ? 0.85 : 1,
+              transition: "opacity 0.15s",
             }}
-            className="hover:opacity-90 transition-opacity"
           >
             Join Inzira
           </Link>

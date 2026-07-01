@@ -665,14 +665,14 @@ function CTASection() {
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row md:justify-end gap-3">
+            <div className="flex md:justify-end">
               <Link
                 to="/signup"
                 style={{
                   border: "1.5px solid rgba(255,255,255,0.6)",
                   color: "white",
                   borderRadius: 10,
-                  padding: "12px 24px",
+                  padding: "12px 28px",
                   fontSize: "0.875rem",
                   fontWeight: 600,
                   textDecoration: "none",
@@ -681,22 +681,6 @@ function CTASection() {
                 className="hover:bg-white hover:bg-opacity-10 transition-colors"
               >
                 Join Inzira Works
-              </Link>
-              <Link
-                to="/providers"
-                style={{
-                  backgroundColor: "rgba(255,255,255,0.15)",
-                  color: "white",
-                  borderRadius: 10,
-                  padding: "12px 24px",
-                  fontSize: "0.875rem",
-                  fontWeight: 600,
-                  textDecoration: "none",
-                  textAlign: "center",
-                }}
-                className="hover:bg-opacity-25 transition-colors"
-              >
-                See the dashboard
               </Link>
             </div>
           </div>
