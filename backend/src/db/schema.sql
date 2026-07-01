@@ -445,3 +445,22 @@ BEGIN
   );
 END;
 $$ LANGUAGE plpgsql;
+
+-- Admin: approve a provider's verification status
+-- Caller must have role = 'admin' in the users table
+CREATE OR REPLACE FUNCTION admin_approve_provider(p_profile_id UUID)
+RETURNS void SECURITY DEFINER AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin'
+  ) THEN
+    RAISE EXCEPTION 'Unauthorized';
+  END IF;
+
+  UPDATE provider_profiles
+  SET verification_status = 'verified',
+      verified_at         = now(),
+      verified_by         = auth.uid()
+  WHERE id = p_profile_id;
+END;
+$$ LANGUAGE plpgsql;
