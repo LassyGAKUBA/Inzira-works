@@ -95,6 +95,7 @@ function mapProvider(d) {
     badge: trustScore >= 90 ? "Top Rated" : verified ? "Verified" : "New",
     initials: initialsFrom(d.full_name),
     color: colorFromId(d.provider_id),
+    avatarUrl: d.avatar_url || null,
     bio: d.bio || "",
     skills: Array.isArray(d.specialties) ? d.specialties : [],
     services: (d.services || []).map((s) => ({
@@ -144,7 +145,14 @@ function computeTrustFactors(p) {
 // ─────────────────────────────────────────────────────────────────────────────
 // PRIMITIVES
 // ─────────────────────────────────────────────────────────────────────────────
-function Avatar({ initials, color, size = 48 }) {
+function Avatar({ initials, color, size = 48, src }) {
+  if (src) {
+    return (
+      <div style={{ width: size, height: size, borderRadius: "50%", overflow: "hidden", flexShrink: 0, border: `2px solid ${color}` }}>
+        <img src={src} alt={initials} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+      </div>
+    );
+  }
   return (
     <div style={{ width: size, height: size, backgroundColor: color + "20", border: `2px solid ${color}`, color, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: size * 0.35, flexShrink: 0 }}>
       {initials}
@@ -598,7 +606,7 @@ export default function ProviderProfilePage() {
       <section className="px-4 sm:px-6 pt-4">
         <div className="bg-white rounded-2xl border border-slate-100 p-6 flex flex-col gap-5">
           <div className="flex flex-col sm:flex-row gap-5 items-start">
-            <Avatar initials={provider.initials} color={provider.color} size={88} />
+            <Avatar initials={provider.initials} color={provider.color} size={88} src={provider.avatarUrl} />
 
             <div className="flex-1 flex flex-col gap-3">
               <div className="flex flex-wrap items-start justify-between gap-3">

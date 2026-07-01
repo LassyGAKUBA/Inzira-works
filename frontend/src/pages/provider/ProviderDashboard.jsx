@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { supabase } from "../../lib/supabase";
@@ -48,7 +48,7 @@ function InitialsCircle({ name = "", size = 36 }) {
 
 // ── Sidebar ───────────────────────────────────────────────────────────────────
 function Sidebar({ tab, setTab, user, profile, pendingCount }) {
-  const firstName = (user?.fullName || "Provider").split(" ")[0];
+  const firstName = (user?.full_name || "Provider").split(" ")[0];
   const navItems = [
     { id: "overview",  label: "Overview"   },
     { id: "bookings",  label: "Bookings",  badge: pendingCount || null },
@@ -107,7 +107,7 @@ function Sidebar({ tab, setTab, user, profile, pendingCount }) {
 
 // ── Overview tab ──────────────────────────────────────────────────────────────
 function Overview({ user, profile, pending, onAccept, onDecline, statsLoading }) {
-  const firstName = (user?.fullName || "Provider").split(" ")[0];
+  const firstName = (user?.full_name || "Provider").split(" ")[0];
   const trustScore = Math.round(profile?.trust_score ?? 0);
   const responseRate = Math.round(profile?.response_rate ?? 0);
   const jobsThisMonth = profile?.jobs_this_month ?? 0;
@@ -275,6 +275,12 @@ function MyProfile({ user, profile, onSave }) {
   const [saving,  setSaving]  = useState(false);
   const [saveMsg, setSaveMsg] = useState("");
 
+  // Photo upload
+  const fileRef    = useRef(null);
+  const [avatarUrl,      setAvatarUrl]      = useState(null);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [photoErr,       setPhotoErr]       = useState("");
+
   // Specialties
   const [specialties, setSpecialties] = useState([]);
   const [tagInput,    setTagInput]    = useState("");
@@ -291,6 +297,33 @@ function MyProfile({ user, profile, onSave }) {
       loadExtras();
     }
   }, [profile]);
+
+  // Load avatar from users table
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase.from("users").select("avatar_url").eq("id", user.id).single()
+      .then(({ data }) => { if (data?.avatar_url) setAvatarUrl(data.avatar_url); });
+  }, [user?.id]);
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !user?.id) return;
+    setPhotoUploading(true); setPhotoErr("");
+    try {
+      const ext  = file.name.split(".").pop();
+      const path = `${user.id}/avatar.${ext}`;
+      const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+      if (upErr) throw upErr;
+      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+      const publicUrl = urlData.publicUrl;
+      await supabase.from("users").update({ avatar_url: publicUrl }).eq("id", user.id);
+      setAvatarUrl(publicUrl);
+    } catch {
+      setPhotoErr("Upload failed. Check bucket permissions.");
+    } finally {
+      setPhotoUploading(false);
+    }
+  };
 
   const loadExtras = async () => {
     if (!profile?.id) return;
@@ -374,13 +407,24 @@ function MyProfile({ user, profile, onSave }) {
           {/* Basic info */}
           <div style={{ ...CARD, padding: 24 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
-              <div style={{ width: 52, height: 52, borderRadius: "50%", border: "1.5px dashed #c8c0b0", backgroundColor: "#f5f0e8", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, flexShrink: 0 }}>
-                <ImageIcon size={14} style={{ color: "#c8c0b0" }} />
-                <span style={{ color: "#c8c0b0", fontSize: "0.55rem" }}>Photo</span>
+              <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handlePhotoUpload} />
+              <div onClick={() => fileRef.current?.click()} title="Click to upload photo"
+                style={{ width: 56, height: 56, borderRadius: "50%", border: avatarUrl ? `2px solid ${G}` : "1.5px dashed #c8c0b0", backgroundColor: "#f5f0e8", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, flexShrink: 0, cursor: "pointer", overflow: "hidden" }}>
+                {photoUploading ? (
+                  <Loader2 size={18} style={{ color: G, animation: "spin 1s linear infinite" }} />
+                ) : avatarUrl ? (
+                  <img src={avatarUrl} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                ) : (
+                  <>
+                    <ImageIcon size={14} style={{ color: "#c8c0b0" }} />
+                    <span style={{ color: "#c8c0b0", fontSize: "0.55rem" }}>Photo</span>
+                  </>
+                )}
               </div>
               <div>
-                <p style={{ color: DARK, fontWeight: 700, fontSize: "0.95rem" }}>{user?.fullName || "Your name"}</p>
+                <p style={{ color: DARK, fontWeight: 700, fontSize: "0.95rem" }}>{user?.full_name || "Your name"}</p>
                 <p style={{ color: MUTED, fontSize: "0.78rem", marginTop: 1 }}>{form.business || "Headline"}</p>
+                {photoErr && <p style={{ color: "#e05c5c", fontSize: "0.7rem", marginTop: 2 }}>{photoErr}</p>}
               </div>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
