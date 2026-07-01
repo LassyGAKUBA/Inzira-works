@@ -204,7 +204,7 @@ function Overview({ user, profile, pending, onAccept, onDecline, statsLoading })
 }
 
 // ── Bookings tab ──────────────────────────────────────────────────────────────
-function Bookings({ pending, confirmed, onAccept, onDecline }) {
+function Bookings({ pending, confirmed, onAccept, onDecline, onComplete }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       <div>
@@ -250,9 +250,12 @@ function Bookings({ pending, confirmed, onAccept, onDecline }) {
                 <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: G, flexShrink: 0, marginLeft: 4 }} />
                 <div style={{ flex: 1 }}>
                   <p style={{ color: DARK, fontWeight: 600, fontSize: "0.875rem" }}>{b.title}</p>
-                  <p style={{ color: MUTED, fontSize: "0.75rem", marginTop: 1 }}>for {b.customer_name}</p>
+                  <p style={{ color: MUTED, fontSize: "0.75rem", marginTop: 1 }}>for {b.customer_name} · {formatDate(b.scheduled_date)}</p>
                 </div>
-                <span style={{ color: MUTED, fontSize: "0.75rem" }}>{formatDate(b.scheduled_date)}</span>
+                <button onClick={() => onComplete(b.id)}
+                  style={{ backgroundColor: "white", color: G, border: `1px solid ${G}`, borderRadius: 8, padding: "6px 14px", fontFamily: SANS, fontWeight: 600, fontSize: "0.75rem", cursor: "pointer", flexShrink: 0 }}>
+                  Mark completed
+                </button>
               </div>
             ))}
           </div>
@@ -604,6 +607,11 @@ export default function ProviderDashboard() {
     await loadData();
   };
 
+  const handleComplete = async (bookingId) => {
+    await supabase.from("bookings").update({ status: "completed" }).eq("id", bookingId);
+    await loadData();
+  };
+
   if (loading && !profile) {
     return (
       <div style={{ display: "flex", minHeight: "100vh", fontFamily: SANS, backgroundColor: CREAM }}>
@@ -622,7 +630,7 @@ export default function ProviderDashboard() {
       <Sidebar tab={tab} setTab={setTab} user={user} profile={profile} pendingCount={pending.length} />
       <main style={{ flex: 1, padding: 32, overflowY: "auto" }}>
         {tab === "overview" && <Overview user={user} profile={profile} pending={pending} onAccept={handleAccept} onDecline={handleDecline} statsLoading={loading} />}
-        {tab === "bookings" && <Bookings pending={pending} confirmed={confirmed} onAccept={handleAccept} onDecline={handleDecline} />}
+        {tab === "bookings" && <Bookings pending={pending} confirmed={confirmed} onAccept={handleAccept} onDecline={handleDecline} onComplete={handleComplete} />}
         {tab === "profile"  && <MyProfile user={user} profile={profile} onSave={setProfile} />}
       </main>
     </div>
