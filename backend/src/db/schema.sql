@@ -298,7 +298,8 @@ RETURNS TABLE(
   verification_status TEXT,
   avg_rating          NUMERIC,
   review_count        BIGINT,
-  specialties         TEXT[]
+  specialties         TEXT[],
+  categories          TEXT[]
 ) SECURITY DEFINER AS $$
 BEGIN
   RETURN QUERY
@@ -313,7 +314,8 @@ BEGIN
     pp.verification_status::TEXT                              AS verification_status,
     COALESCE(r.avg_rating,    0::NUMERIC)::NUMERIC            AS avg_rating,
     COALESCE(r.review_count,  0::BIGINT)::BIGINT              AS review_count,
-    COALESCE(s.specialties,   ARRAY[]::TEXT[])                AS specialties
+    COALESCE(s.specialties,   ARRAY[]::TEXT[])                AS specialties,
+    COALESCE(c.categories,    ARRAY[]::TEXT[])                AS categories
   FROM provider_profiles pp
   JOIN users u ON u.id = pp.user_id
   LEFT JOIN (
@@ -330,6 +332,14 @@ BEGIN
     FROM provider_specialties
     GROUP BY provider_specialties.provider_id
   ) s ON s.provider_id = pp.id
+  LEFT JOIN (
+    SELECT pc.provider_id,
+           ARRAY_AGG(cat.name::TEXT ORDER BY cat.name) AS categories
+    FROM provider_categories pc
+    JOIN categories cat ON cat.id = pc.category_id
+    WHERE cat.is_active = TRUE
+    GROUP BY pc.provider_id
+  ) c ON c.provider_id = pp.id
   WHERE u.is_active = TRUE
   ORDER BY pp.trust_score DESC;
 END;
