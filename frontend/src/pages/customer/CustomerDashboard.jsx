@@ -1,886 +1,208 @@
-﻿// src/pages/customer/CustomerDashboard.jsx
-// Complete Customer Dashboard â€” sidebar + all sections in one file
-// Sections: Overview, Browse Providers, My Bookings, Saved Providers, Reviews, Settings
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import LanguageSwitcher from "../../components/shared/LanguageSwitcher";
-import {
-  LayoutDashboard, Search, Calendar, Heart, Star, Settings,
-  ChevronRight, ChevronLeft, LogOut, MapPin, TrendingUp, Menu,
-  Scissors, Sparkles, Package, ChefHat, Palette, Layers, Inbox, CheckCircle,
-} from "lucide-react";
+import { Calendar, Image as ImageIcon, Star } from "lucide-react";
 
-// Build initials from a full name, e.g. "Niyomugaba Jean" â†’ "NJ"
-function initialsFromName(name = "") {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 0 || parts[0] === "") return "?";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
+// ── Tokens ────────────────────────────────────────────────────────────────────
+const G      = "#0E5C46";
+const CREAM  = "#ede9e0";
+const DARK   = "#172420";
+const GOLD   = "#b98a22";
+const MUTED  = "#5c7068";
+const SERIF  = "Spectral, serif";
+const SANS   = "'Hanken Grotesk', sans-serif";
+const CARD   = { backgroundColor: "white", borderRadius: 14, border: "1px solid #e8e2d8" };
 
-// First name for greetings, e.g. "Niyomugaba Jean" â†’ "Niyomugaba"
-function firstName(name = "") {
-  return name.trim().split(/\s+/)[0] || "there";
-}
-
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// MOCK DATA
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-const CUSTOMER = {
-  name: "Niyomugaba Jean",
-  initials: "NJ",
-  email: "jean.niyomugaba@example.com",
-  phone: "0788 123 456",
-  district: "Gasabo",
-  memberSince: "March 2025",
-  totalBookings: 9,
-  activeBookings: 2,
-  savedCount: 5,
-};
-
-const PROVIDERS = [
-  { id: 1, name: "Uwase Clarisse", role: "Tailor & Fashion Designer", district: "Gasabo", trustScore: 94, rating: 4.9, reviews: 38, completedJobs: 112, badge: "Top Rated", skills: ["Dresses", "Uniforms", "Alterations"], initials: "UC", color: "#0E5C46", saved: true },
-  { id: 2, name: "Mukamana Diane", role: "Professional Hairdresser", district: "Kicukiro", trustScore: 88, rating: 4.7, reviews: 55, completedJobs: 203, badge: "Verified", skills: ["Braiding", "Natural Hair", "Styling"], initials: "MD", color: "#8B5CF6", saved: true },
-  { id: 3, name: "Ingabire Alice", role: "Handcraft & Basket Weaving", district: "Nyarugenge", trustScore: 91, rating: 4.8, reviews: 27, completedJobs: 89, badge: "Verified", skills: ["Agaseke", "Sisal Crafts", "Export Quality"], initials: "IA", color: "#10B981", saved: false },
-  { id: 4, name: "Mukashyaka Rose", role: "Caterer & Event Chef", district: "Gasabo", trustScore: 86, rating: 4.6, reviews: 41, completedJobs: 78, badge: "Verified", skills: ["Local Cuisine", "Event Catering", "Buffet"], initials: "MR", color: "#3B82F6", saved: false },
-  { id: 5, name: "Uwimana Grace", role: "Event Decorator", district: "Kicukiro", trustScore: 90, rating: 4.8, reviews: 33, completedJobs: 65, badge: "Top Rated", skills: ["Weddings", "Balloon Decor", "Venue Styling"], initials: "UG", color: "#F59E0B", saved: true },
-  { id: 6, name: "Nyirahabimana Anne", role: "House Cleaning Specialist", district: "Nyarugenge", trustScore: 82, rating: 4.5, reviews: 22, completedJobs: 54, badge: "Verified", skills: ["Deep Cleaning", "Laundry", "Organizing"], initials: "NA", color: "#EC4899", saved: false },
+// ── Mock data ─────────────────────────────────────────────────────────────────
+const UPCOMING = [
+  { id: 1, name: "Solange Mukamana",        score: 94, service: "Custom dress (made-to-measure)", datetime: "Thu 12 Jun · 11:00", status: "confirmed" },
+  { id: 2, name: "Claudine Uwase",           score: 88, service: "Braiding / cornrows",            datetime: "Sat 14 Jun · 14:00", status: "awaiting"  },
+  { id: 3, name: "Diane Ingabire",           score: 91, service: "Custom celebration cake",        datetime: "Fri 20 Jun · 10:00", status: "confirmed" },
 ];
 
-const BOOKINGS = [
-  { id: 1, provider: "Uwase Clarisse", role: "Tailor", service: "Wedding Dress Alteration", date: "Jun 14, 2026", time: "10:00 AM", status: "pending", amount: "RWF 15,000", initials: "UC", color: "#0E5C46" },
-  { id: 2, provider: "Uwimana Grace", role: "Event Decorator", service: "Birthday Party Decoration", date: "Jun 20, 2026", time: "8:00 AM", status: "confirmed", amount: "RWF 60,000", initials: "UG", color: "#F59E0B" },
-  { id: 3, provider: "Mukamana Diane", role: "Hairdresser", service: "Braiding Session", date: "Jun 5, 2026", time: "1:00 PM", status: "completed", amount: "RWF 8,000", initials: "MD", color: "#8B5CF6" },
-  { id: 4, provider: "Mukashyaka Rose", role: "Caterer", service: "Office Lunch Catering (20 ppl)", date: "May 28, 2026", time: "12:00 PM", status: "completed", amount: "RWF 90,000", initials: "MR", color: "#3B82F6" },
-  { id: 5, provider: "Nyirahabimana Anne", role: "Cleaner", service: "Apartment Deep Clean", date: "May 15, 2026", time: "9:00 AM", status: "cancelled", amount: "RWF 20,000", initials: "NA", color: "#EC4899" },
+const COMPLETED = [
+  { id: 1, name: "Esperance Nyiransabimana", score: 96, service: "Pastry & snack trays", datetime: "Fri 30 May · 15:00" },
+  { id: 2, name: "Chantal Uwimana",          score: 90, service: "Deep home cleaning",   datetime: "Sat 24 May · 09:00" },
 ];
 
-const CATEGORIES = [
-  { label: "Tailoring & Fashion", Icon: Scissors },
-  { label: "Hair & Beauty",       Icon: Sparkles  },
-  { label: "Handcraft & Weaving", Icon: Package   },
-  { label: "Catering & Food",     Icon: ChefHat   },
-  { label: "Event Decoration",    Icon: Palette   },
-  { label: "Cleaning Services",   Icon: Layers    },
-];
-
-const MY_REVIEWS = [
-  { id: 1, provider: "Mukamana Diane", rating: 5, date: "Jun 6, 2026", text: "Diane did an amazing job with my braids. Very professional and gentle. Will book again!", initials: "MD", color: "#8B5CF6", editable: true },
-  { id: 2, provider: "Mukashyaka Rose", rating: 4, date: "May 29, 2026", text: "Food was delicious and arrived on time. Would have liked more variety in the buffet.", initials: "MR", color: "#3B82F6", editable: true },
-];
-
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// DESIGN PRIMITIVES
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-function Avatar({ initials, color, size = 40 }) {
+// ── Booking card ──────────────────────────────────────────────────────────────
+function BookingCard({ booking, showStatus = true, showReview = false }) {
   return (
-    <div style={{ width: size, height: size, backgroundColor: color + "20", border: `2px solid ${color}`, color, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: size * 0.33, flexShrink: 0 }}>
-      {initials}
-    </div>
-  );
-}
+    <div style={{ ...CARD, padding: 18, display: "flex", alignItems: "center", gap: 16 }}>
+      {/* Photo placeholder */}
+      <div style={{ width: 52, height: 52, borderRadius: "50%", border: "1.5px dashed #c8c0b0", backgroundColor: "#f5f0e8", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <ImageIcon size={18} style={{ color: "#c8c0b0" }} />
+      </div>
 
-function StarRating({ rating, size = "sm" }) {
-  const px = size === "sm" ? 12 : 14;
-  return (
-    <span className="flex gap-0.5">
-      {[1, 2, 3, 4, 5].map((s) => (
-        <Star
-          key={s}
-          size={px}
-          style={{
-            color: s <= Math.round(rating) ? "#0E5C46" : "#CBD5E1",
-            fill:  s <= Math.round(rating) ? "#0E5C46" : "none",
-          }}
-        />
-      ))}
-    </span>
-  );
-}
-
-function TrustScoreBadge({ score }) {
-  const color = score >= 90 ? "#10B981" : score >= 75 ? "#0E5C46" : "#64748B";
-  return (
-    <div style={{ border: `2px solid ${color}`, color }} className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold bg-white">
-      <span>âœ¦</span> {score}
-    </div>
-  );
-}
-
-function StatusBadge({ status }) {
-  const map = {
-    pending:   { bg: "#FEF3C7", color: "#D97706", label: "Pending" },
-    confirmed: { bg: "#DCFCE7", color: "#16A34A", label: "Confirmed" },
-    completed: { bg: "#EFF6FF", color: "#2563EB", label: "Completed" },
-    cancelled: { bg: "#FEE2E2", color: "#DC2626", label: "Cancelled" },
-  };
-  const s = map[status] || map.pending;
-  return (
-    <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ backgroundColor: s.bg, color: s.color }}>
-      {s.label}
-    </span>
-  );
-}
-
-function StatCard({ icon, label, value, sub, color = "#0E5C46" }) {
-  return (
-    <div className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ backgroundColor: color + "15" }}>
-          {icon}
+      {/* Info */}
+      <div style={{ flex: 1 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
+          <p style={{ color: DARK, fontWeight: 700, fontSize: "0.9rem" }}>{booking.name}</p>
+          <span style={{ backgroundColor: DARK, color: GOLD, borderRadius: 99, padding: "2px 8px", fontSize: "0.65rem", fontWeight: 700 }}>
+            ◆ {booking.score}
+          </span>
         </div>
-        {sub && <span className="text-xs text-slate-400 font-medium">{sub}</span>}
+        <p style={{ color: MUTED, fontSize: "0.8rem" }}>{booking.service}</p>
+        <p style={{ color: MUTED, fontSize: "0.75rem", marginTop: 4, display: "flex", alignItems: "center", gap: 6 }}>
+          <Calendar size={11} /> {booking.datetime}
+        </p>
       </div>
-      <div>
-        <p className="text-2xl font-black" style={{ color: "#172420" }}>{value}</p>
-        <p className="text-sm text-slate-500 mt-0.5">{label}</p>
-      </div>
-    </div>
-  );
-}
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// PROVIDER CARD (for Browse + Saved sections)
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-function ProviderCard({ provider, savedIds, toggleSave }) {
-  const isSaved = savedIds.includes(provider.id);
-  return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 hover:shadow-md transition-shadow duration-200 flex flex-col gap-3">
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-3">
-          <Avatar initials={provider.initials} color={provider.color} size={48} />
-          <div>
-            <p className="font-semibold text-slate-800 text-sm leading-tight">{provider.name}</p>
-            <p className="text-xs text-slate-500 mt-0.5">{provider.role}</p>
+      {/* Right: status + actions */}
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 10 }}>
+        {showStatus && booking.status === "confirmed" && (
+          <span style={{ border: "1px solid #0E5C46", color: G, borderRadius: 99, padding: "3px 10px", fontSize: "0.7rem", fontWeight: 600 }}>
+            ✓ Confirmed
+          </span>
+        )}
+        {showStatus && booking.status === "awaiting" && (
+          <span style={{ border: `1px solid ${GOLD}`, color: GOLD, borderRadius: 99, padding: "3px 10px", fontSize: "0.7rem", fontWeight: 600 }}>
+            ⌛ Awaiting reply
+          </span>
+        )}
+        {!showStatus && (
+          <span style={{ backgroundColor: "#f0ece4", color: MUTED, borderRadius: 99, padding: "3px 10px", fontSize: "0.7rem", fontWeight: 600 }}>
+            Completed
+          </span>
+        )}
+
+        {showReview ? (
+          <button style={{ backgroundColor: GOLD, color: "white", border: "none", borderRadius: 8, padding: "7px 14px", fontFamily: SANS, fontWeight: 600, fontSize: "0.78rem", cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}>
+            <Star size={12} fill="white" /> Leave a review
+          </button>
+        ) : (
+          <div style={{ display: "flex", gap: 8 }}>
+            <button style={{ backgroundColor: "white", color: DARK, border: "1px solid #e8e2d8", borderRadius: 8, padding: "7px 14px", fontFamily: SANS, fontWeight: 500, fontSize: "0.78rem", cursor: "pointer" }}>
+              View
+            </button>
+            <button style={{ backgroundColor: G, color: "white", border: "none", borderRadius: 8, padding: "7px 14px", fontFamily: SANS, fontWeight: 600, fontSize: "0.78rem", cursor: "pointer" }}>
+              Message
+            </button>
           </div>
-        </div>
-        <button
-          onClick={() => toggleSave(provider.id)}
-          className="text-lg flex-shrink-0 transition-transform hover:scale-110"
-          aria-label={isSaved ? "Unsave provider" : "Save provider"}
-          style={{ color: isSaved ? "#0E5C46" : "#CBD5E1" }}
-        >
-          <Heart size={18} style={{ fill: isSaved ? "#0E5C46" : "none" }} />
-        </button>
-      </div>
-
-      <div className="flex items-center gap-3">
-        <TrustScoreBadge score={provider.trustScore} />
-        <div className="flex items-center gap-1">
-          <StarRating rating={provider.rating} />
-          <span className="text-xs text-slate-500">{provider.rating} ({provider.reviews})</span>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap gap-1.5">
-        {provider.skills.map((s) => (
-          <span key={s} className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">{s}</span>
-        ))}
-      </div>
-
-      <div className="flex items-center justify-between pt-1 border-t border-slate-100">
-        <div className="flex items-center gap-1.5 text-slate-400">
-          <MapPin size={12} /><span className="text-xs">{provider.district} Â· {provider.completedJobs} jobs</span>
-        </div>
-        <button style={{ backgroundColor: "#0E5C46" }} className="text-white text-xs font-medium px-3 py-1.5 rounded-lg hover:opacity-90 transition-opacity">
-          Book Now
-        </button>
+        )}
       </div>
     </div>
   );
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// NAV ITEMS
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-const NAV_ITEMS = [
-  { id: "overview", Icon: LayoutDashboard, label: "Overview" },
-  { id: "browse",   Icon: Search,          label: "Browse"   },
-  { id: "bookings", Icon: Calendar,        label: "Bookings" },
-  { id: "saved",    Icon: Heart,           label: "Saved"    },
-  { id: "reviews",  Icon: Star,            label: "Reviews"  },
-  { id: "settings", Icon: Settings,        label: "Settings" },
-];
+// ── Sidebar ───────────────────────────────────────────────────────────────────
+function Sidebar({ tab, setTab }) {
+  const navItems = [
+    { id: "upcoming",  label: "Upcoming",  badge: UPCOMING.length },
+    { id: "completed", label: "Completed", badge: null             },
+  ];
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// SIDEBAR
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-function Sidebar({ active, setActive, collapsed, setCollapsed }) {
   return (
-    <aside
-      className="flex flex-col h-full transition-all duration-200"
-      style={{ width: collapsed ? 64 : 240, backgroundColor: "#172420", flexShrink: 0 }}
-    >
+    <aside style={{ width: 220, backgroundColor: G, flexShrink: 0, display: "flex", flexDirection: "column", minHeight: "100vh", fontFamily: SANS }}>
       {/* Logo */}
-      <div className="flex items-center gap-3 px-4 py-5 border-b border-slate-700">
-        <div style={{ backgroundColor: "#0E5C46", flexShrink: 0 }} className="w-8 h-8 rounded-lg flex items-center justify-center">
-          <span className="text-white font-black text-sm">IW</span>
-        </div>
-        {!collapsed && <span className="text-white font-bold text-base tracking-tight whitespace-nowrap">Inzira Works</span>}
+      <div style={{ padding: "20px 20px 0" }}>
+        <Link to="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 8 }}>
+          <svg width="16" height="20" viewBox="0 0 18 22" fill="none">
+            <path d="M9 2C9 2 3 5.5 3 12C3 16.5 5.5 19 9 19L9 21L13 17.5L9 14L9 16.5C7 16.5 5 15 5 12C5 7.5 9 5 9 5L9 2Z" fill="white" />
+          </svg>
+          <span style={{ fontFamily: SERIF, color: "white", fontWeight: 700, fontSize: "1rem" }}>Inzira Works</span>
+        </Link>
       </div>
 
-      {/* Mini profile */}
-      {!collapsed && (
-        <div className="px-4 py-4 border-b border-slate-700">
-          <div className="flex items-center gap-3">
-            <Avatar initials={CUSTOMER.initials} color="#3B82F6" size={36} />
-            <div className="min-w-0">
-              <p className="text-white text-sm font-semibold truncate">{CUSTOMER.name}</p>
-              <p className="text-slate-500 text-xs truncate">{CUSTOMER.district}</p>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Section label */}
+      <p style={{ color: "#9ed3bf", fontSize: "0.6rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", padding: "24px 20px 8px" }}>
+        MY BOOKINGS
+      </p>
 
       {/* Nav */}
-      <nav className="flex-1 py-4 flex flex-col gap-1 px-2">
-        {NAV_ITEMS.map((item) => {
-          const isActive = active === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => setActive(item.id)}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 text-left w-full"
-              style={{ backgroundColor: isActive ? "#0E5C46" : "transparent", color: isActive ? "white" : "#94A3B8" }}
-              title={collapsed ? item.label : undefined}
-            >
-              <item.Icon size={18} className="flex-shrink-0" />
-              {!collapsed && <span className="text-sm font-medium whitespace-nowrap">{item.label}</span>}
-            </button>
-          );
-        })}
+      <nav style={{ display: "flex", flexDirection: "column", gap: 2, padding: "0 10px" }}>
+        {navItems.map(({ id, label, badge }) => (
+          <button
+            key={id}
+            onClick={() => setTab(id)}
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              width: "100%", padding: "9px 12px",
+              borderRadius: 8, border: "none", cursor: "pointer",
+              backgroundColor: tab === id ? "rgba(255,255,255,0.14)" : "transparent",
+              color: tab === id ? "white" : "rgba(255,255,255,0.65)",
+              fontFamily: SANS, fontSize: "0.875rem", fontWeight: tab === id ? 600 : 400,
+              textAlign: "left",
+            }}
+          >
+            {label}
+            {badge && (
+              <span style={{ backgroundColor: "rgba(255,255,255,0.2)", color: "white", borderRadius: 99, padding: "1px 7px", fontSize: "0.7rem", fontWeight: 600 }}>
+                {badge}
+              </span>
+            )}
+          </button>
+        ))}
       </nav>
 
-      {/* Bottom actions */}
-      <div className="px-2 py-4 border-t border-slate-700 flex flex-col gap-1">
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-500 hover:text-slate-300 hover:bg-slate-700 transition-colors w-full"
-          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-          {!collapsed && <span className="text-xs font-medium">Collapse</span>}
-        </button>
-        <Link
-          to="/"
-          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-500 hover:text-red-400 hover:bg-slate-700 transition-colors"
-          title={collapsed ? "Log out" : undefined}
-        >
-          <LogOut size={18} />
-          {!collapsed && <span className="text-sm font-medium">Log out</span>}
+      {/* Find a provider */}
+      <div style={{ padding: "16px 10px" }}>
+        <Link to="/providers" style={{ display: "block", textAlign: "center", backgroundColor: "#0a3d2c", color: "white", borderRadius: 8, padding: "10px 0", fontFamily: SANS, fontWeight: 600, fontSize: "0.8rem", textDecoration: "none" }}>
+          Find a provider
         </Link>
+      </div>
+
+      <div style={{ flex: 1 }} />
+
+      {/* Role switcher */}
+      <div style={{ padding: 16, borderTop: "1px solid rgba(255,255,255,0.1)" }}>
+        <div style={{ display: "flex", gap: 6 }}>
+          {["Provider", "Admin"].map((role) => (
+            <Link
+              key={role}
+              to={role === "Provider" ? "/provider/dashboard" : "#"}
+              style={{ flex: 1, textAlign: "center", padding: "5px 0", border: "1px solid rgba(255,255,255,0.3)", borderRadius: 6, color: "rgba(255,255,255,0.7)", fontSize: "0.72rem", textDecoration: "none" }}
+            >
+              {role}
+            </Link>
+          ))}
+        </div>
       </div>
     </aside>
   );
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// SECTION: OVERVIEW
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-function OverviewSection({ savedIds, toggleSave, setActive }) {
-  const upcoming = BOOKINGS.filter((b) => b.status === "pending" || b.status === "confirmed");
-  const recommended = PROVIDERS.slice(0, 3);
-
-  return (
-    <div className="flex flex-col gap-6">
-      {/* Welcome banner */}
-      <div
-        className="rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
-        style={{ background: "linear-gradient(135deg, #1E293B 0%, #0F172A 100%)" }}
-      >
-        <div className="flex flex-col gap-1">
-          <p style={{ color: "#0E5C46" }} className="text-xs font-bold uppercase tracking-widest">Good morning</p>
-          <h2 className="text-white text-xl font-black">Welcome back, {firstName(CUSTOMER.name)}!</h2>
-          <p className="text-slate-400 text-sm">
-            You have <span style={{ color: "#0E5C46" }} className="font-semibold">{upcoming.length} upcoming booking{upcoming.length !== 1 ? "s" : ""}</span>.
-          </p>
-        </div>
-        <button
-          onClick={() => setActive("browse")}
-          style={{ backgroundColor: "#0E5C46" }}
-          className="text-white font-semibold text-sm px-5 py-2.5 rounded-xl hover:opacity-90 transition-opacity flex-shrink-0"
-        >
-          Find a Provider
-        </button>
-      </div>
-
-      {/* Stat cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={<Calendar size={18} />} label="Total Bookings" value={CUSTOMER.totalBookings} color="#0E5C46" />
-        <StatCard icon={<TrendingUp size={18} />} label="Active Bookings" value={CUSTOMER.activeBookings} color="#3B82F6" />
-        <StatCard icon={<Heart size={18} />} label="Saved Providers" value={CUSTOMER.savedCount} color="#EC4899" />
-        <StatCard icon={<Star size={18} />} label="Reviews Given" value={MY_REVIEWS.length} color="#F59E0B" />
-      </div>
-
-      {/* Upcoming bookings */}
-      <div className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <h3 style={{ color: "#172420" }} className="font-bold">Upcoming Bookings</h3>
-          <button onClick={() => setActive("bookings")} style={{ color: "#0E5C46" }} className="text-xs font-semibold hover:underline">View all</button>
-        </div>
-        {upcoming.length === 0 ? (
-          <p className="text-sm text-slate-400 text-center py-6">No upcoming bookings yet.</p>
-        ) : (
-          <div className="flex flex-col gap-3">
-            {upcoming.map((b) => (
-              <div key={b.id} className="flex items-center gap-3 py-2 border-b border-slate-50 last:border-0">
-                <Avatar initials={b.initials} color={b.color} size={36} />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-800 truncate">{b.provider}</p>
-                  <p className="text-xs text-slate-500 truncate">{b.service}</p>
-                </div>
-                <div className="text-right flex-shrink-0">
-                  <StatusBadge status={b.status} />
-                  <p className="text-xs text-slate-400 mt-1">{b.date}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Recommended providers */}
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <h3 style={{ color: "#172420" }} className="font-bold">Recommended for You</h3>
-          <button onClick={() => setActive("browse")} style={{ color: "#0E5C46" }} className="text-xs font-semibold hover:underline">Browse all</button>
-        </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {recommended.map((p) => (
-            <ProviderCard key={p.id} provider={p} savedIds={savedIds} toggleSave={toggleSave} />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// SECTION: BROWSE PROVIDERS
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-function BrowseSection({ savedIds, toggleSave }) {
-  const [search, setSearch] = useState("");
-  const [districtFilter, setDistrictFilter] = useState("all");
-  const [sortBy, setSortBy] = useState("trust");
-
-  const districts = ["all", "Gasabo", "Kicukiro", "Nyarugenge"];
-
-  let filtered = PROVIDERS.filter((p) => {
-    const matchesSearch = search === "" ||
-      p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.role.toLowerCase().includes(search.toLowerCase()) ||
-      p.skills.some((s) => s.toLowerCase().includes(search.toLowerCase()));
-    const matchesDistrict = districtFilter === "all" || p.district === districtFilter;
-    return matchesSearch && matchesDistrict;
-  });
-
-  filtered = [...filtered].sort((a, b) => {
-    if (sortBy === "trust") return b.trustScore - a.trustScore;
-    if (sortBy === "rating") return b.rating - a.rating;
-    if (sortBy === "jobs") return b.completedJobs - a.completedJobs;
-    return 0;
-  });
-
-  return (
-    <div className="flex flex-col gap-5">
-      <div>
-        <h2 style={{ color: "#172420" }} className="text-xl font-black">Browse Providers</h2>
-        <p className="text-slate-500 text-sm mt-0.5">Find skilled women professionals across Kigali</p>
-      </div>
-
-      {/* Search */}
-      <div className="flex gap-2 bg-white rounded-2xl shadow-sm p-2 border border-slate-100">
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by name, skill, or service..."
-          className="flex-1 px-4 py-2 text-sm text-slate-700 outline-none bg-transparent placeholder-slate-400"
-        />
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="flex gap-2 flex-wrap">
-          {districts.map((d) => (
-            <button
-              key={d}
-              onClick={() => setDistrictFilter(d)}
-              className="px-4 py-1.5 rounded-full text-xs font-semibold capitalize transition-all"
-              style={{
-                backgroundColor: districtFilter === d ? "#0E5C46" : "#F1F5F9",
-                color: districtFilter === d ? "white" : "#64748B",
-              }}
-            >
-              {d === "all" ? "All Districts" : d}
-            </button>
-          ))}
-        </div>
-        <div className="ml-auto flex items-center gap-2">
-          <span className="text-xs text-slate-400">Sort:</span>
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="text-xs font-medium text-slate-600 border border-slate-200 rounded-lg px-3 py-1.5 outline-none bg-white"
-          >
-            <option value="trust">Trust Score</option>
-            <option value="rating">Rating</option>
-            <option value="jobs">Most Jobs</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Categories quick filter */}
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        {CATEGORIES.map((cat) => (
-          <button
-            key={cat.label}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-slate-600 border border-slate-200 bg-white hover:border-green-300 hover:text-green-700 transition-colors flex-shrink-0"
-          >
-            <cat.Icon size={14} /> {cat.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Results */}
-      <p className="text-sm text-slate-500">{filtered.length} provider{filtered.length !== 1 ? "s" : ""} found</p>
-
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filtered.map((p) => (
-          <ProviderCard key={p.id} provider={p} savedIds={savedIds} toggleSave={toggleSave} />
-        ))}
-      </div>
-
-      {filtered.length === 0 && (
-        <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center">
-          <Search size={28} className="text-slate-300 mx-auto mb-3" />
-          <p className="font-semibold text-slate-700">No providers found</p>
-          <p className="text-sm text-slate-400 mt-1">Try adjusting your search or filters.</p>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// SECTION: MY BOOKINGS
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-function BookingsSection() {
-  const [filter, setFilter] = useState("all");
-  const filters = ["all", "pending", "confirmed", "completed", "cancelled"];
-
-  const filtered = filter === "all" ? BOOKINGS : BOOKINGS.filter((b) => b.status === filter);
-
-  return (
-    <div className="flex flex-col gap-5">
-      <div className="flex items-center justify-between">
-        <h2 style={{ color: "#172420" }} className="text-xl font-black">My Bookings</h2>
-        <span className="text-sm text-slate-500">{filtered.length} {filter === "all" ? "total" : filter}</span>
-      </div>
-
-      {/* Filter tabs */}
-      <div className="flex gap-2 flex-wrap">
-        {filters.map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className="px-4 py-1.5 rounded-full text-xs font-semibold capitalize transition-all"
-            style={{ backgroundColor: filter === f ? "#0E5C46" : "#F1F5F9", color: filter === f ? "white" : "#64748B" }}
-          >
-            {f}
-          </button>
-        ))}
-      </div>
-
-      {/* Bookings list */}
-      <div className="flex flex-col gap-3">
-        {filtered.map((b) => (
-          <div key={b.id} className="bg-white rounded-2xl border border-slate-100 p-5">
-            <div className="flex items-start gap-4">
-              <Avatar initials={b.initials} color={b.color} size={44} />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <p className="font-semibold text-slate-800">{b.provider}</p>
-                    <p className="text-xs text-slate-400">{b.role}</p>
-                    <p className="text-sm text-slate-500 mt-1">{b.service}</p>
-                  </div>
-                  <StatusBadge status={b.status} />
-                </div>
-                <div className="flex items-center gap-4 mt-3 flex-wrap">
-                  <span className="text-xs text-slate-500 flex items-center gap-1"><Calendar size={11} /> {b.date} Â· {b.time}</span>
-                  <span className="text-xs font-semibold text-slate-700">{b.amount}</span>
-                </div>
-
-                {/* Actions */}
-                {b.status === "pending" && (
-                  <div className="flex gap-2 mt-3">
-                    <button className="text-slate-500 text-xs font-semibold px-4 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors">
-                      Cancel Request
-                    </button>
-                  </div>
-                )}
-                {b.status === "confirmed" && (
-                  <div className="flex gap-2 mt-3">
-                    <button style={{ backgroundColor: "#0E5C46" }} className="text-white text-xs font-semibold px-4 py-1.5 rounded-lg hover:opacity-90 transition-opacity">
-                      Message Provider
-                    </button>
-                    <button className="text-slate-500 text-xs font-semibold px-4 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50">
-                      Cancel
-                    </button>
-                  </div>
-                )}
-                {b.status === "completed" && (
-                  <div className="flex gap-2 mt-3">
-                    <button style={{ backgroundColor: "#0E5C46" }} className="text-white text-xs font-semibold px-4 py-1.5 rounded-lg hover:opacity-90 transition-opacity">
-                      Leave a Review
-                    </button>
-                    <button className="text-slate-500 text-xs font-semibold px-4 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50">
-                      Book Again
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
-
-        {filtered.length === 0 && (
-          <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center">
-            <Inbox size={28} className="text-slate-300 mx-auto mb-3" />
-            <p className="font-semibold text-slate-700">No {filter} bookings</p>
-            <p className="text-sm text-slate-400 mt-1">Browse providers to make your first booking.</p>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// SECTION: SAVED PROVIDERS
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-function SavedSection({ savedIds, toggleSave, setActive }) {
-  const saved = PROVIDERS.filter((p) => savedIds.includes(p.id));
-
-  return (
-    <div className="flex flex-col gap-5">
-      <div>
-        <h2 style={{ color: "#172420" }} className="text-xl font-black">Saved Providers</h2>
-        <p className="text-slate-500 text-sm mt-0.5">Providers you've bookmarked for later</p>
-      </div>
-
-      {saved.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center flex flex-col items-center gap-3">
-          <Heart size={28} className="text-slate-200 mx-auto" />
-          <p className="font-semibold text-slate-700">No saved providers yet</p>
-          <p className="text-sm text-slate-400">Tap the heart icon on any provider to save them here.</p>
-          <button
-            onClick={() => setActive("browse")}
-            style={{ backgroundColor: "#0E5C46" }}
-            className="text-white text-sm font-semibold px-5 py-2 rounded-xl hover:opacity-90 transition-opacity mt-1"
-          >
-            Browse Providers
-          </button>
-        </div>
-      ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {saved.map((p) => (
-            <ProviderCard key={p.id} provider={p} savedIds={savedIds} toggleSave={toggleSave} />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// SECTION: MY REVIEWS
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-function ReviewsSection() {
-  return (
-    <div className="flex flex-col gap-5">
-      <div>
-        <h2 style={{ color: "#172420" }} className="text-xl font-black">My Reviews</h2>
-        <p className="text-slate-500 text-sm mt-0.5">Reviews you've left for service providers</p>
-      </div>
-
-      {MY_REVIEWS.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center">
-          <p className="text-3xl mb-3">â­</p>
-          <p className="font-semibold text-slate-700">No reviews yet</p>
-          <p className="text-sm text-slate-400 mt-1">After a completed booking, you can leave a review.</p>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-3">
-          {MY_REVIEWS.map((r) => (
-            <div key={r.id} className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col gap-3">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <Avatar initials={r.initials} color={r.color} size={38} />
-                  <div>
-                    <p className="font-semibold text-slate-800 text-sm">{r.provider}</p>
-                    <p className="text-xs text-slate-400">{r.date}</p>
-                  </div>
-                </div>
-                <StarRating rating={r.rating} size="md" />
-              </div>
-              <p className="text-sm text-slate-600 leading-relaxed">{r.text}</p>
-              {r.editable && (
-                <div className="flex gap-2 pt-1 border-t border-slate-50">
-                  <button style={{ color: "#0E5C46" }} className="text-xs font-semibold hover:underline pt-2">Edit</button>
-                  <button className="text-xs font-semibold text-slate-400 hover:text-red-500 pt-2">Delete</button>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// SECTION: SETTINGS
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-function SettingsSection() {
-  const [form, setForm] = useState({
-    fullName: CUSTOMER.name,
-    email: CUSTOMER.email,
-    phone: CUSTOMER.phone,
-    district: CUSTOMER.district,
-    notifications: true,
-    smsAlerts: false,
-  });
-
-  const set = (field) => (e) => {
-    const val = e.target.type === "checkbox" ? e.target.checked : e.target.value;
-    setForm((prev) => ({ ...prev, [field]: val }));
-  };
-
-  return (
-    <div className="flex flex-col gap-5">
-      <h2 style={{ color: "#172420" }} className="text-xl font-black">Settings</h2>
-
-      {/* Profile info */}
-      <div className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col gap-5">
-        <h3 className="font-bold text-slate-800 text-sm border-b border-slate-100 pb-3">Profile Information</h3>
-
-        <div className="flex items-center gap-4">
-          <Avatar initials={CUSTOMER.initials} color="#3B82F6" size={64} />
-          <div>
-            <button style={{ color: "#0E5C46" }} className="text-sm font-semibold hover:underline">Change photo</button>
-            <p className="text-xs text-slate-400 mt-0.5">JPG or PNG, max 2MB</p>
-          </div>
-        </div>
-
-        <div className="grid sm:grid-cols-2 gap-4">
-          {[
-            { label: "Full Name", field: "fullName" },
-            { label: "Email Address", field: "email" },
-            { label: "Phone Number", field: "phone" },
-            { label: "District", field: "district", type: "select", options: ["Gasabo", "Kicukiro", "Nyarugenge"] },
-          ].map(({ label, field, type, options }) => (
-            <div key={field} className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-slate-700">{label}</label>
-              {type === "select" ? (
-                <select
-                  value={form[field]}
-                  onChange={set(field)}
-                  className="px-3 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-green-400 focus:ring-2 focus:ring-orange-100 bg-white text-slate-800"
-                >
-                  {options.map((o) => <option key={o}>{o}</option>)}
-                </select>
-              ) : (
-                <input
-                  type="text"
-                  value={form[field]}
-                  onChange={set(field)}
-                  className="px-3 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-green-400 focus:ring-2 focus:ring-orange-100 text-slate-800 bg-white"
-                />
-              )}
-            </div>
-          ))}
-        </div>
-
-        <button style={{ backgroundColor: "#0E5C46" }} className="text-white font-semibold text-sm px-6 py-2.5 rounded-xl hover:opacity-90 transition-opacity w-fit">
-          Save Changes
-        </button>
-      </div>
-
-      {/* Preferences */}
-      <div className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col gap-4">
-        <h3 className="font-bold text-slate-800 text-sm border-b border-slate-100 pb-3">Preferences</h3>
-        {[
-          { label: "Email Notifications", desc: "Get booking confirmations and updates via email", field: "notifications" },
-          { label: "SMS Alerts", desc: "Receive text messages for urgent booking updates", field: "smsAlerts" },
-        ].map(({ label, desc, field }) => (
-          <div key={field} className="flex items-center justify-between gap-4">
-            <div>
-              <p className="text-sm font-medium text-slate-700">{label}</p>
-              <p className="text-xs text-slate-400 mt-0.5">{desc}</p>
-            </div>
-            <button
-              onClick={() => setForm((p) => ({ ...p, [field]: !p[field] }))}
-              className="relative w-11 h-6 rounded-full transition-colors flex-shrink-0"
-              style={{ backgroundColor: form[field] ? "#0E5C46" : "#CBD5E1" }}
-              role="switch"
-              aria-checked={form[field]}
-            >
-              <span
-                className="absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform"
-                style={{ transform: form[field] ? "translateX(20px)" : "translateX(2px)" }}
-              />
-            </button>
-          </div>
-        ))}
-      </div>
-
-      {/* Danger zone */}
-      <div className="bg-white rounded-2xl border border-red-100 p-5 flex flex-col gap-3">
-        <h3 className="font-bold text-red-600 text-sm">Danger Zone</h3>
-        <p className="text-xs text-slate-500">These actions are permanent and cannot be undone.</p>
-        <div className="flex gap-3 flex-wrap">
-          <button className="text-red-500 text-sm font-semibold px-4 py-2 rounded-xl border border-red-200 hover:bg-red-50 transition-colors">
-            Deactivate Account
-          </button>
-          <button className="text-red-600 text-sm font-semibold px-4 py-2 rounded-xl border border-red-300 hover:bg-red-50 transition-colors">
-            Delete Account
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// TOPBAR
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-function Topbar({ active, mobileMenuOpen, setMobileMenuOpen }) {
-  const label = NAV_ITEMS.find((n) => n.id === active)?.label || "Dashboard";
-  return (
-    <header className="h-14 bg-white border-b border-slate-100 flex items-center justify-between px-4 sm:px-6 flex-shrink-0">
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="lg:hidden p-1.5 rounded-lg text-slate-500 hover:bg-slate-100"
-        >
-          <Menu size={20} />
-        </button>
-        <h1 style={{ color: "#172420" }} className="font-bold text-base">{label}</h1>
-      </div>
-      <div className="flex items-center gap-3">
-        <LanguageSwitcher compact />
-        <div className="w-px h-5 bg-slate-200" />
-        <Avatar initials={CUSTOMER.initials} color="#3B82F6" size={32} />
-      </div>
-    </header>
-  );
-}
-
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// MOBILE BOTTOM NAV
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-function MobileNav({ active, setActive }) {
-  return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 z-40 flex">
-      {NAV_ITEMS.slice(0, 5).map((item) => {
-        const isActive = active === item.id;
-        return (
-          <button
-            key={item.id}
-            onClick={() => setActive(item.id)}
-            className="flex-1 flex flex-col items-center gap-0.5 py-2 transition-colors"
-            style={{ color: isActive ? "#0E5C46" : "#94A3B8" }}
-          >
-            <item.Icon size={20} />
-            <span className="text-xs font-medium">{item.label}</span>
-          </button>
-        );
-      })}
-    </nav>
-  );
-}
-
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// DASHBOARD ROOT
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Page root ─────────────────────────────────────────────────────────────────
 export default function CustomerDashboard() {
   const { user } = useAuth();
-
-  // Overlay the real logged-in user's identity onto the display object,
-  // so the greeting, sidebar, and settings show who is actually signed in.
-  if (user) {
-    CUSTOMER.name = user.full_name;
-    CUSTOMER.initials = initialsFromName(user.full_name);
-    CUSTOMER.email = user.email;
-    if (user.phone) CUSTOMER.phone = user.phone;
-    if (user.district) CUSTOMER.district = user.district;
-  }
-
-  const [active, setActive] = useState("overview");
-  const [collapsed, setCollapsed] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  // Centralized saved-providers state, shared across Overview, Browse, Saved sections
-  const [savedIds, setSavedIds] = useState(
-    PROVIDERS.filter((p) => p.saved).map((p) => p.id)
-  );
-
-  const toggleSave = (id) => {
-    setSavedIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
-  };
-
-  const SECTIONS = {
-    overview: <OverviewSection savedIds={savedIds} toggleSave={toggleSave} setActive={setActive} />,
-    browse:   <BrowseSection savedIds={savedIds} toggleSave={toggleSave} />,
-    bookings: <BookingsSection />,
-    saved:    <SavedSection savedIds={savedIds} toggleSave={toggleSave} setActive={setActive} />,
-    reviews:  <ReviewsSection />,
-    settings: <SettingsSection />,
-  };
+  const [tab, setTab] = useState("upcoming");
+  const firstName = (user?.fullName || "there").split(" ")[0];
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50">
-      {/* Desktop sidebar */}
-      <div className="hidden lg:flex">
-        <Sidebar active={active} setActive={setActive} collapsed={collapsed} setCollapsed={setCollapsed} />
-      </div>
+    <div style={{ display: "flex", minHeight: "100vh", fontFamily: SANS, backgroundColor: CREAM }}>
+      <Sidebar tab={tab} setTab={setTab} />
 
-      {/* Mobile sidebar overlay */}
-      {mobileMenuOpen && (
-        <>
-          <div className="fixed inset-0 bg-black/40 z-40 lg:hidden" onClick={() => setMobileMenuOpen(false)} />
-          <div className="fixed left-0 top-0 bottom-0 z-50 lg:hidden">
-            <Sidebar
-              active={active}
-              setActive={(id) => { setActive(id); setMobileMenuOpen(false); }}
-              collapsed={false}
-              setCollapsed={() => {}}
-            />
+      <main style={{ flex: 1, padding: 32, overflowY: "auto" }}>
+        {/* Heading */}
+        <div style={{ marginBottom: 24 }}>
+          <h1 style={{ fontFamily: SERIF, color: DARK, fontSize: "1.75rem", fontWeight: 700, letterSpacing: "-0.02em" }}>
+            {tab === "upcoming" ? `Upcoming, ${firstName}` : "Completed bookings"}
+          </h1>
+          <p style={{ color: MUTED, fontSize: "0.875rem", marginTop: 4 }}>
+            {tab === "upcoming"
+              ? "Your confirmed and pending bookings."
+              : "Past services — leave a review to help others find great providers."}
+          </p>
+        </div>
+
+        {/* Cards */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {tab === "upcoming"  && UPCOMING.map(b  => <BookingCard key={b.id} booking={b} showStatus={true}  showReview={false} />)}
+          {tab === "completed" && COMPLETED.map(b => <BookingCard key={b.id} booking={b} showStatus={false} showReview={true}  />)}
+        </div>
+
+        {tab === "upcoming"  && UPCOMING.length  === 0 && (
+          <div style={{ textAlign: "center", padding: "60px 0", color: MUTED }}>
+            <p style={{ fontSize: "0.9rem", marginBottom: 10 }}>No upcoming bookings yet.</p>
+            <Link to="/providers" style={{ color: G, fontWeight: 600, fontSize: "0.875rem" }}>Browse providers →</Link>
           </div>
-        </>
-      )}
-
-      {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Topbar active={active} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
-
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 pb-24 lg:pb-6">
-          <div className="max-w-5xl mx-auto">
-            {SECTIONS[active]}
+        )}
+        {tab === "completed" && COMPLETED.length === 0 && (
+          <div style={{ textAlign: "center", padding: "60px 0", color: MUTED }}>
+            <p style={{ fontSize: "0.9rem" }}>No completed bookings yet.</p>
           </div>
-        </main>
-      </div>
-
-      {/* Mobile bottom nav */}
-      <MobileNav active={active} setActive={setActive} />
+        )}
+      </main>
     </div>
   );
 }
-
-

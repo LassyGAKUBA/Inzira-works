@@ -13,6 +13,7 @@ import CheckEmailPage from "./pages/auth/CheckEmailPage";
 import AuthCallbackPage from "./pages/auth/AuthCallbackPage";
 import ProviderDashboard from "./pages/provider/ProviderDashboard";
 import CustomerDashboard from "./pages/customer/CustomerDashboard";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 import ProviderDirectory from "./pages/public/ProviderDirectory";
 import AboutPage from "./pages/public/AboutPage";
 import ContactPage from "./pages/public/ContactPage";
@@ -43,6 +44,8 @@ const router = createBrowserRouter([
       </ProtectedRoute>
     ),
   },
+
+  { path: "/admin/dashboard", element: <AdminDashboard /> },
 
   { path: "/providers", element: <ProviderDirectory /> },
   { path: "/about", element: <AboutPage /> },
