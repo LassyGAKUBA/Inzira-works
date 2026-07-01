@@ -131,9 +131,17 @@ function ContactForm() {
 
     setLoading(true);
     try {
-      // TODO: replace with real API call
-      // await contactService.send(form);
-      await new Promise((r) => setTimeout(r, 1000));
+      const { createClient } = await import("@supabase/supabase-js");
+      const sb = createClient(
+        import.meta.env.VITE_SUPABASE_URL,
+        import.meta.env.VITE_SUPABASE_ANON_KEY
+      );
+      await sb.from("contact_messages").insert({
+        name:    form.name,
+        email:   form.email,
+        subject: form.subject,
+        message: form.message,
+      });
       setSent(true);
       setForm({ name: "", email: "", subject: SUBJECTS[0], message: "" });
     } finally {

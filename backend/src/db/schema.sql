@@ -198,6 +198,24 @@ CREATE TABLE reviews (
 CREATE INDEX idx_reviews_provider ON reviews(provider_id);
 
 -- ============================================================
+--  CONTACT MESSAGES  (public contact form submissions)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS contact_messages (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name       VARCHAR(120) NOT NULL,
+  email      VARCHAR(160) NOT NULL,
+  subject    VARCHAR(160),
+  message    TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Anyone can insert; only admins should read (no public read policy)
+CREATE POLICY "anyone_insert_contact" ON contact_messages
+  FOR INSERT WITH CHECK (true);
+
+ALTER TABLE contact_messages ENABLE ROW LEVEL SECURITY;
+
+-- ============================================================
 --  SAVED PROVIDERS  (customer bookmarks a provider)
 -- ============================================================
 CREATE TABLE saved_providers (
