@@ -210,7 +210,7 @@ export default function CustomerDashboard() {
   const [loading,   setLoading]   = useState(true);
   const [reviewing, setReviewing] = useState(null);
 
-  const firstName = (user?.fullName || "there").split(" ")[0];
+  const firstName = (user?.full_name || "there").split(" ")[0];
 
   const loadData = useCallback(async () => {
     if (!user) return;
