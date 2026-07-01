@@ -5,11 +5,12 @@
 // reviews, booking modal, similar providers, Footer.
 
 import { useState, useEffect } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { useLang } from "../../i18n/LangContext";
 import Navbar from "../../components/shared/Navbar";
 import PageTransition from "../../components/shared/PageTransition";
 import { supabase } from "../../lib/supabase";
+import { useAuth } from "../../context/AuthContext";
 import {
   MapPin, Star, CheckCircle, ArrowRight,
   X, Heart, Share2, MessageCircle, Lock,
@@ -97,6 +98,7 @@ function mapProvider(d) {
     bio: d.bio || "",
     skills: Array.isArray(d.specialties) ? d.specialties : [],
     services: (d.services || []).map((s) => ({
+      id: s.id,
       name: s.title,
       description: s.description || "",
       price: formatPrice(s.price, s.price_type),
@@ -219,9 +221,11 @@ function Footer() {
 // ─────────────────────────────────────────────────────────────────────────────
 // BOOKING MODAL
 // ─────────────────────────────────────────────────────────────────────────────
-function BookingModal({ provider, onClose }) {
+function BookingModal({ provider, user, onClose }) {
+  const navigate = useNavigate();
   const [form, setForm] = useState({ service: provider.services[0]?.name || "", date: "", time: "", notes: "" });
   const [errors, setErrors] = useState({});
+  const [submitError, setSubmitError] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
 
@@ -233,8 +237,8 @@ function BookingModal({ provider, onClose }) {
   const validate = () => {
     const errs = {};
     if (!form.service) errs.service = "Please select a service.";
-    if (!form.date) errs.date = "Please select a date.";
-    if (!form.time) errs.time = "Please select a time.";
+    if (!form.date)    errs.date    = "Please select a date.";
+    if (!form.time)    errs.time    = "Please select a time.";
     return errs;
   };
 
@@ -244,11 +248,28 @@ function BookingModal({ provider, onClose }) {
     if (Object.keys(errs).length) { setErrors(errs); return; }
 
     setLoading(true);
+    setSubmitError("");
     try {
-      // TODO: replace with real API call when the booking feature is built
-      // await bookingService.create({ providerId: provider.id, ...form });
-      await new Promise((r) => setTimeout(r, 1000));
+      const selectedService = provider.services.find((s) => s.name === form.service);
+      const notesText = [
+        form.time  ? `Preferred time: ${form.time}` : "",
+        form.notes || "",
+      ].filter(Boolean).join("\n");
+
+      const { error } = await supabase.from("bookings").insert({
+        customer_id:    user.id,
+        provider_id:    provider.userId,
+        service_id:     selectedService?.id || null,
+        title:          form.service,
+        scheduled_date: form.date,
+        notes:          notesText || null,
+        status:         "pending",
+      });
+
+      if (error) throw error;
       setSent(true);
+    } catch (err) {
+      setSubmitError(err.message || "Could not send request. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -260,17 +281,47 @@ function BookingModal({ provider, onClose }) {
     return () => window.removeEventListener("keydown", handler);
   }, [onClose]);
 
+  // Not logged in — prompt to sign in
+  if (!user) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+        <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-sm p-8 flex flex-col items-center text-center gap-4">
+          <div style={{ backgroundColor: "#e8f3ee", width: 56, height: 56, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Lock size={22} style={{ color: "#0E5C46" }} />
+          </div>
+          <div>
+            <h3 style={{ color: "#172420", fontFamily: "Spectral, serif", fontSize: "1.25rem", fontWeight: 700 }}>Sign in to book</h3>
+            <p className="text-slate-500 text-sm mt-2 leading-relaxed">
+              You need an account to send a booking request to {provider.name.split(" ")[0]}.
+            </p>
+          </div>
+          <button
+            onClick={() => navigate("/login", { state: { from: `/providers/${provider.id}` } })}
+            style={{ backgroundColor: "#0E5C46" }}
+            className="w-full text-white font-semibold py-3 rounded-xl hover:opacity-90 transition-opacity"
+          >
+            Sign in
+          </button>
+          <Link to="/signup" className="text-sm" style={{ color: "#0E5C46" }}>
+            No account yet? Join Inzira →
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
         {sent ? (
           <div className="p-8 flex flex-col items-center text-center gap-4">
-            <div style={{ backgroundColor: "#F0FDF4", border: "2px solid #10B981" }} className="w-16 h-16 rounded-full flex items-center justify-center">
-              <CheckCircle size={30} style={{ color: "#10B981" }} />
+            <div style={{ backgroundColor: "#e8f3ee", border: "2px solid #0E5C46" }} className="w-16 h-16 rounded-full flex items-center justify-center">
+              <CheckCircle size={30} style={{ color: "#0E5C46" }} />
             </div>
             <div>
-              <h3 style={{ color: "#172420" }} className="text-xl font-black">Booking request sent!</h3>
+              <h3 style={{ color: "#172420", fontFamily: "Spectral, serif", fontSize: "1.25rem", fontWeight: 700 }}>Booking request sent!</h3>
               <p className="text-slate-500 text-sm mt-2 leading-relaxed">
                 {provider.name} will review your request and confirm within {provider.responseTime}.
                 You'll be notified once it's accepted.
@@ -296,13 +347,19 @@ function BookingModal({ provider, onClose }) {
             </div>
 
             <form onSubmit={handleSubmit} className="p-5 flex flex-col gap-4" noValidate>
+              {submitError && (
+                <div style={{ backgroundColor: "#fef2f2", border: "1px solid #fecaca", color: "#dc2626", fontSize: "0.8rem", padding: "10px 14px", borderRadius: 10 }}>
+                  {submitError}
+                </div>
+              )}
+
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-medium text-slate-700">Service</label>
                 <select
                   value={form.service}
                   onChange={set("service")}
                   className={`w-full px-4 py-3 rounded-xl border text-sm text-slate-800 outline-none transition-all bg-white
-                    ${errors.service ? "border-red-400" : "border-slate-200 focus:border-green-400 focus:ring-2 focus:ring-orange-100"}`}
+                    ${errors.service ? "border-red-400" : "border-slate-200 focus:border-green-700"}`}
                 >
                   {provider.services.length === 0 && <option value="">No services listed</option>}
                   {provider.services.map((s) => (
@@ -321,7 +378,7 @@ function BookingModal({ provider, onClose }) {
                     onChange={set("date")}
                     min={new Date().toISOString().split("T")[0]}
                     className={`w-full px-3 py-3 rounded-xl border text-sm text-slate-800 outline-none transition-all bg-white
-                      ${errors.date ? "border-red-400" : "border-slate-200 focus:border-green-400 focus:ring-2 focus:ring-orange-100"}`}
+                      ${errors.date ? "border-red-400" : "border-slate-200 focus:border-green-700"}`}
                   />
                   {errors.date && <p className="text-xs text-red-500">{errors.date}</p>}
                 </div>
@@ -332,27 +389,27 @@ function BookingModal({ provider, onClose }) {
                     value={form.time}
                     onChange={set("time")}
                     className={`w-full px-3 py-3 rounded-xl border text-sm text-slate-800 outline-none transition-all bg-white
-                      ${errors.time ? "border-red-400" : "border-slate-200 focus:border-green-400 focus:ring-2 focus:ring-orange-100"}`}
+                      ${errors.time ? "border-red-400" : "border-slate-200 focus:border-green-700"}`}
                   />
                   {errors.time && <p className="text-xs text-red-500">{errors.time}</p>}
                 </div>
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-medium text-slate-700">Additional Notes (optional)</label>
+                <label className="text-sm font-medium text-slate-700">Additional Notes <span className="text-slate-400 font-normal">(optional)</span></label>
                 <textarea
                   value={form.notes}
                   onChange={set("notes")}
                   rows={3}
                   placeholder="Describe what you need, sizes, preferred fabric, etc."
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm text-slate-800 outline-none focus:border-green-400 focus:ring-2 focus:ring-orange-100 resize-none bg-white"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm text-slate-800 outline-none focus:border-green-700 resize-none bg-white"
                 />
               </div>
 
               {form.service && (
-                <div className="bg-green-50 border border-green-100 rounded-xl p-3 flex items-center justify-between">
-                  <span className="text-sm text-green-800 font-medium">Estimated price</span>
-                  <span className="text-sm font-bold text-green-800">
+                <div style={{ backgroundColor: "#e8f3ee", border: "1px solid #b8d9c8", borderRadius: 10, padding: "10px 14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span className="text-sm font-medium" style={{ color: "#0E5C46" }}>Estimated price</span>
+                  <span className="text-sm font-bold" style={{ color: "#0E5C46" }}>
                     {provider.services.find((s) => s.name === form.service)?.price}
                   </span>
                 </div>
@@ -365,7 +422,7 @@ function BookingModal({ provider, onClose }) {
                 className="text-white font-semibold py-3 rounded-xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
               >
                 {loading && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
-                {loading ? "Sending request..." : "Send Booking Request"}
+                {loading ? "Sending request…" : "Send Booking Request"}
               </button>
               <p className="text-xs text-slate-400 text-center">
                 You won't be charged yet. {provider.name} will confirm availability first.
@@ -462,6 +519,7 @@ function NotFoundState() {
 // ─────────────────────────────────────────────────────────────────────────────
 export default function ProviderProfilePage() {
   const { id } = useParams();
+  const { user } = useAuth();
 
   const [provider, setProvider] = useState(null);
   const [similar, setSimilar] = useState([]);
@@ -862,7 +920,7 @@ export default function ProviderProfilePage() {
       <Footer />
 
       {/* Modals */}
-      {showBooking && <BookingModal provider={provider} onClose={() => setShowBooking(false)} />}
+      {showBooking && <BookingModal provider={provider} user={user} onClose={() => setShowBooking(false)} />}
       {showShare && <ShareModal provider={provider} onClose={() => setShowShare(false)} />}
     </div>
     </PageTransition>
