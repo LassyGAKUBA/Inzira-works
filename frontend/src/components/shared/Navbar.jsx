@@ -10,9 +10,9 @@ const MUTED = "#5c7068";
 const SANS  = "'Hanken Grotesk', sans-serif";
 
 const NAV_LINKS = [
-  { label: "Find a provider", to: "/providers" },
-  { label: "For providers",   to: "/signup"    },
-  { label: "How it works",    to: "/about"     },
+  { label: "Find a provider", to: "/providers"   },
+  { label: "For providers",   to: "/role-select" },
+  { label: "How it works",    to: "/about"       },
 ];
 
 const ROLE_DASHBOARD = {
@@ -135,7 +135,7 @@ export default function Navbar() {
                 className="hover:opacity-70 transition-opacity">
                 Sign in
               </Link>
-              <Link to="/signup"
+              <Link to="/role-select"
                 onMouseEnter={() => setJoinHover(true)}
                 onMouseLeave={() => setJoinHover(false)}
                 style={{ backgroundColor: G, color: "white", borderRadius: 8, fontWeight: 600, fontSize: "0.875rem", padding: "8px 18px", textDecoration: "none", opacity: joinHover ? 0.85 : 1, transition: "opacity 0.15s" }}>
@@ -178,7 +178,7 @@ export default function Navbar() {
                   style={{ flex: 1, border: "1px solid #d4cfc5", borderRadius: 8, padding: "9px 16px", color: DARK, fontWeight: 500, fontSize: "0.875rem", textDecoration: "none", textAlign: "center" }}>
                   Sign in
                 </Link>
-                <Link to="/signup" onClick={() => setMenuOpen(false)}
+                <Link to="/role-select" onClick={() => setMenuOpen(false)}
                   style={{ flex: 1, backgroundColor: G, borderRadius: 8, padding: "9px 16px", color: "white", fontWeight: 600, fontSize: "0.875rem", textDecoration: "none", textAlign: "center" }}>
                   Join Inzira
                 </Link>

@@ -228,7 +228,7 @@ export default function AboutPage() {
             local talent — there's a place for you here.
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
-            <Link to="/signup" className="bg-white text-green-700 font-bold px-8 py-3 rounded-xl hover:bg-green-50 transition-colors text-sm">
+            <Link to="/role-select" className="bg-white text-green-700 font-bold px-8 py-3 rounded-xl hover:bg-green-50 transition-colors text-sm">
               Join as a Provider
             </Link>
             <Link to="/providers" className="border-2 border-white text-white font-bold px-8 py-3 rounded-xl hover:bg-green-800 transition-colors text-sm">

@@ -311,7 +311,7 @@ function BookingModal({ provider, user, onClose }) {
           >
             Sign in
           </button>
-          <Link to="/signup" className="text-sm" style={{ color: "#0E5C46" }}>
+          <Link to="/role-select" className="text-sm" style={{ color: "#0E5C46" }}>
             No account yet? Join Inzira →
           </Link>
         </div>

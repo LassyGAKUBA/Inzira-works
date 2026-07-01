@@ -597,7 +597,7 @@ function HowItWorks() {
               ))}
             </div>
             <Link
-              to="/signup"
+              to="/role-select"
               style={{
                 display: "block",
                 marginTop: 24,
@@ -656,7 +656,7 @@ function CTASection() {
 
             <div className="flex md:justify-end">
               <Link
-                to="/signup"
+                to="/role-select"
                 style={{
                   border: "1.5px solid rgba(255,255,255,0.6)",
                   color: "white",
