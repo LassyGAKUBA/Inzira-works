@@ -371,7 +371,7 @@ function TrustScoreSection() {
                   fontWeight: 600,
                   textDecoration: "none",
                 }}
-                className="hover:bg-white hover:bg-opacity-10 transition-colors"
+                className="hover:bg-white/10 transition-colors"
               >
                 See how it works
               </Link>
@@ -667,7 +667,7 @@ function CTASection() {
                   textDecoration: "none",
                   textAlign: "center",
                 }}
-                className="hover:bg-white hover:bg-opacity-10 transition-colors"
+                className="hover:bg-white/10 transition-colors"
               >
                 Join Inzira Works
               </Link>
