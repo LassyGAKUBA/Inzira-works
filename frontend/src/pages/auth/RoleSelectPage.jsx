@@ -3,7 +3,6 @@
 import { useState, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { supabase } from "../../lib/supabase";
 import {
   Shirt, Search, ChevronRight, Image as ImageIcon,
   CreditCard, Shield, Check,
@@ -380,24 +379,17 @@ export default function RoleSelectPage() {
     setLoading(true);
     setApiError("");
     try {
-      const { needsConfirmation, user } = await register({
+      const { needsConfirmation } = await register({
         fullName: form.fullName,
         email:    form.email,
         phone:    form.phone,
-        address:  form.address || "",
+        address:  form.address  || "",
         district: form.district,
+        bio:      form.bio      || "",
+        category: form.category || "",
         password: form.password,
         role,
       });
-
-      // For providers: patch the profile row with bio, headline, district
-      if (!needsConfirmation && role === "provider" && user) {
-        await supabase.from("provider_profiles").update({
-          headline: form.category,
-          bio:      form.bio || null,
-          district: form.district,
-        }).eq("user_id", user.id);
-      }
 
       if (needsConfirmation) {
         navigate("/check-email", { state: { email: form.email } });
