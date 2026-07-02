@@ -58,10 +58,10 @@ export default function ForgotPasswordPage() {
 
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <h1 style={{ color: DARK, fontFamily: SERIF, fontSize: "1.625rem", fontWeight: 700, letterSpacing: "-0.02em" }}>
-                  Forgot your password?
+                  {t("auth_fp_title")}
                 </h1>
                 <p style={{ color: "#5c7068", fontSize: "0.875rem", lineHeight: 1.65 }}>
-                  No problem. Enter your email address and we'll send you a link to reset your password.
+                  {t("auth_fp_sub")}
                 </p>
               </div>
 
@@ -92,12 +92,12 @@ export default function ForgotPasswordPage() {
                   className="hover:opacity-90 transition-opacity"
                 >
                   {loading && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
-                  {loading ? "Sending…" : "Send Reset Link"}
+                  {loading ? t("auth_fp_sending") : t("auth_fp_btn")}
                 </button>
               </form>
 
               <Link to="/login" style={{ textAlign: "center", fontSize: "0.875rem", color: "#5c7068", textDecoration: "none" }} className="hover:opacity-70 transition-opacity">
-                ← Back to login
+                {t("auth_fp_back")}
               </Link>
             </div>
           ) : (
@@ -107,22 +107,22 @@ export default function ForgotPasswordPage() {
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 <h2 style={{ color: DARK, fontFamily: SERIF, fontSize: "1.375rem", fontWeight: 700, letterSpacing: "-0.01em" }}>
-                  Check your email
+                  {t("auth_fp_sent_title")}
                 </h2>
                 <p style={{ color: "#5c7068", fontSize: "0.875rem", lineHeight: 1.65 }}>
-                  We've sent a password reset link to{" "}
-                  <strong style={{ color: DARK }}>{email}</strong>.
-                  Check your inbox and follow the instructions.
+                  {t("auth_fp_sent_sub")}{" "}
+                  <strong style={{ color: DARK }}>{email}</strong>.{" "}
+                  {t("auth_fp_sent_sub2")}
                 </p>
               </div>
               <p style={{ color: "#9aab9e", fontSize: "0.75rem" }}>
-                Didn't receive it? Check your spam folder, or{" "}
+                {t("auth_fp_no_email")}{" "}
                 <button
                   onClick={() => setSent(false)}
                   style={{ color: G, fontWeight: 500, background: "none", border: "none", cursor: "pointer", padding: 0 }}
                   className="hover:underline"
                 >
-                  try again
+                  {t("auth_fp_try_again")}
                 </button>.
               </p>
               <Link
@@ -130,7 +130,7 @@ export default function ForgotPasswordPage() {
                 style={{ backgroundColor: G, color: "white", borderRadius: 10, padding: "10px 24px", fontSize: "0.875rem", fontWeight: 600, textDecoration: "none", marginTop: 8 }}
                 className="hover:opacity-90 transition-opacity"
               >
-                Back to Login
+                {t("auth_fp_back_btn")}
               </Link>
             </div>
           )}

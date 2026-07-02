@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useLang } from "../../i18n/LangContext";
 import {
   Scissors, Sparkles, ChefHat, Package, Home, Layers,
   ChevronDown, Star, ArrowRight, MapPin, CheckCircle,
@@ -15,16 +16,16 @@ const GOLD   = "#b98a22";
 const MUTED  = "#5c7068";
 const SERIF  = "Spectral, serif";
 const SANS   = "'Hanken Grotesk', sans-serif";
-const W      = 1200; // content max-width
+const W      = 1200;
 
 // ── Static data ───────────────────────────────────────────────────────────────
 const CATEGORIES = [
-  { label: "Tailoring & Fashion", Icon: Scissors },
-  { label: "Hair & Beauty",       Icon: Sparkles  },
-  { label: "Baking & Catering",   Icon: ChefHat   },
-  { label: "Handicraft & Décor",  Icon: Package   },
-  { label: "Home & Cleaning",     Icon: Home      },
-  { label: "Knitwear & Textiles", Icon: Layers    },
+  { tKey: "home_cat_tailoring",  Icon: Scissors },
+  { tKey: "home_cat_hair",       Icon: Sparkles  },
+  { tKey: "home_cat_baking",     Icon: ChefHat   },
+  { tKey: "home_cat_handicraft", Icon: Package   },
+  { tKey: "home_cat_home",       Icon: Home      },
+  { tKey: "home_cat_knitwear",   Icon: Layers    },
 ];
 
 const PROVIDERS = [
@@ -83,6 +84,7 @@ function StarRow({ rating }) {
 
 // ── Section: Hero ─────────────────────────────────────────────────────────────
 function Hero() {
+  const { t } = useLang();
   return (
     <section style={{ backgroundColor: CREAM, paddingBottom: 64 }}>
       <Container>
@@ -106,7 +108,7 @@ function Hero() {
                 }}
               >
                 <span style={{ color: GOLD, fontSize: 8 }}>●</span>
-                Built for skilled women in Kigali City
+                {t("home_hero_badge")}
               </span>
             </div>
 
@@ -121,16 +123,14 @@ function Hero() {
                 fontWeight: 800,
               }}
             >
-              Skilled hands,<br />
-              now easy to{" "}
-              <em style={{ color: G, fontStyle: "italic" }}>find & trust.</em>
+              {t("home_hero_h1a")}<br />
+              {t("home_hero_h1b")}{" "}
+              <em style={{ color: G, fontStyle: "italic" }}>{t("home_hero_h1c")}</em>
             </h1>
 
             {/* Sub */}
             <p style={{ color: MUTED, maxWidth: "26rem", lineHeight: 1.7, fontSize: "1rem" }}>
-              Inzira — meaning <em>the path</em> — connects tailors, hairdressers,
-              bakers and artisans with the customers who need them, backed by a
-              verifiable <strong style={{ color: DARK, fontWeight: 600 }}>Trust Score</strong>.
+              {t("home_hero_desc")}
             </p>
 
             {/* Search bar */}
@@ -153,7 +153,6 @@ function Hero() {
                   alignItems: "center",
                   gap: 6,
                   padding: "8px 14px",
-                  borderRight: "1px solid #ddd8ce",
                   background: "none",
                   border: "none",
                   borderRight: "1px solid #ddd8ce",
@@ -163,7 +162,7 @@ function Hero() {
                   flexShrink: 0,
                 }}
               >
-                All categories <ChevronDown size={14} />
+                {t("home_hero_all_cat")} <ChevronDown size={14} />
               </button>
               <button
                 style={{
@@ -179,7 +178,7 @@ function Hero() {
                   flexShrink: 0,
                 }}
               >
-                <MapPin size={13} /> All Kigali <ChevronDown size={14} />
+                <MapPin size={13} /> {t("home_hero_all_kigali")} <ChevronDown size={14} />
               </button>
               <Link
                 to="/providers"
@@ -197,22 +196,22 @@ function Hero() {
                 }}
                 className="hover:opacity-90 transition-opacity"
               >
-                Find
+                {t("home_hero_find")}
               </Link>
             </div>
 
             {/* Stats */}
             <div className="flex items-center gap-8 pt-2 flex-wrap">
               {[
-                { value: "1,200+", label: "Verified providers"   },
-                { value: "8,400+", label: "Bookings completed"   },
-                { value: "3",      label: "Kigali districts"     },
-              ].map(({ value, label }) => (
-                <div key={label}>
+                { value: "1,200+", tKey: "home_stat_verified"  },
+                { value: "8,400+", tKey: "home_stat_bookings"  },
+                { value: "3",      tKey: "home_stat_districts" },
+              ].map(({ value, tKey }) => (
+                <div key={tKey}>
                   <p style={{ fontFamily: SERIF, color: DARK, fontSize: "1.6rem", fontWeight: 700, lineHeight: 1 }}>
                     {value}
                   </p>
-                  <p style={{ color: MUTED, fontSize: "0.75rem", marginTop: 4 }}>{label}</p>
+                  <p style={{ color: MUTED, fontSize: "0.75rem", marginTop: 4 }}>{t(tKey)}</p>
                 </div>
               ))}
             </div>
@@ -286,28 +285,27 @@ function Hero() {
 
 // ── Section: Browse by trade ──────────────────────────────────────────────────
 function BrowseByTrade() {
+  const { t } = useLang();
   return (
     <section style={{ backgroundColor: CREAM, paddingTop: 16, paddingBottom: 64 }}>
       <Container>
         <div className="flex items-center justify-between" style={{ marginBottom: 20 }}>
           <h2 style={{ fontFamily: SERIF, color: DARK, fontSize: "1.5rem", fontWeight: 700, letterSpacing: "-0.01em" }}>
-            Browse by trade
+            {t("home_browse_h2")}
           </h2>
           <Link
             to="/providers"
             style={{ color: G, fontSize: "0.875rem", fontWeight: 500, textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}
             className="hover:opacity-70 transition-opacity"
           >
-            View all providers <ArrowRight size={14} />
+            {t("home_browse_viewall")} <ArrowRight size={14} />
           </Link>
         </div>
 
-        <div
-          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3"
-        >
-          {CATEGORIES.map(({ label, Icon }) => (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          {CATEGORIES.map(({ tKey, Icon }) => (
             <Link
-              key={label}
+              key={tKey}
               to="/providers"
               style={{
                 backgroundColor: "white",
@@ -321,7 +319,7 @@ function BrowseByTrade() {
             >
               <Icon size={22} style={{ color: G }} />
               <p style={{ color: DARK, fontSize: "0.75rem", fontWeight: 500, textAlign: "center", lineHeight: 1.3 }}>
-                {label}
+                {t(tKey)}
               </p>
             </Link>
           ))}
@@ -333,11 +331,13 @@ function BrowseByTrade() {
 
 // ── Section: Trust Score (dark green band) ────────────────────────────────────
 function TrustScoreSection() {
+  const { t } = useLang();
+
   const bars = [
-    { label: "Customer ratings",    weight: "40%", value: "4.9 / 5", pct: 98 },
-    { label: "Completed bookings",  weight: "30%", value: "210",     pct: 84 },
-    { label: "Profile completeness",weight: "20%", value: "100%",    pct: 100 },
-    { label: "Response rate",       weight: "10%", value: "96%",     pct: 96  },
+    { tKey: "home_ts_bar_ratings",  weight: "40%", value: "4.9 / 5", pct: 98 },
+    { tKey: "home_ts_bar_jobs",     weight: "30%", value: "210",     pct: 84 },
+    { tKey: "home_ts_bar_profile",  weight: "20%", value: "100%",    pct: 100 },
+    { tKey: "home_ts_bar_response", weight: "10%", value: "96%",     pct: 96  },
   ];
 
   return (
@@ -347,16 +347,15 @@ function TrustScoreSection() {
           {/* Left text */}
           <div className="flex flex-col gap-6">
             <p style={{ color: "#9ed3bf", fontSize: "0.7rem", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase" }}>
-              THE TRUST SCORE
+              {t("home_ts_eyebrow")}
             </p>
             <h2
               style={{ fontFamily: SERIF, color: "white", fontSize: "clamp(1.8rem, 3.5vw, 2.75rem)", fontWeight: 800, lineHeight: 1.1, letterSpacing: "-0.02em" }}
             >
-              Reputation you can carry anywhere.
+              {t("home_ts_h2")}
             </h2>
             <p style={{ color: "#9ed3bf", lineHeight: 1.7, fontSize: "0.95rem", maxWidth: "26rem" }}>
-              Every completed job builds a single, transparent score from 0–100 — so a new
-              customer can trust a provider they've never met. No word-of-mouth required.
+              {t("home_ts_desc")}
             </p>
             <div>
               <Link
@@ -373,7 +372,7 @@ function TrustScoreSection() {
                 }}
                 className="hover:bg-white/10 transition-colors"
               >
-                See how it works
+                {t("home_ts_cta")}
               </Link>
             </div>
           </div>
@@ -391,18 +390,18 @@ function TrustScoreSection() {
             <div className="flex items-center gap-5" style={{ marginBottom: 24 }}>
               <ScoreRing score={94} size={76} />
               <div>
-                <p style={{ color: "white", fontWeight: 700, fontSize: "1.05rem" }}>Excellent standing</p>
-                <p style={{ color: "#9ed3bf", fontSize: "0.8rem", marginTop: 2 }}>Based on 210 completed jobs</p>
+                <p style={{ color: "white", fontWeight: 700, fontSize: "1.05rem" }}>{t("home_ts_excellent")}</p>
+                <p style={{ color: "#9ed3bf", fontSize: "0.8rem", marginTop: 2 }}>{t("home_ts_based_on")}</p>
               </div>
             </div>
 
             {/* Progress bars */}
             <div className="flex flex-col gap-4">
-              {bars.map(({ label, weight, value, pct }) => (
-                <div key={label}>
+              {bars.map(({ tKey, weight, value, pct }) => (
+                <div key={tKey}>
                   <div className="flex items-center justify-between" style={{ marginBottom: 6 }}>
                     <span style={{ color: "#9ed3bf", fontSize: "0.75rem" }}>
-                      {label} <span style={{ opacity: 0.6 }}>· {weight}</span>
+                      {t(tKey)} <span style={{ opacity: 0.6 }}>· {weight}</span>
                     </span>
                     <span style={{ color: "white", fontSize: "0.8rem", fontWeight: 600 }}>{value}</span>
                   </div>
@@ -428,23 +427,24 @@ function TrustScoreSection() {
 
 // ── Section: Top-rated providers ──────────────────────────────────────────────
 function TopRated() {
+  const { t } = useLang();
   return (
     <section style={{ backgroundColor: CREAM, padding: "64px 0" }}>
       <Container>
         <div className="flex items-end justify-between" style={{ marginBottom: 8 }}>
           <h2 style={{ fontFamily: SERIF, color: DARK, fontSize: "1.5rem", fontWeight: 700, letterSpacing: "-0.01em" }}>
-            Top-rated this week
+            {t("home_top_h2")}
           </h2>
           <Link
             to="/providers"
             style={{ color: G, fontSize: "0.875rem", fontWeight: 500, textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}
             className="hover:opacity-70 transition-opacity"
           >
-            Browse all <ArrowRight size={14} />
+            {t("home_top_browse")} <ArrowRight size={14} />
           </Link>
         </div>
         <p style={{ color: MUTED, fontSize: "0.875rem", marginBottom: 24 }}>
-          Skilled women with the strongest standing in Kigali
+          {t("home_top_sub")}
         </p>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -519,15 +519,17 @@ function TopRated() {
 
 // ── Section: How it works ─────────────────────────────────────────────────────
 function HowItWorks() {
+  const { t } = useLang();
+
   const customerSteps = [
-    { n: 1, title: "Search by trade & district",    desc: "Filter providers near you and compare their Trust Scores." },
-    { n: 2, title: "Enquire and pick a service",    desc: "Pick a service, date and place — no payment needed to enquire." },
-    { n: 3, title: "Get the work done & review",    desc: "Your rating helps the next customer — and rewards good work." },
+    { n: 1, titleKey: "home_hiw_c1_title", descKey: "home_hiw_c1_desc" },
+    { n: 2, titleKey: "home_hiw_c2_title", descKey: "home_hiw_c2_desc" },
+    { n: 3, titleKey: "home_hiw_c3_title", descKey: "home_hiw_c3_desc" },
   ];
   const providerSteps = [
-    { n: 1, title: "Create a professional profile", desc: "Showcase your services, prices and a portfolio of real work." },
-    { n: 2, title: "Accept requests from customers",desc: "Accept requests, message customers and track every job." },
-    { n: 3, title: "Build your Trust Score",        desc: "A verifiable record you can show partners, buyers and lenders." },
+    { n: 1, titleKey: "home_hiw_p1_title", descKey: "home_hiw_p1_desc" },
+    { n: 2, titleKey: "home_hiw_p2_title", descKey: "home_hiw_p2_desc" },
+    { n: 3, titleKey: "home_hiw_p3_title", descKey: "home_hiw_p3_desc" },
   ];
 
   return (
@@ -536,17 +538,17 @@ function HowItWorks() {
         <h2
           style={{ fontFamily: SERIF, color: DARK, fontSize: "clamp(1.6rem, 3vw, 2.25rem)", fontWeight: 700, letterSpacing: "-0.02em", textAlign: "center", marginBottom: 40 }}
         >
-          How Inzira works
+          {t("home_hiw_h2")}
         </h2>
 
         <div className="grid md:grid-cols-2 gap-5">
           {/* Customers card */}
           <div style={{ backgroundColor: "white", borderRadius: 16, border: "1px solid #e8e2d8", padding: 28 }}>
             <p style={{ color: G, fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 20 }}>
-              FOR CUSTOMERS
+              {t("home_hiw_for_customers")}
             </p>
             <div className="flex flex-col gap-5">
-              {customerSteps.map(({ n, title, desc }) => (
+              {customerSteps.map(({ n, titleKey, descKey }) => (
                 <div key={n} className="flex gap-4">
                   <span
                     style={{
@@ -561,8 +563,8 @@ function HowItWorks() {
                     {n}
                   </span>
                   <div>
-                    <p style={{ color: DARK, fontWeight: 600, fontSize: "0.9rem" }}>{title}</p>
-                    <p style={{ color: MUTED, fontSize: "0.8rem", marginTop: 3, lineHeight: 1.55 }}>{desc}</p>
+                    <p style={{ color: DARK, fontWeight: 600, fontSize: "0.9rem" }}>{t(titleKey)}</p>
+                    <p style={{ color: MUTED, fontSize: "0.8rem", marginTop: 3, lineHeight: 1.55 }}>{t(descKey)}</p>
                   </div>
                 </div>
               ))}
@@ -572,10 +574,10 @@ function HowItWorks() {
           {/* Providers card */}
           <div style={{ backgroundColor: "white", borderRadius: 16, border: "1px solid #e8e2d8", padding: 28 }}>
             <p style={{ color: G, fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 20 }}>
-              FOR PROVIDERS
+              {t("home_hiw_for_providers")}
             </p>
             <div className="flex flex-col gap-5">
-              {providerSteps.map(({ n, title, desc }) => (
+              {providerSteps.map(({ n, titleKey, descKey }) => (
                 <div key={n} className="flex gap-4">
                   <span
                     style={{
@@ -590,8 +592,8 @@ function HowItWorks() {
                     {n}
                   </span>
                   <div>
-                    <p style={{ color: DARK, fontWeight: 600, fontSize: "0.9rem" }}>{title}</p>
-                    <p style={{ color: MUTED, fontSize: "0.8rem", marginTop: 3, lineHeight: 1.55 }}>{desc}</p>
+                    <p style={{ color: DARK, fontWeight: 600, fontSize: "0.9rem" }}>{t(titleKey)}</p>
+                    <p style={{ color: MUTED, fontSize: "0.8rem", marginTop: 3, lineHeight: 1.55 }}>{t(descKey)}</p>
                   </div>
                 </div>
               ))}
@@ -612,7 +614,7 @@ function HowItWorks() {
               }}
               className="hover:opacity-90 transition-opacity"
             >
-              Create your profile — it's free
+              {t("home_hiw_join_btn")}
             </Link>
           </div>
         </div>
@@ -623,6 +625,7 @@ function HowItWorks() {
 
 // ── Section: CTA ──────────────────────────────────────────────────────────────
 function CTASection() {
+  const { t } = useLang();
   return (
     <section style={{ backgroundColor: CREAM, padding: "0 0 64px" }}>
       <Container>
@@ -646,11 +649,10 @@ function CTASection() {
           <div className="grid md:grid-cols-2 gap-8 items-center">
             <div className="flex flex-col gap-4">
               <h2 style={{ fontFamily: SERIF, color: "white", fontSize: "clamp(1.6rem, 3vw, 2.25rem)", fontWeight: 800, lineHeight: 1.12, letterSpacing: "-0.02em" }}>
-                Your skill deserves to be seen.
+                {t("home_cta_h2")}
               </h2>
               <p style={{ color: "#9ed3bf", fontSize: "0.95rem", lineHeight: 1.65, maxWidth: "28rem" }}>
-                Join thousands of women turning their craft into a growing business — with
-                the visibility and credibility they've earned.
+                {t("home_cta_desc")}
               </p>
             </div>
 
@@ -669,7 +671,7 @@ function CTASection() {
                 }}
                 className="hover:bg-white/10 transition-colors"
               >
-                Join Inzira Works
+                {t("home_cta_btn")}
               </Link>
             </div>
           </div>
@@ -681,6 +683,7 @@ function CTASection() {
 
 // ── Footer ────────────────────────────────────────────────────────────────────
 function Footer() {
+  const { t } = useLang();
   return (
     <footer style={{ backgroundColor: "#e8e3d8", borderTop: "1px solid #d4cfc5", padding: "20px 0" }}>
       <Container>
@@ -692,7 +695,7 @@ function Footer() {
             <span style={{ color: DARK, fontWeight: 600, fontSize: "0.875rem" }}>Inzira Works</span>
           </div>
           <p style={{ color: MUTED, fontSize: "0.75rem" }}>
-            A capstone project · Enhancing market access for skilled women in Kigali City
+            {t("home_footer_copy")}
           </p>
         </div>
       </Container>

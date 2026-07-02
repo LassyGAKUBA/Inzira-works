@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useLang } from "../../i18n/LangContext";
 import { supabase } from "../../lib/supabase";
 import {
   Shield, CheckCircle, Banknote, MessageCircle,
@@ -48,14 +49,15 @@ function InitialsCircle({ name = "", size = 36 }) {
 
 // ── Sidebar ───────────────────────────────────────────────────────────────────
 function Sidebar({ tab, setTab, user, profile, pendingCount, onLogout, isMobile, isOpen, onClose }) {
+  const { t } = useLang();
   const firstName = (user?.full_name || "Provider").split(" ")[0];
   const navItems = [
-    { id: "overview",  label: "Overview",     badge: null },
-    { id: "bookings",  label: "Bookings",     badge: pendingCount || null },
-    { id: "history",   label: "History",      badge: null },
-    { id: "reviews",   label: "Reviews",      badge: null },
-    { id: "portfolio", label: "Portfolio",    badge: null },
-    { id: "profile",   label: "My Profile",   badge: null },
+    { id: "overview",  label: t("prov_dash_overview"),  badge: null },
+    { id: "bookings",  label: t("prov_dash_bookings"),  badge: pendingCount || null },
+    { id: "history",   label: t("prov_dash_history"),   badge: null },
+    { id: "reviews",   label: t("prov_dash_reviews"),   badge: null },
+    { id: "portfolio", label: t("prov_dash_portfolio"), badge: null },
+    { id: "profile",   label: t("prov_dash_profile"),   badge: null },
   ];
   const handleNav = (id) => { setTab(id); if (isMobile && onClose) onClose(); };
 
@@ -71,7 +73,7 @@ function Sidebar({ tab, setTab, user, profile, pendingCount, onLogout, isMobile,
       </div>
 
       <p style={{ color: "#9ed3bf", fontSize: "0.6rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", padding: "24px 20px 8px" }}>
-        PROVIDER
+        {t("dash_nav_provider").toUpperCase()}
       </p>
 
       <nav style={{ display: "flex", flexDirection: "column", gap: 2, padding: "0 10px" }}>
@@ -99,7 +101,7 @@ function Sidebar({ tab, setTab, user, profile, pendingCount, onLogout, isMobile,
         <button onClick={onLogout}
           style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "9px 12px", borderRadius: 8, border: "none", cursor: "pointer", backgroundColor: "transparent", color: "rgba(255,255,255,0.55)", fontFamily: SANS, fontSize: "0.825rem", fontWeight: 500, marginTop: 4 }}
           className="hover:bg-white/10 transition-colors">
-          <LogOut size={14} /> Sign out
+          <LogOut size={14} /> {t("prov_dash_sign_out")}
         </button>
       </div>
     </aside>

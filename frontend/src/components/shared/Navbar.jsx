@@ -2,18 +2,14 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, LogOut, LayoutDashboard } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { useLang } from "../../i18n/LangContext";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 const G     = "#0E5C46";
 const CREAM = "#ede9e0";
 const DARK  = "#172420";
 const MUTED = "#5c7068";
 const SANS  = "'Hanken Grotesk', sans-serif";
-
-const NAV_LINKS = [
-  { label: "Find a provider", to: "/providers"   },
-  { label: "For providers",   to: "/role-select" },
-  { label: "How it works",    to: "/about"       },
-];
 
 const ROLE_DASHBOARD = {
   provider: "/provider/dashboard",
@@ -35,10 +31,16 @@ function LogoMark() {
 export default function Navbar() {
   const { pathname }          = useLocation();
   const { user, logout }      = useAuth();
+  const { t }                 = useLang();
   const [scrolled,  setScrolled]  = useState(false);
   const [menuOpen,  setMenuOpen]  = useState(false);
   const [joinHover, setJoinHover] = useState(false);
   const [dropOpen,  setDropOpen]  = useState(false);
+
+  const NAV_LINKS = [
+    { label: t("nav_browse"), to: "/providers"   },
+    { label: t("nav_how"),    to: "/about"       },
+  ];
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 8);
@@ -98,6 +100,7 @@ export default function Navbar() {
 
         {/* Right actions */}
         <div className="hidden md:flex items-center gap-4">
+          <LanguageSwitcher compact />
           {user ? (
             <div style={{ position: "relative" }}>
               <button
@@ -118,12 +121,12 @@ export default function Navbar() {
                   <Link to={dashboardHref} onClick={() => setDropOpen(false)}
                     style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", color: DARK, textDecoration: "none", fontSize: "0.82rem", fontFamily: SANS, fontWeight: 500 }}
                     className="hover:bg-[#f5f2ea]">
-                    <LayoutDashboard size={14} style={{ color: G }} /> Dashboard
+                    <LayoutDashboard size={14} style={{ color: G }} /> {t("dash_nav_overview")}
                   </Link>
                   <button onClick={() => { logout(); setDropOpen(false); }}
                     style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 14px", background: "none", border: "none", cursor: "pointer", color: "#e05c5c", fontSize: "0.82rem", fontFamily: SANS, fontWeight: 500, textAlign: "left" }}
                     className="hover:bg-[#f5f2ea]">
-                    <LogOut size={14} /> Sign out
+                    <LogOut size={14} /> {t("dash_nav_sign_out")}
                   </button>
                 </div>
               )}
@@ -133,13 +136,13 @@ export default function Navbar() {
               <Link to="/login"
                 style={{ color: DARK, fontWeight: 500, fontSize: "0.875rem", textDecoration: "none" }}
                 className="hover:opacity-70 transition-opacity">
-                Sign in
+                {t("nav_login")}
               </Link>
               <Link to="/role-select"
                 onMouseEnter={() => setJoinHover(true)}
                 onMouseLeave={() => setJoinHover(false)}
                 style={{ backgroundColor: G, color: "white", borderRadius: 8, fontWeight: 600, fontSize: "0.875rem", padding: "8px 18px", textDecoration: "none", opacity: joinHover ? 0.85 : 1, transition: "opacity 0.15s" }}>
-                Join Inzira
+                {t("nav_getstarted")}
               </Link>
             </>
           )}
@@ -165,22 +168,22 @@ export default function Navbar() {
               <>
                 <Link to={dashboardHref} onClick={() => setMenuOpen(false)}
                   style={{ flex: 1, backgroundColor: G, borderRadius: 8, padding: "9px 16px", color: "white", fontWeight: 600, fontSize: "0.875rem", textDecoration: "none", textAlign: "center" }}>
-                  Dashboard
+                  {t("dash_nav_overview")}
                 </Link>
                 <button onClick={() => { logout(); setMenuOpen(false); }}
                   style={{ flex: 1, border: "1px solid #d4cfc5", borderRadius: 8, padding: "9px 16px", color: DARK, fontWeight: 500, fontSize: "0.875rem", background: "none", cursor: "pointer" }}>
-                  Sign out
+                  {t("dash_nav_sign_out")}
                 </button>
               </>
             ) : (
               <>
                 <Link to="/login" onClick={() => setMenuOpen(false)}
                   style={{ flex: 1, border: "1px solid #d4cfc5", borderRadius: 8, padding: "9px 16px", color: DARK, fontWeight: 500, fontSize: "0.875rem", textDecoration: "none", textAlign: "center" }}>
-                  Sign in
+                  {t("nav_login")}
                 </Link>
                 <Link to="/role-select" onClick={() => setMenuOpen(false)}
                   style={{ flex: 1, backgroundColor: G, borderRadius: 8, padding: "9px 16px", color: "white", fontWeight: 600, fontSize: "0.875rem", textDecoration: "none", textAlign: "center" }}>
-                  Join Inzira
+                  {t("nav_getstarted")}
                 </Link>
               </>
             )}

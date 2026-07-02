@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../../components/shared/Navbar";
 import PageTransition from "../../components/shared/PageTransition";
+import { useLang } from "../../i18n/LangContext";
 import { supabase } from "../../lib/supabase";
 import {
   MapPin, Star, CheckCircle, Search,
@@ -272,6 +273,7 @@ function FiltersSidebar({ filters, setFilters, onClose }) {
 
 // ── Page ───────────────────────────────────────────────────────────────────────
 export default function ProviderDirectory() {
+  const { t } = useLang();
   const [search,             setSearch]             = useState("");
   const [sortBy,             setSortBy]             = useState("trust");
   const [providers,          setProviders]          = useState([]);
@@ -352,10 +354,10 @@ export default function ProviderDirectory() {
           <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", flexDirection: "column", gap: 20 }}>
             <div>
               <h1 style={{ fontFamily: SERIF, color: DARK, fontSize: "2rem", fontWeight: 800, letterSpacing: "-0.02em", lineHeight: 1.1 }}>
-                Find a skilled provider
+                {t("dir_title")}
               </h1>
               <p style={{ color: MUTED, fontSize: "0.875rem", marginTop: 6 }}>
-                {loading ? "Loading providers…" : `${filtered.length} provider${filtered.length !== 1 ? "s" : ""} in Kigali`}
+                {loading ? t("shared_loading") : `${filtered.length} provider${filtered.length !== 1 ? "s" : ""} in Kigali`}
               </p>
             </div>
 
@@ -368,7 +370,7 @@ export default function ProviderDirectory() {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Name, skill, or service…"
+                placeholder={t("dir_search_ph")}
                 style={{ flex: 1, padding: "11px 12px", border: "none", outline: "none", fontFamily: SANS, fontSize: "0.875rem", color: DARK, backgroundColor: "transparent" }}
               />
               {search && (
