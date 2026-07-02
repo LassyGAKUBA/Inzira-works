@@ -97,6 +97,7 @@ function mapProvider(d) {
     color: colorFromId(d.provider_id),
     avatarUrl: d.avatar_url || null,
     bio: d.bio || "",
+    phone: d.phone || null,
     skills: Array.isArray(d.specialties) ? d.specialties : [],
     services: (d.services || []).map((s) => ({
       id: s.id,
@@ -111,6 +112,14 @@ function mapProvider(d) {
     })),
     reviewList: (d.reviews || []).map(mapReview),
   };
+}
+
+function openWhatsApp(phone, message) {
+  let n = (phone || "").replace(/\D/g, "");
+  if (n.startsWith("0")) n = "250" + n.slice(1);
+  else if (n && !n.startsWith("250")) n = "250" + n;
+  if (!n) return;
+  window.open(`https://wa.me/${n}?text=${encodeURIComponent(message)}`, "_blank");
 }
 
 function mapSimilar(rows = [], currentId) {
@@ -229,7 +238,7 @@ function Footer() {
 // ─────────────────────────────────────────────────────────────────────────────
 // BOOKING MODAL
 // ─────────────────────────────────────────────────────────────────────────────
-function BookingModal({ provider, user, onClose }) {
+function BookingModal({ provider, user, providerPhone, onClose }) {
   const navigate = useNavigate();
   const [form, setForm] = useState({ service: provider.services[0]?.name || "", date: "", time: "", notes: "" });
   const [errors, setErrors] = useState({});
@@ -276,6 +285,17 @@ function BookingModal({ provider, user, onClose }) {
 
       if (error) throw error;
       setSent(true);
+      if (providerPhone) {
+        const lines = [
+          `Hi ${provider.name.split(" ")[0]}, I just sent a booking request on Inzira Works!`,
+          ``,
+          `Service: ${form.service}`,
+          `Date: ${form.date}`,
+          `Time: ${form.time}`,
+          form.notes ? `Notes: ${form.notes}` : "",
+        ].filter((l) => l !== undefined);
+        openWhatsApp(providerPhone, lines.join("\n").trim());
+      }
     } catch (err) {
       setSubmitError(err.message || "Could not send request. Please try again.");
     } finally {
@@ -331,10 +351,23 @@ function BookingModal({ provider, user, onClose }) {
             <div>
               <h3 style={{ color: "#172420", fontFamily: "Spectral, serif", fontSize: "1.25rem", fontWeight: 700 }}>Booking request sent!</h3>
               <p className="text-slate-500 text-sm mt-2 leading-relaxed">
-                {provider.name} will review your request and confirm within {provider.responseTime}.
-                You'll be notified once it's accepted.
+                A WhatsApp message was opened so {provider.name.split(" ")[0]} can see your request right away.
               </p>
             </div>
+            {providerPhone && (
+              <button
+                onClick={() => {
+                  const lines = [
+                    `Hi ${provider.name.split(" ")[0]}, following up on my booking request on Inzira Works.`,
+                  ];
+                  openWhatsApp(providerPhone, lines.join("\n"));
+                }}
+                style={{ backgroundColor: "#25D366", color: "white" }}
+                className="font-semibold text-sm px-6 py-2.5 rounded-xl hover:opacity-90 transition-opacity flex items-center gap-2"
+              >
+                <MessageCircle size={15} /> Open WhatsApp again
+              </button>
+            )}
             <button onClick={onClose} style={{ backgroundColor: "#0E5C46" }} className="text-white font-semibold text-sm px-6 py-2.5 rounded-xl hover:opacity-90 transition-opacity">
               Done
             </button>
@@ -550,7 +583,12 @@ export default function ProviderProfilePage() {
       try {
         const { data, error } = await supabase.rpc("get_provider_detail", { p_id: id });
         if (error || !data) throw new Error("Not found");
-        if (!cancelled) setProvider(mapProvider(data));
+        const mapped = mapProvider(data);
+        if (!mapped.phone) {
+          const { data: u } = await supabase.from("users").select("phone").eq("id", data.user_id).maybeSingle();
+          mapped.phone = u?.phone || null;
+        }
+        if (!cancelled) setProvider(mapped);
       } catch {
         if (!cancelled) setNotFound(true);
       } finally {
@@ -896,8 +934,18 @@ export default function ProviderProfilePage() {
               >
                 Book Now
               </button>
-              <button className="text-slate-600 font-semibold py-3 rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors flex items-center justify-center gap-2">
-                <MessageCircle size={16} /> Send Message
+              <button
+                onClick={() => {
+                  if (!provider.phone) return;
+                  openWhatsApp(
+                    provider.phone,
+                    `Hi ${provider.name.split(" ")[0]}, I found you on Inzira Works and I'm interested in your services. Are you available?`
+                  );
+                }}
+                style={{ backgroundColor: "#25D366", color: "white", border: "none" }}
+                className="font-semibold py-3 rounded-xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+              >
+                <MessageCircle size={16} /> Message on WhatsApp
               </button>
               <div className="pt-2 border-t border-slate-100 flex items-center gap-2 text-xs text-slate-400">
                 <Lock size={11} className="flex-shrink-0" />
@@ -928,7 +976,7 @@ export default function ProviderProfilePage() {
       <Footer />
 
       {/* Modals */}
-      {showBooking && <BookingModal provider={provider} user={user} onClose={() => setShowBooking(false)} />}
+      {showBooking && <BookingModal provider={provider} user={user} providerPhone={provider.phone} onClose={() => setShowBooking(false)} />}
       {showShare && <ShareModal provider={provider} onClose={() => setShowShare(false)} />}
     </div>
     </PageTransition>
