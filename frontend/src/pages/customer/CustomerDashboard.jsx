@@ -187,16 +187,6 @@ function Sidebar({ tab, setTab, upcomingCount }) {
       </div>
 
       <div style={{ flex: 1 }} />
-
-      <div style={{ padding: 16, borderTop: "1px solid rgba(255,255,255,0.1)" }}>
-        <div style={{ display: "flex", gap: 6 }}>
-          {[["Provider", "/provider/dashboard"], ["Admin", "/admin/dashboard"]].map(([role, href]) => (
-            <Link key={role} to={href} style={{ flex: 1, textAlign: "center", padding: "5px 0", border: "1px solid rgba(255,255,255,0.3)", borderRadius: 6, color: "rgba(255,255,255,0.7)", fontSize: "0.72rem", textDecoration: "none" }}>
-              {role}
-            </Link>
-          ))}
-        </div>
-      </div>
     </aside>
   );
 }
