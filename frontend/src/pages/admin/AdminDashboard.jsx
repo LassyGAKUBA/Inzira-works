@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useLang } from "../../i18n/LangContext";
 import { supabase } from "../../lib/supabase";
 import {
   Users, ShieldCheck, Clock, Star, FileText, Loader2, MapPin, LogOut, Menu,
@@ -33,12 +34,13 @@ function timeAgo(iso) {
 
 // ── Sidebar ───────────────────────────────────────────────────────────────────
 function Sidebar({ tab, setTab, queueCount, onLogout, isMobile, isOpen, onClose }) {
+  const { t } = useLang();
   const navItems = [
-    { id: "overview",  label: "Overview",           badge: null },
-    { id: "customers", label: "Customers",          badge: null },
-    { id: "providers", label: "Providers",          badge: null },
-    { id: "bookings",  label: "All Bookings",       badge: null },
-    { id: "queue",     label: "Verify queue",       badge: queueCount || null },
+    { id: "overview",  label: t("admin_overview"),  badge: null },
+    { id: "customers", label: t("admin_customers"), badge: null },
+    { id: "providers", label: t("admin_providers"), badge: null },
+    { id: "bookings",  label: t("admin_bookings"),  badge: null },
+    { id: "queue",     label: t("admin_queue"),     badge: queueCount || null },
   ];
   const handleNav = (id) => { setTab(id); if (isMobile && onClose) onClose(); };
   return (
@@ -52,7 +54,7 @@ function Sidebar({ tab, setTab, queueCount, onLogout, isMobile, isOpen, onClose 
         </Link>
       </div>
       <p style={{ color: "#6aab8e", fontSize: "0.6rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", padding: "24px 20px 8px" }}>
-        ADMIN CONSOLE
+        {t("admin_console").toUpperCase()}
       </p>
       <nav style={{ display: "flex", flexDirection: "column", gap: 2, padding: "0 10px" }}>
         {navItems.map(({ id, label, badge }) => (
@@ -69,7 +71,7 @@ function Sidebar({ tab, setTab, queueCount, onLogout, isMobile, isOpen, onClose 
         <button onClick={onLogout}
           style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "9px 12px", borderRadius: 8, border: "none", cursor: "pointer", backgroundColor: "transparent", color: "rgba(255,255,255,0.55)", fontFamily: SANS, fontSize: "0.825rem", fontWeight: 500 }}
           className="hover:bg-white/10 transition-colors">
-          <LogOut size={14} /> Sign out
+          <LogOut size={14} /> {t("admin_sign_out")}
         </button>
       </div>
     </aside>
@@ -404,6 +406,7 @@ function AllBookings() {
 // ── Page root ─────────────────────────────────────────────────────────────────
 export default function AdminDashboard() {
   const { logout } = useAuth();
+  const { t }      = useLang();
   const navigate   = useNavigate();
   const handleLogout = async () => { await logout(); navigate("/"); };
   const [tab,         setTab]         = useState("overview");
@@ -500,7 +503,7 @@ export default function AdminDashboard() {
           <button onClick={() => setSidebarOpen(true)} style={{ background: "none", border: "none", cursor: "pointer", color: "white", padding: 4, display: "flex" }}>
             <Menu size={22} />
           </button>
-          <span style={{ fontFamily: SERIF, color: "white", fontWeight: 700, fontSize: "1rem" }}>Admin Console</span>
+          <span style={{ fontFamily: SERIF, color: "white", fontWeight: 700, fontSize: "1rem" }}>{t("admin_console")}</span>
           <div style={{ width: 30 }} />
         </div>
       )}

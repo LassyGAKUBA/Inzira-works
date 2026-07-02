@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useLang } from "../../i18n/LangContext";
 import { supabase } from "../../lib/supabase";
 import {
   Calendar, Star, X, Loader2, CheckCircle, Clock, LogOut,
@@ -106,12 +107,13 @@ function ReviewModal({ booking, onClose, onSubmitted }) {
 }
 
 function Sidebar({ tab, setTab, upcomingCount, user, onLogout, isMobile, isOpen, onClose }) {
+  const { t } = useLang();
   const firstName = (user?.full_name || "there").split(" ")[0];
   const navItems = [
-    { id: "overview",  label: "Overview",     Icon: LayoutDashboard, badge: null },
-    { id: "bookings",  label: "My Bookings",  Icon: BookOpen,        badge: upcomingCount || null },
-    { id: "history",   label: "History",      Icon: HistoryIcon,     badge: null },
-    { id: "profile",   label: "My Profile",   Icon: User,            badge: null },
+    { id: "overview",  label: t("dash_nav_overview"), Icon: LayoutDashboard, badge: null },
+    { id: "bookings",  label: t("dash_nav_bookings"), Icon: BookOpen,        badge: upcomingCount || null },
+    { id: "history",   label: t("dash_nav_history"),  Icon: HistoryIcon,     badge: null },
+    { id: "profile",   label: t("dash_nav_profile"),  Icon: User,            badge: null },
   ];
   const handleNav = (id) => { setTab(id); if (isMobile && onClose) onClose(); };
   return (
@@ -130,7 +132,7 @@ function Sidebar({ tab, setTab, upcomingCount, user, onLogout, isMobile, isOpen,
           <User size={18} style={{ color: "white" }} />
         </div>
         <p style={{ color: "white", fontSize: "0.85rem", fontWeight: 600 }}>{firstName}</p>
-        <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.7rem" }}>Customer</p>
+        <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.7rem" }}>{t("dash_nav_customer")}</p>
       </div>
 
       <p style={{ color: "#9ed3bf", fontSize: "0.6rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", padding: "16px 20px 8px" }}>MENU</p>
@@ -150,7 +152,7 @@ function Sidebar({ tab, setTab, upcomingCount, user, onLogout, isMobile, isOpen,
       <div style={{ padding: "12px 10px" }}>
         <Link to="/providers"
           style={{ display: "block", textAlign: "center", backgroundColor: "#0a3d2c", color: "white", borderRadius: 8, padding: "10px 0", fontFamily: SANS, fontWeight: 600, fontSize: "0.8rem", textDecoration: "none" }}>
-          Find a provider
+          {t("cust_dash_find")}
         </Link>
       </div>
 
@@ -158,7 +160,7 @@ function Sidebar({ tab, setTab, upcomingCount, user, onLogout, isMobile, isOpen,
       <div style={{ padding: "0 10px 16px" }}>
         <button onClick={onLogout}
           style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "9px 12px", borderRadius: 8, border: "none", cursor: "pointer", backgroundColor: "transparent", color: "rgba(255,255,255,0.55)", fontFamily: SANS, fontSize: "0.825rem", fontWeight: 500 }}>
-          <LogOut size={14} /> Sign out
+          <LogOut size={14} /> {t("dash_nav_sign_out")}
         </button>
       </div>
     </aside>
@@ -176,6 +178,7 @@ function StatCard({ label, value, color, note }) {
 }
 
 function Overview({ stats, upcoming, completed, onTabChange }) {
+  const { t } = useLang();
   const recent = [...upcoming, ...completed]
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
     .slice(0, 4);
@@ -183,30 +186,30 @@ function Overview({ stats, upcoming, completed, onTabChange }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       <div>
-        <h1 style={{ fontFamily: SERIF, color: DARK, fontSize: "1.75rem", fontWeight: 700, letterSpacing: "-0.02em" }}>Your dashboard</h1>
-        <p style={{ color: MUTED, fontSize: "0.875rem", marginTop: 4 }}>Here's a summary of your activity on Inzira Works.</p>
+        <h1 style={{ fontFamily: SERIF, color: DARK, fontSize: "1.75rem", fontWeight: 700, letterSpacing: "-0.02em" }}>{t("cust_dash_overview_h1")}</h1>
+        <p style={{ color: MUTED, fontSize: "0.875rem", marginTop: 4 }}>{t("cust_dash_overview_sub")}</p>
       </div>
 
       <div className="stat-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
-        <StatCard label="Total Bookings"   value={stats.total}     color={DARK}       note="all time" />
-        <StatCard label="Upcoming"         value={stats.upcoming}  color={G}          note="pending + confirmed" />
-        <StatCard label="Completed"        value={stats.completed} color="#3b82f6"    note="jobs done" />
-        <StatCard label="Providers Tried"  value={stats.providers} color={GOLD}       note="unique providers" />
+        <StatCard label={t("cust_dash_total")}         value={stats.total}     color={DARK}    note={t("cust_dash_note_alltime")} />
+        <StatCard label={t("cust_dash_upcoming_lbl")}  value={stats.upcoming}  color={G}       note={t("cust_dash_note_pending")} />
+        <StatCard label={t("cust_dash_completed_lbl")} value={stats.completed} color="#3b82f6" note={t("cust_dash_note_done")} />
+        <StatCard label={t("cust_dash_providers_lbl")} value={stats.providers} color={GOLD}    note={t("cust_dash_note_unique")} />
       </div>
 
       <div style={{ ...CARD, padding: 24 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-          <h2 style={{ fontFamily: SERIF, color: DARK, fontSize: "1.1rem", fontWeight: 700 }}>Recent activity</h2>
+          <h2 style={{ fontFamily: SERIF, color: DARK, fontSize: "1.1rem", fontWeight: 700 }}>{t("cust_dash_recent")}</h2>
           <button onClick={() => onTabChange("bookings")} style={{ background: "none", border: "none", color: G, fontSize: "0.8rem", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
-            See all <ChevronRight size={13} />
+            {t("cust_dash_see_all")} <ChevronRight size={13} />
           </button>
         </div>
 
         {recent.length === 0 ? (
           <div style={{ textAlign: "center", padding: "32px 0", color: MUTED }}>
-            <p style={{ fontSize: "0.9rem", marginBottom: 12 }}>No bookings yet.</p>
+            <p style={{ fontSize: "0.9rem", marginBottom: 12 }}>{t("cust_dash_no_bookings")}</p>
             <Link to="/providers" style={{ backgroundColor: G, color: "white", borderRadius: 8, padding: "9px 20px", fontFamily: SANS, fontWeight: 600, fontSize: "0.85rem", textDecoration: "none" }}>
-              Browse providers
+              {t("cust_dash_browse")}
             </Link>
           </div>
         ) : (

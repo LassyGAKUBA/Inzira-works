@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
+import { useLang } from "../../i18n/LangContext";
+import LanguageSwitcher from "../../components/shared/LanguageSwitcher";
 import { KeyRound, Eye, EyeOff, CheckCircle } from "lucide-react";
 
 const G     = "#0E5C46";
@@ -22,6 +24,7 @@ function strengthOf(pw) {
 
 export default function ResetPasswordPage() {
   const navigate = useNavigate();
+  const { t } = useLang();
   const [form, setForm]     = useState({ password: "", confirm: "" });
   const [errors, setErrors] = useState({});
   const [showPw, setShowPw] = useState(false);
@@ -81,6 +84,7 @@ export default function ResetPasswordPage() {
           </svg>
           <span style={{ fontFamily: SERIF, color: DARK, fontWeight: 700, fontSize: "1.05rem" }}>Inzira Works</span>
         </Link>
+        <LanguageSwitcher compact />
       </div>
 
       <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "48px 24px" }}>
@@ -92,15 +96,15 @@ export default function ResetPasswordPage() {
               </div>
               <div>
                 <h2 style={{ color: DARK, fontFamily: SERIF, fontSize: "1.375rem", fontWeight: 700, letterSpacing: "-0.01em", marginBottom: 8 }}>
-                  Password updated!
+                  {t("auth_rp_success_title")}
                 </h2>
                 <p style={{ color: "#5c7068", fontSize: "0.875rem", lineHeight: 1.65 }}>
-                  Your password has been changed successfully. Redirecting you to login…
+                  {t("auth_rp_success_sub")}
                 </p>
               </div>
               <Link to="/login" style={{ backgroundColor: G, color: "white", borderRadius: 10, padding: "10px 24px", fontSize: "0.875rem", fontWeight: 600, textDecoration: "none" }}
                 className="hover:opacity-90 transition-opacity">
-                Go to Login
+                {t("auth_rp_go_login")}
               </Link>
             </div>
           ) : (
@@ -111,17 +115,17 @@ export default function ResetPasswordPage() {
 
               <div>
                 <h1 style={{ color: DARK, fontFamily: SERIF, fontSize: "1.625rem", fontWeight: 700, letterSpacing: "-0.02em", marginBottom: 6 }}>
-                  Set a new password
+                  {t("auth_rp_title")}
                 </h1>
                 <p style={{ color: "#5c7068", fontSize: "0.875rem", lineHeight: 1.65 }}>
-                  Choose a strong password you haven't used before.
+                  {t("auth_rp_sub")}
                 </p>
               </div>
 
               <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }} noValidate>
                 {/* New password */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                  <label style={{ color: "#3c4a44", fontSize: "0.875rem", fontWeight: 500 }}>New password</label>
+                  <label style={{ color: "#3c4a44", fontSize: "0.875rem", fontWeight: 500 }}>{t("auth_rp_new_pw")}</label>
                   <div style={{ position: "relative" }}>
                     <input
                       type={showPw ? "text" : "password"}
@@ -150,7 +154,7 @@ export default function ResetPasswordPage() {
 
                 {/* Confirm password */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                  <label style={{ color: "#3c4a44", fontSize: "0.875rem", fontWeight: 500 }}>Confirm password</label>
+                  <label style={{ color: "#3c4a44", fontSize: "0.875rem", fontWeight: 500 }}>{t("auth_rp_confirm_pw")}</label>
                   <div style={{ position: "relative" }}>
                     <input
                       type={showCf ? "text" : "password"}
@@ -175,12 +179,12 @@ export default function ResetPasswordPage() {
                   style={{ backgroundColor: loading ? "#3d8a6e" : G, color: "white", borderRadius: 10, padding: "12px 0", fontWeight: 600, fontSize: "0.875rem", border: "none", cursor: loading ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
                   className="hover:opacity-90 transition-opacity">
                   {loading && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
-                  {loading ? "Updating…" : "Update password"}
+                  {loading ? t("auth_rp_updating") : t("auth_rp_btn")}
                 </button>
               </form>
 
               <Link to="/login" style={{ textAlign: "center", fontSize: "0.875rem", color: "#5c7068", textDecoration: "none" }} className="hover:opacity-70 transition-opacity">
-                ← Back to login
+                {t("auth_rp_back")}
               </Link>
             </div>
           )}
