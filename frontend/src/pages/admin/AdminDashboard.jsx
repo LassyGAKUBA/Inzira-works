@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { supabase } from "../../lib/supabase";
 import {
-  Users, ShieldCheck, Clock, Star, FileText, Loader2, MapPin,
+  Users, ShieldCheck, Clock, Star, FileText, Loader2, MapPin, LogOut,
 } from "lucide-react";
 
 // ── Tokens ────────────────────────────────────────────────────────────────────
@@ -32,7 +32,7 @@ function timeAgo(iso) {
 }
 
 // ── Sidebar ───────────────────────────────────────────────────────────────────
-function Sidebar({ tab, setTab, queueCount }) {
+function Sidebar({ tab, setTab, queueCount, onLogout }) {
   const navItems = [
     { id: "overview",  label: "Overview",           badge: null },
     { id: "queue",     label: "Verification queue", badge: queueCount || null },
@@ -61,6 +61,14 @@ function Sidebar({ tab, setTab, queueCount }) {
         ))}
       </nav>
       <div style={{ flex: 1 }} />
+
+      <div style={{ padding: "0 10px 16px" }}>
+        <button onClick={onLogout}
+          style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "9px 12px", borderRadius: 8, border: "none", cursor: "pointer", backgroundColor: "transparent", color: "rgba(255,255,255,0.55)", fontFamily: SANS, fontSize: "0.825rem", fontWeight: 500 }}
+          className="hover:bg-white/10 transition-colors">
+          <LogOut size={14} /> Sign out
+        </button>
+      </div>
     </aside>
   );
 }
@@ -254,6 +262,9 @@ function AllProviders({ providers }) {
 
 // ── Page root ─────────────────────────────────────────────────────────────────
 export default function AdminDashboard() {
+  const { logout } = useAuth();
+  const navigate   = useNavigate();
+  const handleLogout = async () => { await logout(); navigate("/"); };
   const [tab,       setTab]       = useState("overview");
   const [stats,     setStats]     = useState({ total: 0, verified: 0, pending: 0, avgTrust: 0, reviews: 0 });
   const [districts, setDistricts] = useState([]);
@@ -334,7 +345,7 @@ export default function AdminDashboard() {
   return (
     <div style={{ display: "flex", minHeight: "100vh", fontFamily: SANS, backgroundColor: CREAM }}>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      <Sidebar tab={tab} setTab={setTab} queueCount={queue.length} />
+      <Sidebar tab={tab} setTab={setTab} queueCount={queue.length} onLogout={handleLogout} />
       <main style={{ flex: 1, padding: 32, overflowY: "auto" }}>
         {tab === "overview"  && <Overview  stats={stats} districts={districts} activity={activity} />}
         {tab === "queue"     && <VerificationQueue queue={queue} onApprove={handleApprove} />}

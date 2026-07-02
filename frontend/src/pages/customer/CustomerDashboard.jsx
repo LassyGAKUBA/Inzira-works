@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { supabase } from "../../lib/supabase";
-import { Calendar, Image as ImageIcon, Star, X, Loader2, CheckCircle, Clock, Shield } from "lucide-react";
+import { Calendar, Image as ImageIcon, Star, X, Loader2, CheckCircle, Clock, Shield, LogOut } from "lucide-react";
 
 // ── Tokens ────────────────────────────────────────────────────────────────────
 const G     = "#0E5C46";
@@ -149,7 +149,7 @@ function BookingCard({ row, onReviewClick }) {
 }
 
 // ── Sidebar ───────────────────────────────────────────────────────────────────
-function Sidebar({ tab, setTab, upcomingCount }) {
+function Sidebar({ tab, setTab, upcomingCount, onLogout }) {
   const navItems = [
     { id: "upcoming",  label: "Upcoming",  badge: upcomingCount || null },
     { id: "completed", label: "Completed", badge: null                   },
@@ -187,13 +187,23 @@ function Sidebar({ tab, setTab, upcomingCount }) {
       </div>
 
       <div style={{ flex: 1 }} />
+
+      <div style={{ padding: "0 10px 16px" }}>
+        <button onClick={onLogout}
+          style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "9px 12px", borderRadius: 8, border: "none", cursor: "pointer", backgroundColor: "transparent", color: "rgba(255,255,255,0.55)", fontFamily: SANS, fontSize: "0.825rem", fontWeight: 500 }}
+          className="hover:bg-white/10 transition-colors">
+          <LogOut size={14} /> Sign out
+        </button>
+      </div>
     </aside>
   );
 }
 
 // ── Page root ─────────────────────────────────────────────────────────────────
 export default function CustomerDashboard() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const handleLogout = async () => { await logout(); navigate("/"); };
   const [tab,       setTab]       = useState("upcoming");
   const [upcoming,  setUpcoming]  = useState([]);
   const [completed, setCompleted] = useState([]);
@@ -255,7 +265,7 @@ export default function CustomerDashboard() {
     <div style={{ display: "flex", minHeight: "100vh", fontFamily: SANS, backgroundColor: CREAM }}>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
 
-      <Sidebar tab={tab} setTab={setTab} upcomingCount={upcoming.length} />
+      <Sidebar tab={tab} setTab={setTab} upcomingCount={upcoming.length} onLogout={handleLogout} />
 
       <main style={{ flex: 1, padding: 32, overflowY: "auto" }}>
         <div style={{ marginBottom: 24 }}>
