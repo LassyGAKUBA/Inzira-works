@@ -61,15 +61,6 @@ function Sidebar({ tab, setTab, queueCount }) {
         ))}
       </nav>
       <div style={{ flex: 1 }} />
-      <div style={{ padding: 16, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
-        <div style={{ display: "flex", gap: 6 }}>
-          {[["Provider", "/provider/dashboard"], ["Customer", "/customer/dashboard"]].map(([role, href]) => (
-            <Link key={role} to={href} style={{ flex: 1, textAlign: "center", padding: "5px 0", border: "1px solid rgba(255,255,255,0.25)", borderRadius: 6, color: "rgba(255,255,255,0.6)", fontSize: "0.72rem", textDecoration: "none" }}>
-              {role}
-            </Link>
-          ))}
-        </div>
-      </div>
     </aside>
   );
 }

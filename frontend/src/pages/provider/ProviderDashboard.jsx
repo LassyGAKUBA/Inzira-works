@@ -92,14 +92,6 @@ function Sidebar({ tab, setTab, user, profile, pendingCount }) {
             {profile && <p style={{ color: GOLD, fontSize: "0.7rem", fontWeight: 500 }}>Trust {Math.round(profile.trust_score ?? 0)}</p>}
           </div>
         </div>
-        <div style={{ display: "flex", gap: 6 }}>
-          {["Customer", "Admin"].map((role) => (
-            <Link key={role} to={role === "Customer" ? "/customer/dashboard" : "/admin/dashboard"}
-              style={{ flex: 1, textAlign: "center", padding: "5px 0", border: "1px solid rgba(255,255,255,0.3)", borderRadius: 6, color: "rgba(255,255,255,0.7)", fontSize: "0.72rem", textDecoration: "none" }}>
-              {role}
-            </Link>
-          ))}
-        </div>
       </div>
     </aside>
   );
