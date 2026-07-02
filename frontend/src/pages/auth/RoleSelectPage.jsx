@@ -66,6 +66,52 @@ function Field({ label, type = "text", placeholder, value, onChange, error }) {
   );
 }
 
+function PhoneField({ label, placeholder, value, onChange, error }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      <label style={{ fontSize: "0.85rem", color: "#3c4a44", fontWeight: 500 }}>{label}</label>
+      <div style={{ display: "flex", borderRadius: 10, border: `1px solid ${error ? "#f87171" : "#e2e8f0"}`, overflow: "hidden" }}>
+        <span style={{ padding: "10px 12px", backgroundColor: "#f8f5f0", color: "#5c7068", fontSize: "0.875rem", fontWeight: 600, borderRight: "1px solid #e2e8f0", whiteSpace: "nowrap", display: "flex", alignItems: "center" }}>
+          +250
+        </span>
+        <input
+          type="tel"
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          style={{ flex: 1, padding: "10px 14px", border: "none", outline: "none", fontSize: "0.875rem", color: DARK, fontFamily: "'Hanken Grotesk', sans-serif", backgroundColor: "white" }}
+        />
+      </div>
+      {error && <p style={{ fontSize: "0.75rem", color: "#dc2626" }}>{error}</p>}
+    </div>
+  );
+}
+
+function PasswordStrength({ password }) {
+  if (!password) return null;
+  const score = [
+    password.length >= 8,
+    /[A-Z]/.test(password),
+    /[0-9]/.test(password),
+    /[^A-Za-z0-9]/.test(password),
+  ].filter(Boolean).length;
+  const levels = [
+    { label: "Weak",   color: "#ef4444", width: "25%" },
+    { label: "Fair",   color: "#f97316", width: "50%" },
+    { label: "Good",   color: "#eab308", width: "75%" },
+    { label: "Strong", color: "#22c55e", width: "100%" },
+  ];
+  const { label, color, width } = levels[score - 1] || levels[0];
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: -8 }}>
+      <div style={{ height: 4, backgroundColor: "#e2e8f0", borderRadius: 99, overflow: "hidden" }}>
+        <div style={{ height: "100%", width, backgroundColor: color, borderRadius: 99, transition: "width 0.3s, background-color 0.3s" }} />
+      </div>
+      <p style={{ fontSize: "0.72rem", color, fontWeight: 600 }}>{label}</p>
+    </div>
+  );
+}
+
 function StepFooter({ onBack, onNext, loading, nextLabel = "Continue" }) {
   return (
     <>
@@ -197,8 +243,10 @@ function ProviderFlow({ step, form, setField, errors, apiError, photos, previews
           {apiError && <p style={{ color: "#dc2626", backgroundColor: "#fef2f2", padding: "10px 14px", borderRadius: 10, fontSize: "0.85rem" }}>{apiError}</p>}
           <Field label="Full name"     placeholder="e.g. Solange Mukamana" value={form.fullName} onChange={setField("fullName")} error={errors.fullName} />
           <Field label="Email address" type="email" placeholder="you@example.com" value={form.email} onChange={setField("email")} error={errors.email} />
-          <Field label="Phone number"  type="tel" placeholder="07XX XXX XXX" value={form.phone} onChange={setField("phone")} error={errors.phone} />
-          <Field label="Password"      type="password" placeholder="Create a password" value={form.password} onChange={setField("password")} error={errors.password} />
+          <PhoneField label="Phone number" placeholder="7XX XXX XXX" value={form.phone} onChange={setField("phone")} error={errors.phone} />
+          <Field label="Password" type="password" placeholder="Create a password" value={form.password} onChange={setField("password")} error={errors.password} />
+          <PasswordStrength password={form.password} />
+          <Field label="Confirm password" type="password" placeholder="Repeat your password" value={form.confirmPassword} onChange={setField("confirmPassword")} error={errors.confirmPassword} />
           <StepFooter onBack={onBack} onNext={onNext} loading={loading} />
         </>}
 
@@ -308,9 +356,11 @@ function CustomerFlow({ form, setField, errors, apiError, loading, onBack, onFin
         {apiError && <p style={{ color: "#dc2626", backgroundColor: "#fef2f2", padding: "10px 14px", borderRadius: 10, fontSize: "0.85rem" }}>{apiError}</p>}
         <Field label="Full name"     placeholder="e.g. Solange Mukamana" value={form.fullName} onChange={setField("fullName")} error={errors.fullName} />
         <Field label="Email address" type="email" placeholder="you@example.com" value={form.email} onChange={setField("email")} error={errors.email} />
-        <Field label="Phone number"  type="tel" placeholder="07XX XXX XXX" value={form.phone} onChange={setField("phone")} error={errors.phone} />
+        <PhoneField label="Phone number" placeholder="7XX XXX XXX" value={form.phone} onChange={setField("phone")} error={errors.phone} />
         <Field label="Address"       placeholder="e.g. Kimihurura, Kigali" value={form.address} onChange={setField("address")} error={errors.address} />
         <Field label="Password"      type="password" placeholder="Create a password" value={form.password} onChange={setField("password")} error={errors.password} />
+        <PasswordStrength password={form.password} />
+        <Field label="Confirm password" type="password" placeholder="Repeat your password" value={form.confirmPassword} onChange={setField("confirmPassword")} error={errors.confirmPassword} />
         <StepFooter onBack={onBack} onNext={onFinish} loading={loading} nextLabel="Finish & go to dashboard" />
       </div>
     </div>
@@ -337,6 +387,7 @@ export default function RoleSelectPage() {
     fullName: seed.fullName || "",
     email:    seed.email    || "",
     phone:    seed.phone    || "",
+    confirmPassword: "",
     password: seed.password || "",
     address:  seed.address  || "",
     category: "Tailoring & Fashion",
@@ -372,6 +423,7 @@ export default function RoleSelectPage() {
     if (!form.phone.trim())                 errs.phone    = "Phone number is required.";
     if (!form.password)                     errs.password = "Password is required.";
     else if (form.password.length < 8)      errs.password = "At least 8 characters.";
+    if (form.password && form.password !== form.confirmPassword) errs.confirmPassword = "Passwords do not match.";
     return errs;
   };
 
