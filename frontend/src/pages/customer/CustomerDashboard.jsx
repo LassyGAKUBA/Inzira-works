@@ -228,15 +228,6 @@ function Overview({ stats, upcoming, completed, onTabChange }) {
         )}
       </div>
 
-      {stats.total === 0 && (
-        <div style={{ ...CARD, padding: 28, textAlign: "center", background: "linear-gradient(135deg, #e8f3ee, #f5f0e8)" }}>
-          <p style={{ fontFamily: SERIF, color: DARK, fontSize: "1.1rem", fontWeight: 700, marginBottom: 8 }}>Ready to get started?</p>
-          <p style={{ color: MUTED, fontSize: "0.875rem", marginBottom: 20 }}>Browse verified providers near you and book your first service.</p>
-          <Link to="/providers" style={{ backgroundColor: G, color: "white", borderRadius: 10, padding: "11px 28px", fontFamily: SANS, fontWeight: 600, fontSize: "0.9rem", textDecoration: "none" }}>
-            Browse providers
-          </Link>
-        </div>
-      )}
     </div>
   );
 }
