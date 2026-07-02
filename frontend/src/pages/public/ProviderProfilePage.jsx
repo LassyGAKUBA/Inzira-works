@@ -922,6 +922,7 @@ export default function ProviderProfilePage() {
 
           {/* Sidebar */}
           <div className="flex flex-col gap-4">
+            {user?.role !== "admin" && (
             <div className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col gap-3 sticky top-20">
               <p style={{ color: "#172420" }} className="font-bold">Ready to book?</p>
               <p className="text-sm text-slate-500">
@@ -952,6 +953,7 @@ export default function ProviderProfilePage() {
                 Your contact info is only shared after booking is confirmed
               </div>
             </div>
+            )}
 
             {/* Similar providers */}
             {similar.length > 0 && (
@@ -976,7 +978,7 @@ export default function ProviderProfilePage() {
       <Footer />
 
       {/* Modals */}
-      {showBooking && <BookingModal provider={provider} user={user} providerPhone={provider.phone} onClose={() => setShowBooking(false)} />}
+      {showBooking && user?.role !== "admin" && <BookingModal provider={provider} user={user} providerPhone={provider.phone} onClose={() => setShowBooking(false)} />}
       {showShare && <ShareModal provider={provider} onClose={() => setShowShare(false)} />}
     </div>
     </PageTransition>

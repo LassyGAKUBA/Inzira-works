@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useLang } from "../../i18n/LangContext";
 import LanguageSwitcher from "../../components/shared/LanguageSwitcher";
 import { KeyRound, Mail } from "lucide-react";
+import { supabase } from "../../lib/supabase";
 
 const G     = "#0E5C46";
 const CREAM = "#ede9e0";
@@ -22,10 +23,13 @@ export default function ForgotPasswordPage() {
     if (!/\S+@\S+\.\S+/.test(email)) { setError("Enter a valid email address."); return; }
     setLoading(true);
     try {
-      await new Promise((r) => setTimeout(r, 1000));
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      });
+      if (error) throw error;
       setSent(true);
-    } catch {
-      setError("Something went wrong. Please try again.");
+    } catch (err) {
+      setError(err.message || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
