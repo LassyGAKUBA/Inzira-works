@@ -35,8 +35,10 @@ function timeAgo(iso) {
 function Sidebar({ tab, setTab, queueCount, onLogout }) {
   const navItems = [
     { id: "overview",  label: "Overview",           badge: null },
-    { id: "queue",     label: "Verification queue", badge: queueCount || null },
-    { id: "providers", label: "All providers",      badge: null },
+    { id: "customers", label: "Customers",          badge: null },
+    { id: "providers", label: "Providers",          badge: null },
+    { id: "bookings",  label: "All Bookings",       badge: null },
+    { id: "queue",     label: "Verify queue",       badge: queueCount || null },
   ];
   return (
     <aside style={{ width: 220, backgroundColor: G_ADMIN, flexShrink: 0, display: "flex", flexDirection: "column", minHeight: "100vh", fontFamily: SANS }}>
@@ -260,6 +262,144 @@ function AllProviders({ providers }) {
   );
 }
 
+// ── Customers tab ─────────────────────────────────────────────────────────────
+function CustomersTab() {
+  const [customers, setCustomers] = useState([]);
+  const [loading,   setLoading]   = useState(true);
+  const [search,    setSearch]    = useState("");
+
+  useEffect(() => {
+    supabase.from("users")
+      .select("id, full_name, email, phone, district, is_active, created_at")
+      .eq("role", "customer")
+      .order("created_at", { ascending: false })
+      .then(({ data }) => { setCustomers(data || []); setLoading(false); });
+  }, []);
+
+  const filtered = customers.filter(c =>
+    !search ||
+    (c.full_name || "").toLowerCase().includes(search.toLowerCase()) ||
+    (c.email || "").toLowerCase().includes(search.toLowerCase())
+  );
+
+  if (loading) return <div style={{ display: "flex", justifyContent: "center", padding: 60 }}><Loader2 size={24} style={{ color: G, animation: "spin 1s linear infinite" }} /></div>;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div>
+          <h1 style={{ fontFamily: SERIF, color: DARK, fontSize: "1.75rem", fontWeight: 700, letterSpacing: "-0.02em" }}>Customers</h1>
+          <p style={{ color: MUTED, fontSize: "0.875rem", marginTop: 4 }}>{customers.length} registered customers.</p>
+        </div>
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name or email…"
+          style={{ padding: "9px 14px", border: "1px solid #e8e2d8", borderRadius: 10, fontFamily: SANS, fontSize: "0.875rem", color: DARK, outline: "none", width: 220 }} />
+      </div>
+
+      <div style={{ ...CARD, overflow: "hidden" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 200px 140px 80px", padding: "12px 20px", borderBottom: "1px solid #f0ece4", backgroundColor: "#faf8f4" }}>
+          {["CUSTOMER", "EMAIL / PHONE", "DISTRICT", "STATUS"].map(col => (
+            <span key={col} style={{ color: MUTED, fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.08em" }}>{col}</span>
+          ))}
+        </div>
+        {filtered.length === 0 ? (
+          <p style={{ padding: "24px 20px", color: MUTED, fontSize: "0.85rem" }}>No customers found.</p>
+        ) : filtered.map((c, i) => (
+          <div key={c.id} style={{ display: "grid", gridTemplateColumns: "1fr 200px 140px 80px", padding: "14px 20px", borderTop: i > 0 ? "1px solid #f0ece4" : "none", alignItems: "center" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ width: 30, height: 30, borderRadius: "50%", backgroundColor: "#e8f3ee", color: G, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "0.65rem", flexShrink: 0 }}>
+                {initials(c.full_name)}
+              </div>
+              <div>
+                <p style={{ color: DARK, fontSize: "0.82rem", fontWeight: 600 }}>{c.full_name || "—"}</p>
+                <p style={{ color: MUTED, fontSize: "0.7rem" }}>Joined {timeAgo(c.created_at)}</p>
+              </div>
+            </div>
+            <div>
+              <p style={{ color: DARK, fontSize: "0.78rem" }}>{c.email || "—"}</p>
+              {c.phone && <p style={{ color: MUTED, fontSize: "0.72rem" }}>+250 {c.phone}</p>}
+            </div>
+            <span style={{ color: MUTED, fontSize: "0.78rem" }}>{c.district || "—"}</span>
+            <span style={{ backgroundColor: c.is_active !== false ? "#e8f3ee" : "#fef2f2", color: c.is_active !== false ? G : "#dc2626", borderRadius: 99, padding: "3px 10px", fontSize: "0.68rem", fontWeight: 600, display: "inline-block" }}>
+              {c.is_active !== false ? "Active" : "Inactive"}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── All Bookings tab ──────────────────────────────────────────────────────────
+function AllBookings() {
+  const [bookings, setBookings] = useState([]);
+  const [loading,  setLoading]  = useState(true);
+  const [filter,   setFilter]   = useState("all");
+
+  useEffect(() => {
+    supabase.from("bookings")
+      .select("id, title, status, scheduled_date, created_at, customer:users!customer_id(full_name), provider:users!provider_id(full_name)")
+      .order("created_at", { ascending: false })
+      .limit(100)
+      .then(({ data }) => { setBookings(data || []); setLoading(false); });
+  }, []);
+
+  const statusColors = {
+    pending:   { bg: "#fef9ec", color: GOLD },
+    confirmed: { bg: "#e8f3ee", color: G },
+    completed: { bg: "#f0ece4", color: MUTED },
+    rejected:  { bg: "#fef2f2", color: "#dc2626" },
+  };
+
+  const filtered = filter === "all" ? bookings : bookings.filter(b => b.status === filter);
+  const counts = ["pending","confirmed","completed","rejected"].reduce((acc, s) => ({ ...acc, [s]: bookings.filter(b => b.status === s).length }), {});
+
+  if (loading) return <div style={{ display: "flex", justifyContent: "center", padding: 60 }}><Loader2 size={24} style={{ color: G, animation: "spin 1s linear infinite" }} /></div>;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      <div>
+        <h1 style={{ fontFamily: SERIF, color: DARK, fontSize: "1.75rem", fontWeight: 700, letterSpacing: "-0.02em" }}>All Bookings</h1>
+        <p style={{ color: MUTED, fontSize: "0.875rem", marginTop: 4 }}>{bookings.length} bookings on the platform.</p>
+      </div>
+
+      <div style={{ display: "flex", gap: 8 }}>
+        {[["all", "All", bookings.length], ["pending","Pending",counts.pending], ["confirmed","Confirmed",counts.confirmed], ["completed","Completed",counts.completed]].map(([id, label, count]) => (
+          <button key={id} onClick={() => setFilter(id)}
+            style={{ backgroundColor: filter === id ? DARK : "white", color: filter === id ? "white" : MUTED, border: "1px solid #e8e2d8", borderRadius: 8, padding: "6px 14px", fontFamily: SANS, fontWeight: 600, fontSize: "0.78rem", cursor: "pointer" }}>
+            {label} ({count})
+          </button>
+        ))}
+      </div>
+
+      <div style={{ ...CARD, overflow: "hidden" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 160px 160px 120px 100px", padding: "12px 20px", borderBottom: "1px solid #f0ece4", backgroundColor: "#faf8f4" }}>
+          {["SERVICE", "CUSTOMER", "PROVIDER", "DATE", "STATUS"].map(col => (
+            <span key={col} style={{ color: MUTED, fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.08em" }}>{col}</span>
+          ))}
+        </div>
+        {filtered.length === 0 ? (
+          <p style={{ padding: "24px 20px", color: MUTED, fontSize: "0.85rem" }}>No bookings found.</p>
+        ) : filtered.map((b, i) => {
+          const sc = statusColors[b.status] || statusColors.pending;
+          return (
+            <div key={b.id} style={{ display: "grid", gridTemplateColumns: "1fr 160px 160px 120px 100px", padding: "13px 20px", borderTop: i > 0 ? "1px solid #f0ece4" : "none", alignItems: "center" }}>
+              <p style={{ color: DARK, fontSize: "0.82rem", fontWeight: 600 }}>{b.title}</p>
+              <p style={{ color: MUTED, fontSize: "0.78rem" }}>{b.customer?.full_name || "—"}</p>
+              <p style={{ color: MUTED, fontSize: "0.78rem" }}>{b.provider?.full_name || "—"}</p>
+              <p style={{ color: MUTED, fontSize: "0.75rem" }}>
+                {b.scheduled_date ? new Date(b.scheduled_date).toLocaleDateString("en-US", { day: "numeric", month: "short" }) : "—"}
+              </p>
+              <span style={{ backgroundColor: sc.bg, color: sc.color, borderRadius: 99, padding: "3px 10px", fontSize: "0.68rem", fontWeight: 600, display: "inline-block", textTransform: "capitalize" }}>
+                {b.status}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── Page root ─────────────────────────────────────────────────────────────────
 export default function AdminDashboard() {
   const { logout } = useAuth();
@@ -348,8 +488,10 @@ export default function AdminDashboard() {
       <Sidebar tab={tab} setTab={setTab} queueCount={queue.length} onLogout={handleLogout} />
       <main style={{ flex: 1, padding: 32, overflowY: "auto" }}>
         {tab === "overview"  && <Overview  stats={stats} districts={districts} activity={activity} />}
-        {tab === "queue"     && <VerificationQueue queue={queue} onApprove={handleApprove} />}
+        {tab === "customers" && <CustomersTab />}
         {tab === "providers" && <AllProviders providers={providers} />}
+        {tab === "bookings"  && <AllBookings />}
+        {tab === "queue"     && <VerificationQueue queue={queue} onApprove={handleApprove} />}
       </main>
     </div>
   );

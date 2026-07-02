@@ -50,9 +50,12 @@ function InitialsCircle({ name = "", size = 36 }) {
 function Sidebar({ tab, setTab, user, profile, pendingCount, onLogout }) {
   const firstName = (user?.full_name || "Provider").split(" ")[0];
   const navItems = [
-    { id: "overview",  label: "Overview"   },
-    { id: "bookings",  label: "Bookings",  badge: pendingCount || null },
-    { id: "profile",   label: "My profile" },
+    { id: "overview",  label: "Overview",     badge: null },
+    { id: "bookings",  label: "Bookings",     badge: pendingCount || null },
+    { id: "history",   label: "History",      badge: null },
+    { id: "reviews",   label: "Reviews",      badge: null },
+    { id: "portfolio", label: "Portfolio",    badge: null },
+    { id: "profile",   label: "My Profile",   badge: null },
   ];
 
   return (
@@ -570,6 +573,232 @@ function MyProfile({ user, profile, onSave }) {
   );
 }
 
+// ── History tab ───────────────────────────────────────────────────────────────
+function HistoryTab({ userId }) {
+  const [bookings, setBookings] = useState([]);
+  const [loading,  setLoading]  = useState(true);
+
+  useEffect(() => {
+    if (!userId) return;
+    supabase.from("bookings")
+      .select("id, title, scheduled_date, updated_at, customer:users!customer_id(full_name)")
+      .eq("provider_id", userId)
+      .eq("status", "completed")
+      .order("updated_at", { ascending: false })
+      .then(({ data }) => { setBookings(data || []); setLoading(false); });
+  }, [userId]);
+
+  if (loading) return <div style={{ display: "flex", justifyContent: "center", padding: 60 }}><Loader2 size={24} style={{ color: G, animation: "spin 1s linear infinite" }} /></div>;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      <div>
+        <h1 style={{ fontFamily: SERIF, color: DARK, fontSize: "1.75rem", fontWeight: 700, letterSpacing: "-0.02em" }}>Completed Jobs</h1>
+        <p style={{ color: MUTED, fontSize: "0.875rem", marginTop: 4 }}>{bookings.length} job{bookings.length !== 1 ? "s" : ""} completed in total.</p>
+      </div>
+
+      {bookings.length === 0 ? (
+        <div style={{ ...CARD, padding: 48, textAlign: "center", color: MUTED, fontSize: "0.9rem" }}>
+          No completed jobs yet. Accept bookings and mark them as completed to see them here.
+        </div>
+      ) : (
+        <div style={{ ...CARD, overflow: "hidden" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 180px 160px", padding: "12px 20px", borderBottom: "1px solid #f0ece4", backgroundColor: "#faf8f4" }}>
+            {["SERVICE", "CUSTOMER", "COMPLETED ON"].map(col => (
+              <span key={col} style={{ color: MUTED, fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.08em" }}>{col}</span>
+            ))}
+          </div>
+          {bookings.map((b, i) => (
+            <div key={b.id} style={{ display: "grid", gridTemplateColumns: "1fr 180px 160px", padding: "14px 20px", borderTop: i > 0 ? "1px solid #f0ece4" : "none", alignItems: "center" }}>
+              <div>
+                <p style={{ color: DARK, fontWeight: 600, fontSize: "0.875rem" }}>{b.title}</p>
+                <p style={{ color: MUTED, fontSize: "0.75rem", marginTop: 1 }}>
+                  <Calendar size={10} style={{ display: "inline", marginRight: 4 }} />{formatDate(b.scheduled_date)}
+                </p>
+              </div>
+              <p style={{ color: DARK, fontSize: "0.82rem" }}>{b.customer?.full_name || "—"}</p>
+              <p style={{ color: MUTED, fontSize: "0.78rem" }}>{formatDate(b.updated_at)}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Reviews tab ───────────────────────────────────────────────────────────────
+function ReviewsTab({ userId }) {
+  const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [avgRating, setAvgRating] = useState(0);
+
+  useEffect(() => {
+    if (!userId) return;
+    supabase.from("reviews")
+      .select("id, rating, comment, created_at, customer:users!customer_id(full_name)")
+      .eq("provider_id", userId)
+      .order("created_at", { ascending: false })
+      .then(({ data }) => {
+        const rows = data || [];
+        setReviews(rows);
+        setAvgRating(rows.length ? rows.reduce((s, r) => s + r.rating, 0) / rows.length : 0);
+        setLoading(false);
+      });
+  }, [userId]);
+
+  if (loading) return <div style={{ display: "flex", justifyContent: "center", padding: 60 }}><Loader2 size={24} style={{ color: G, animation: "spin 1s linear infinite" }} /></div>;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      <div>
+        <h1 style={{ fontFamily: SERIF, color: DARK, fontSize: "1.75rem", fontWeight: 700, letterSpacing: "-0.02em" }}>Customer Reviews</h1>
+        <p style={{ color: MUTED, fontSize: "0.875rem", marginTop: 4 }}>{reviews.length} review{reviews.length !== 1 ? "s" : ""} received.</p>
+      </div>
+
+      {reviews.length > 0 && (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+          {[
+            { label: "Average Rating", value: avgRating.toFixed(1), sub: "out of 5.0" },
+            { label: "Total Reviews",  value: reviews.length,       sub: "all time" },
+            { label: "5-Star Reviews", value: reviews.filter(r => r.rating === 5).length, sub: `${Math.round(reviews.filter(r => r.rating === 5).length / reviews.length * 100)}% of total` },
+          ].map(({ label, value, sub }) => (
+            <div key={label} style={{ ...CARD, padding: 18 }}>
+              <p style={{ color: MUTED, fontSize: "0.75rem", fontWeight: 500 }}>{label}</p>
+              <p style={{ fontFamily: SERIF, color: DARK, fontSize: "1.75rem", fontWeight: 700, marginTop: 4 }}>{value}</p>
+              <p style={{ color: MUTED, fontSize: "0.72rem", marginTop: 4 }}>{sub}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {reviews.length === 0 ? (
+        <div style={{ ...CARD, padding: 48, textAlign: "center", color: MUTED, fontSize: "0.9rem" }}>
+          No reviews yet. Complete jobs to start receiving reviews from customers.
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {reviews.map(r => (
+            <div key={r.id} style={{ ...CARD, padding: 20 }}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+                <InitialsCircle name={r.customer?.full_name || "C"} size={38} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <p style={{ color: DARK, fontWeight: 700, fontSize: "0.875rem" }}>{r.customer?.full_name || "Customer"}</p>
+                    <span style={{ color: MUTED, fontSize: "0.72rem" }}>{timeAgo(r.created_at)}</span>
+                  </div>
+                  <div style={{ display: "flex", gap: 2, marginTop: 4 }}>
+                    {[1,2,3,4,5].map(s => (
+                      <Banknote key={s} size={0} style={{ display: "none" }} />
+                    ))}
+                    {[1,2,3,4,5].map(s => (
+                      <svg key={s} width="14" height="14" viewBox="0 0 24 24" fill={s <= r.rating ? GOLD : "none"} stroke={s <= r.rating ? GOLD : "#c8c0b0"} strokeWidth="2">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                      </svg>
+                    ))}
+                  </div>
+                  {r.comment && (
+                    <p style={{ color: MUTED, fontSize: "0.8rem", marginTop: 8, lineHeight: 1.6, fontStyle: "italic" }}>"{r.comment}"</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Portfolio tab ─────────────────────────────────────────────────────────────
+function PortfolioTab({ profile, userId }) {
+  const [items,     setItems]     = useState([]);
+  const [loading,   setLoading]   = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [err,       setErr]       = useState("");
+  const fileRef = useRef(null);
+
+  useEffect(() => {
+    if (!profile?.id) return;
+    supabase.from("portfolio_items")
+      .select("id, image_url, caption")
+      .eq("provider_id", profile.id)
+      .order("created_at")
+      .then(({ data }) => { setItems(data || []); setLoading(false); });
+  }, [profile?.id]);
+
+  const handleUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !profile?.id || !userId) return;
+    setUploading(true); setErr("");
+    try {
+      const ext  = file.name.split(".").pop();
+      const path = `${userId}/portfolio/${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: false });
+      if (upErr) throw upErr;
+      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+      const { data: inserted, error: insErr } = await supabase.from("portfolio_items")
+        .insert({ provider_id: profile.id, image_url: urlData.publicUrl, caption: "" })
+        .select("id, image_url, caption").single();
+      if (insErr) throw insErr;
+      setItems(prev => [...prev, inserted]);
+    } catch { setErr("Upload failed. Check that the storage bucket exists."); }
+    finally { setUploading(false); if (fileRef.current) fileRef.current.value = ""; }
+  };
+
+  const handleRemove = async (id) => {
+    await supabase.from("portfolio_items").delete().eq("id", id);
+    setItems(prev => prev.filter(i => i.id !== id));
+  };
+
+  if (loading) return <div style={{ display: "flex", justifyContent: "center", padding: 60 }}><Loader2 size={24} style={{ color: G, animation: "spin 1s linear infinite" }} /></div>;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div>
+          <h1 style={{ fontFamily: SERIF, color: DARK, fontSize: "1.75rem", fontWeight: 700, letterSpacing: "-0.02em" }}>Portfolio</h1>
+          <p style={{ color: MUTED, fontSize: "0.875rem", marginTop: 4 }}>Show your best work. Profiles with photos get 3× more bookings.</p>
+        </div>
+        <div>
+          <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleUpload} />
+          <button onClick={() => fileRef.current?.click()} disabled={uploading}
+            style={{ backgroundColor: G, color: "white", border: "none", borderRadius: 10, padding: "10px 20px", fontFamily: SANS, fontWeight: 600, fontSize: "0.85rem", cursor: uploading ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: 8 }}>
+            {uploading ? <><Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} /> Uploading…</> : <>+ Add photo</>}
+          </button>
+        </div>
+      </div>
+
+      {err && <p style={{ color: "#dc2626", backgroundColor: "#fef2f2", padding: "10px 14px", borderRadius: 10, fontSize: "0.85rem" }}>{err}</p>}
+
+      {items.length === 0 ? (
+        <div style={{ ...CARD, padding: 48, textAlign: "center" }}>
+          <ImageIcon size={36} style={{ color: "#d4cfc5", margin: "0 auto 12px" }} />
+          <p style={{ color: MUTED, fontSize: "0.9rem", marginBottom: 16 }}>No portfolio photos yet.</p>
+          <button onClick={() => fileRef.current?.click()}
+            style={{ backgroundColor: G, color: "white", border: "none", borderRadius: 10, padding: "10px 24px", fontFamily: SANS, fontWeight: 600, fontSize: "0.875rem", cursor: "pointer" }}>
+            Upload your first photo
+          </button>
+        </div>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
+          {items.map(item => (
+            <div key={item.id} style={{ ...CARD, overflow: "hidden", position: "relative" }}>
+              <img src={item.image_url} alt={item.caption || "Portfolio"} style={{ width: "100%", aspectRatio: "1", objectFit: "cover", display: "block" }} />
+              <div style={{ padding: "10px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <p style={{ color: MUTED, fontSize: "0.75rem", flex: 1 }}>{item.caption || "No caption"}</p>
+                <button onClick={() => handleRemove(item.id)}
+                  style={{ background: "none", border: "1px solid #e8e2d8", borderRadius: 6, padding: "3px 8px", color: "#e05c5c", fontFamily: SANS, fontSize: "0.7rem", cursor: "pointer" }}>
+                  Remove
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Page root ─────────────────────────────────────────────────────────────────
 export default function ProviderDashboard() {
   const { user, logout } = useAuth();
@@ -672,9 +901,12 @@ export default function ProviderDashboard() {
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       <Sidebar tab={tab} setTab={setTab} user={user} profile={profile} pendingCount={pending.length} onLogout={handleLogout} />
       <main style={{ flex: 1, padding: 32, overflowY: "auto" }}>
-        {tab === "overview" && <Overview user={user} profile={profile} pending={pending} onAccept={handleAccept} onDecline={handleDecline} statsLoading={loading} />}
-        {tab === "bookings" && <Bookings pending={pending} confirmed={confirmed} onAccept={handleAccept} onDecline={handleDecline} onComplete={handleComplete} />}
-        {tab === "profile"  && <MyProfile user={user} profile={profile} onSave={setProfile} />}
+        {tab === "overview"  && <Overview user={user} profile={profile} pending={pending} onAccept={handleAccept} onDecline={handleDecline} statsLoading={loading} />}
+        {tab === "bookings"  && <Bookings pending={pending} confirmed={confirmed} onAccept={handleAccept} onDecline={handleDecline} onComplete={handleComplete} />}
+        {tab === "history"   && <HistoryTab userId={user?.id} />}
+        {tab === "reviews"   && <ReviewsTab userId={user?.id} />}
+        {tab === "portfolio" && <PortfolioTab profile={profile} userId={user?.id} />}
+        {tab === "profile"   && <MyProfile user={user} profile={profile} onSave={setProfile} />}
       </main>
     </div>
   );
