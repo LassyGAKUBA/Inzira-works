@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { supabase } from "../../lib/supabase";
 import {
   Shield, CheckCircle, Banknote, MessageCircle,
-  Calendar, MapPin, Image as ImageIcon, ExternalLink, Loader2,
+  Calendar, MapPin, Image as ImageIcon, ExternalLink, Loader2, LogOut,
 } from "lucide-react";
 
 // ── Tokens ────────────────────────────────────────────────────────────────────
@@ -47,7 +47,7 @@ function InitialsCircle({ name = "", size = 36 }) {
 }
 
 // ── Sidebar ───────────────────────────────────────────────────────────────────
-function Sidebar({ tab, setTab, user, profile, pendingCount }) {
+function Sidebar({ tab, setTab, user, profile, pendingCount, onLogout }) {
   const firstName = (user?.full_name || "Provider").split(" ")[0];
   const navItems = [
     { id: "overview",  label: "Overview"   },
@@ -92,6 +92,11 @@ function Sidebar({ tab, setTab, user, profile, pendingCount }) {
             {profile && <p style={{ color: GOLD, fontSize: "0.7rem", fontWeight: 500 }}>Trust {Math.round(profile.trust_score ?? 0)}</p>}
           </div>
         </div>
+        <button onClick={onLogout}
+          style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "9px 12px", borderRadius: 8, border: "none", cursor: "pointer", backgroundColor: "transparent", color: "rgba(255,255,255,0.55)", fontFamily: SANS, fontSize: "0.825rem", fontWeight: 500, marginTop: 4 }}
+          className="hover:bg-white/10 transition-colors">
+          <LogOut size={14} /> Sign out
+        </button>
       </div>
     </aside>
   );
@@ -567,7 +572,9 @@ function MyProfile({ user, profile, onSave }) {
 
 // ── Page root ─────────────────────────────────────────────────────────────────
 export default function ProviderDashboard() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const handleLogout = async () => { await logout(); navigate("/"); };
   const [tab,       setTab]       = useState("overview");
   const [profile,   setProfile]   = useState(null);
   const [pending,   setPending]   = useState([]);
@@ -663,7 +670,7 @@ export default function ProviderDashboard() {
   return (
     <div style={{ display: "flex", minHeight: "100vh", fontFamily: SANS, backgroundColor: CREAM }}>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      <Sidebar tab={tab} setTab={setTab} user={user} profile={profile} pendingCount={pending.length} />
+      <Sidebar tab={tab} setTab={setTab} user={user} profile={profile} pendingCount={pending.length} onLogout={handleLogout} />
       <main style={{ flex: 1, padding: 32, overflowY: "auto" }}>
         {tab === "overview" && <Overview user={user} profile={profile} pending={pending} onAccept={handleAccept} onDecline={handleDecline} statsLoading={loading} />}
         {tab === "bookings" && <Bookings pending={pending} confirmed={confirmed} onAccept={handleAccept} onDecline={handleDecline} onComplete={handleComplete} />}
