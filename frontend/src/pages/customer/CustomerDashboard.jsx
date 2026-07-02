@@ -5,7 +5,7 @@ import { supabase } from "../../lib/supabase";
 import {
   Calendar, Star, X, Loader2, CheckCircle, Clock, LogOut,
   User, LayoutDashboard, BookOpen, History as HistoryIcon,
-  MessageCircle, Shield, ChevronRight, Edit2, Save,
+  MessageCircle, Shield, ChevronRight, Edit2, Save, Menu,
 } from "lucide-react";
 
 const G     = "#0E5C46";
@@ -105,7 +105,7 @@ function ReviewModal({ booking, onClose, onSubmitted }) {
   );
 }
 
-function Sidebar({ tab, setTab, upcomingCount, user, onLogout }) {
+function Sidebar({ tab, setTab, upcomingCount, user, onLogout, isMobile, isOpen, onClose }) {
   const firstName = (user?.full_name || "there").split(" ")[0];
   const navItems = [
     { id: "overview",  label: "Overview",     Icon: LayoutDashboard, badge: null },
@@ -113,8 +113,9 @@ function Sidebar({ tab, setTab, upcomingCount, user, onLogout }) {
     { id: "history",   label: "History",      Icon: HistoryIcon,     badge: null },
     { id: "profile",   label: "My Profile",   Icon: User,            badge: null },
   ];
+  const handleNav = (id) => { setTab(id); if (isMobile && onClose) onClose(); };
   return (
-    <aside style={{ width: 220, backgroundColor: G, flexShrink: 0, display: "flex", flexDirection: "column", minHeight: "100vh", fontFamily: SANS }}>
+    <aside style={{ width: 220, backgroundColor: G, flexShrink: 0, display: "flex", flexDirection: "column", minHeight: "100vh", fontFamily: SANS, ...(isMobile ? { position: "fixed", top: 0, left: 0, bottom: 0, zIndex: 200, transform: isOpen ? "translateX(0)" : "translateX(-220px)", transition: "transform 0.25s ease", boxShadow: isOpen ? "4px 0 20px rgba(0,0,0,0.3)" : "none" } : {}) }}>
       <div style={{ padding: "20px 20px 0" }}>
         <Link to="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 8 }}>
           <svg width="16" height="20" viewBox="0 0 18 22" fill="none">
@@ -136,7 +137,7 @@ function Sidebar({ tab, setTab, upcomingCount, user, onLogout }) {
 
       <nav style={{ display: "flex", flexDirection: "column", gap: 2, padding: "0 10px" }}>
         {navItems.map(({ id, label, Icon, badge }) => (
-          <button key={id} onClick={() => setTab(id)}
+          <button key={id} onClick={() => handleNav(id)}
             style={{ display: "flex", alignItems: "center", gap: 10, justifyContent: "space-between", width: "100%", padding: "9px 12px", borderRadius: 8, border: "none", cursor: "pointer", backgroundColor: tab === id ? "rgba(255,255,255,0.14)" : "transparent", color: tab === id ? "white" : "rgba(255,255,255,0.65)", fontFamily: SANS, fontSize: "0.875rem", fontWeight: tab === id ? 600 : 400, textAlign: "left" }}>
             <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <Icon size={15} /> {label}
@@ -186,7 +187,7 @@ function Overview({ stats, upcoming, completed, onTabChange }) {
         <p style={{ color: MUTED, fontSize: "0.875rem", marginTop: 4 }}>Here's a summary of your activity on Inzira Works.</p>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+      <div className="stat-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
         <StatCard label="Total Bookings"   value={stats.total}     color={DARK}       note="all time" />
         <StatCard label="Upcoming"         value={stats.upcoming}  color={G}          note="pending + confirmed" />
         <StatCard label="Completed"        value={stats.completed} color="#3b82f6"    note="jobs done" />
@@ -478,7 +479,15 @@ export default function CustomerDashboard() {
   const navigate = useNavigate();
   const handleLogout = async () => { await logout(); navigate("/"); };
 
-  const [tab,       setTab]       = useState("overview");
+  const [tab,         setTab]         = useState("overview");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMobile,    setIsMobile]    = useState(() => window.innerWidth < 768);
+
+  useEffect(() => {
+    const check = () => { const m = window.innerWidth < 768; setIsMobile(m); if (!m) setSidebarOpen(false); };
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
   const [stats,     setStats]     = useState({ total: 0, upcoming: 0, completed: 0, providers: 0 });
   const [upcoming,  setUpcoming]  = useState([]);
   const [completed, setCompleted] = useState([]);
@@ -538,9 +547,23 @@ export default function CustomerDashboard() {
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", fontFamily: SANS, backgroundColor: CREAM }}>
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      <Sidebar tab={tab} setTab={setTab} upcomingCount={upcoming.length} user={user} onLogout={handleLogout} />
-      <main style={{ flex: 1, padding: 32, overflowY: "auto" }}>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } } @media(max-width:640px){.stat-grid{grid-template-columns:repeat(2,1fr)!important}}`}</style>
+
+      {isMobile && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: 56, backgroundColor: G, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", zIndex: 100, boxSizing: "border-box" }}>
+          <button onClick={() => setSidebarOpen(true)} style={{ background: "none", border: "none", cursor: "pointer", color: "white", padding: 4, display: "flex" }}>
+            <Menu size={22} />
+          </button>
+          <span style={{ fontFamily: "Spectral, serif", color: "white", fontWeight: 700, fontSize: "1rem" }}>Inzira Works</span>
+          <div style={{ width: 30 }} />
+        </div>
+      )}
+      {isMobile && sidebarOpen && (
+        <div onClick={() => setSidebarOpen(false)} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", zIndex: 150 }} />
+      )}
+
+      <Sidebar tab={tab} setTab={setTab} upcomingCount={upcoming.length} user={user} onLogout={handleLogout} isMobile={isMobile} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <main style={{ flex: 1, padding: isMobile ? "72px 16px 24px" : 32, overflowY: "auto" }}>
         {tab === "overview"  && <Overview stats={stats} upcoming={upcoming} completed={completed} onTabChange={setTab} />}
         {tab === "bookings"  && <MyBookings bookings={upcoming} />}
         {tab === "history"   && <HistoryTab bookings={completed} onReviewClick={setReviewing} onRefresh={loadData} />}

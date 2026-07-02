@@ -9,6 +9,7 @@ import LoginPage from "./pages/auth/LoginPage";
 import SignupPage from "./pages/auth/SignupPage";
 import RoleSelectPage from "./pages/auth/RoleSelectPage";
 import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 import CheckEmailPage from "./pages/auth/CheckEmailPage";
 import AuthCallbackPage from "./pages/auth/AuthCallbackPage";
 import ProviderDashboard from "./pages/provider/ProviderDashboard";
@@ -25,6 +26,7 @@ const router = createBrowserRouter([
   { path: "/signup", element: <SignupPage /> },
   { path: "/role-select", element: <RoleSelectPage /> },
   { path: "/forgot-password", element: <ForgotPasswordPage /> },
+  { path: "/reset-password", element: <ResetPasswordPage /> },
   { path: "/check-email",    element: <CheckEmailPage /> },
   { path: "/auth/callback",  element: <AuthCallbackPage /> },
 
