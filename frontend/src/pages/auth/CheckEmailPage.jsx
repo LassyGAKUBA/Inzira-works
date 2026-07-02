@@ -55,7 +55,7 @@ export default function CheckEmailPage() {
 
         <p style={{ color: "#9aab9e", fontSize: "0.75rem", lineHeight: 1.6 }}>
           Didn&apos;t receive it? Check your spam folder.{" "}
-          <Link to="/signup" style={{ color: G, fontWeight: 500, textDecoration: "none" }} className="hover:underline">
+          <Link to="/role-select" style={{ color: G, fontWeight: 500, textDecoration: "none" }} className="hover:underline">
             Try signing up again
           </Link>
           .

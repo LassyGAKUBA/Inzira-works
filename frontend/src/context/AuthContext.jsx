@@ -39,12 +39,13 @@ export function AuthProvider({ children }) {
     return mapUser(data.user);
   };
 
-  const register = async ({ fullName, email, phone, address = "", district, password, role }) => {
+  const register = async ({ fullName, email, phone, address = "", district, bio = "", category = "", password, role }) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name: fullName, phone, address, district, role },
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        data: { full_name: fullName, phone, address, district, role, bio, category },
       },
     });
     if (error) throw new Error(error.message);
@@ -52,15 +53,23 @@ export function AuthProvider({ children }) {
     // session is null when Supabase requires email confirmation
     const needsConfirmation = !data.session;
 
-    // Only create provider profile immediately when there is no confirmation step
+    // Only create + patch provider profile when session is immediate (no confirmation)
     if (!needsConfirmation && role === "provider" && data.user) {
-      await supabase.from("provider_profiles").insert({
+      const { data: inserted } = await supabase.from("provider_profiles").insert({
         user_id: data.user.id,
         trust_score: 0,
         profile_completeness: 0,
         response_rate: 0,
         repeat_rate: 0,
-      });
+      }).select("id").single();
+
+      if (inserted) {
+        await supabase.from("provider_profiles").update({
+          headline: category || null,
+          bio:      bio      || null,
+          district: district || null,
+        }).eq("id", inserted.id);
+      }
     }
 
     return { needsConfirmation, user: mapUser(data.user) };
