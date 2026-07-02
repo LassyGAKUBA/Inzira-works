@@ -18,15 +18,15 @@ export default function AuthCallbackPage() {
     if (didRun.current) return;
     didRun.current = true;
 
-    // Detect password recovery link (hash contains type=recovery)
-    const hashParams = new URLSearchParams(window.location.hash.slice(1));
-    if (hashParams.get("type") === "recovery") {
-      await supabase.auth.getSession(); // exchanges the hash token
-      navigate("/reset-password", { replace: true });
-      return;
-    }
-
     (async () => {
+      // Detect password recovery link (hash contains type=recovery)
+      const hashParams = new URLSearchParams(window.location.hash.slice(1));
+      if (hashParams.get("type") === "recovery") {
+        await supabase.auth.getSession(); // exchanges the hash token
+        navigate("/reset-password", { replace: true });
+        return;
+      }
+
       // Exchange the token from the URL hash / query for a real session
       const { data: { session }, error } = await supabase.auth.getSession();
 
