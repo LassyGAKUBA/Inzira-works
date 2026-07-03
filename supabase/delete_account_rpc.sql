@@ -1,3 +1,4 @@
+
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Account self-deletion RPC
 -- Run in: Supabase Dashboard → SQL Editor → New query → Run
