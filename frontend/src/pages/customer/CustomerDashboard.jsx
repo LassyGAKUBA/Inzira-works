@@ -387,10 +387,32 @@ function HistoryTab({ bookings, onReviewClick, onRefresh }) {
 }
 
 function ProfileTab({ user }) {
+  const { logout }   = useAuth();
+  const navigate     = useNavigate();
   const [form, setForm] = useState({ full_name: "", phone: "", district: "" });
   const [loading, setLoading] = useState(true);
   const [saving,  setSaving]  = useState(false);
   const [msg,     setMsg]     = useState("");
+
+  // Delete account state
+  const [showDelete,   setShowDelete]   = useState(false);
+  const [deleteInput,  setDeleteInput]  = useState("");
+  const [deleting,     setDeleting]     = useState(false);
+  const [deleteErr,    setDeleteErr]    = useState("");
+
+  const handleDeleteAccount = async () => {
+    if (deleteInput !== "DELETE") return;
+    setDeleting(true); setDeleteErr("");
+    try {
+      const { error } = await supabase.rpc("delete_my_account");
+      if (error) throw error;
+      await logout();
+      navigate("/", { replace: true });
+    } catch (err) {
+      setDeleteErr(err.message || "Could not delete account. Please try again.");
+      setDeleting(false);
+    }
+  };
 
   useEffect(() => {
     if (!user?.id) return;
@@ -463,6 +485,45 @@ function ProfileTab({ user }) {
         <p style={{ color: DARK, fontWeight: 600, fontSize: "0.875rem", marginBottom: 4 }}>Account details</p>
         <p style={{ color: MUTED, fontSize: "0.78rem" }}>Joined: {user?.created_at ? new Date(user.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "—"}</p>
         <p style={{ color: MUTED, fontSize: "0.78rem", marginTop: 4 }}>Role: Customer</p>
+      </div>
+
+      {/* Danger zone */}
+      <div style={{ border: "1px solid #fca5a5", borderRadius: 14, padding: 24, maxWidth: 520, backgroundColor: "#fff8f8" }}>
+        <p style={{ color: "#b91c1c", fontWeight: 700, fontSize: "0.875rem", marginBottom: 4 }}>Danger zone</p>
+        <p style={{ color: MUTED, fontSize: "0.78rem", marginBottom: 14 }}>
+          Permanently delete your account and all associated data. This cannot be undone.
+        </p>
+        {!showDelete ? (
+          <button onClick={() => setShowDelete(true)}
+            style={{ backgroundColor: "#fef2f2", color: "#b91c1c", border: "1px solid #fca5a5", borderRadius: 8, padding: "8px 18px", fontFamily: SANS, fontWeight: 600, fontSize: "0.82rem", cursor: "pointer" }}>
+            Delete my account
+          </button>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <p style={{ color: DARK, fontSize: "0.82rem" }}>
+              Type <strong>DELETE</strong> to confirm:
+            </p>
+            <input
+              value={deleteInput}
+              onChange={e => { setDeleteInput(e.target.value); setDeleteErr(""); }}
+              placeholder="DELETE"
+              style={{ padding: "9px 14px", border: "1px solid #fca5a5", borderRadius: 8, fontFamily: SANS, fontSize: "0.875rem", color: DARK, outline: "none", maxWidth: 200 }}
+            />
+            {deleteErr && <p style={{ color: "#b91c1c", fontSize: "0.78rem" }}>{deleteErr}</p>}
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={handleDeleteAccount}
+                disabled={deleteInput !== "DELETE" || deleting}
+                style={{ backgroundColor: deleteInput === "DELETE" ? "#b91c1c" : "#fca5a5", color: "white", border: "none", borderRadius: 8, padding: "8px 18px", fontFamily: SANS, fontWeight: 600, fontSize: "0.82rem", cursor: deleteInput === "DELETE" ? "pointer" : "not-allowed", display: "flex", alignItems: "center", gap: 8 }}>
+                {deleting && <Loader2 size={13} style={{ animation: "spin 1s linear infinite" }} />}
+                {deleting ? "Deleting…" : "Confirm delete"}
+              </button>
+              <button onClick={() => { setShowDelete(false); setDeleteInput(""); setDeleteErr(""); }}
+                style={{ background: "none", border: "1px solid #e8e2d8", borderRadius: 8, padding: "8px 18px", fontFamily: SANS, fontWeight: 500, fontSize: "0.82rem", color: MUTED, cursor: "pointer" }}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

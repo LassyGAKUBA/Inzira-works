@@ -19,6 +19,7 @@ import ProviderDirectory from "./pages/public/ProviderDirectory";
 import AboutPage from "./pages/public/AboutPage";
 import ContactPage from "./pages/public/ContactPage";
 import ProviderProfilePage from "./pages/public/ProviderProfilePage";
+import PrivacyPolicyPage from "./pages/public/PrivacyPolicyPage";
 
 const router = createBrowserRouter([
   { path: "/", element: <HomePage /> },
@@ -60,6 +61,7 @@ const router = createBrowserRouter([
   { path: "/about", element: <AboutPage /> },
   { path: "/contact", element: <ContactPage /> },
   { path: "/providers/:id", element: <ProviderProfilePage /> },
+  { path: "/privacy",       element: <PrivacyPolicyPage /> },
 ]);
 
 export default function App() {

@@ -694,9 +694,15 @@ function Footer() {
             </svg>
             <span style={{ color: DARK, fontWeight: 600, fontSize: "0.875rem" }}>Inzira Works</span>
           </div>
-          <p style={{ color: MUTED, fontSize: "0.75rem" }}>
-            {t("home_footer_copy")}
-          </p>
+          <div className="flex items-center gap-4">
+            <p style={{ color: MUTED, fontSize: "0.75rem" }}>
+              {t("home_footer_copy")}
+            </p>
+            <Link to="/privacy" style={{ color: MUTED, fontSize: "0.75rem", textDecoration: "none", borderBottom: "1px solid #c4bfb6" }}
+              className="hover:opacity-70 transition-opacity">
+              Privacy Policy
+            </Link>
+          </div>
         </div>
       </Container>
     </footer>

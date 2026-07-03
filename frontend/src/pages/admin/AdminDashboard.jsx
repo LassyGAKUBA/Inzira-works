@@ -5,6 +5,7 @@ import { useLang } from "../../i18n/LangContext";
 import { supabase } from "../../lib/supabase";
 import {
   Users, ShieldCheck, Clock, Star, FileText, Loader2, MapPin, LogOut, Menu,
+  UserX, UserCheck,
 } from "lucide-react";
 
 // ── Tokens ────────────────────────────────────────────────────────────────────
@@ -209,7 +210,7 @@ function VerificationQueue({ queue, onApprove }) {
 }
 
 // ── All providers tab ─────────────────────────────────────────────────────────
-function AllProviders({ providers }) {
+function AllProviders({ providers, onToggle }) {
   const verified = providers.filter((p) => p.verification_status === "verified").length;
 
   return (
@@ -222,8 +223,8 @@ function AllProviders({ providers }) {
       </div>
 
       <div style={{ ...CARD, overflow: "hidden" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 180px 80px 100px", padding: "12px 20px", borderBottom: "1px solid #f0ece4", backgroundColor: "#faf8f4" }}>
-          {["PROVIDER", "CATEGORY", "TRUST", "STATUS"].map((col) => (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 150px 60px 90px 100px", padding: "12px 20px", borderBottom: "1px solid #f0ece4", backgroundColor: "#faf8f4" }}>
+          {["PROVIDER", "CATEGORY", "TRUST", "VERIFIED", "ACTION"].map((col) => (
             <span key={col} style={{ color: MUTED, fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.08em" }}>{col}</span>
           ))}
         </div>
@@ -232,17 +233,18 @@ function AllProviders({ providers }) {
           <p style={{ padding: "24px 20px", color: MUTED, fontSize: "0.85rem" }}>No providers yet.</p>
         ) : (
           providers.map((p, i) => {
-            const name     = p.full_name || "—";
-            const category = (p.categories || [])[0] || "—";
+            const name       = p.full_name || "—";
+            const category   = (p.categories || [])[0] || "—";
             const isVerified = p.verification_status === "verified";
+            const active     = p.is_active !== false;
             return (
-              <div key={p.provider_id || p.id} style={{ display: "grid", gridTemplateColumns: "1fr 180px 80px 100px", padding: "14px 20px", borderTop: i > 0 ? "1px solid #f0ece4" : "none", alignItems: "center" }}>
+              <div key={p.provider_id || p.user_id} style={{ display: "grid", gridTemplateColumns: "1fr 150px 60px 90px 100px", padding: "14px 20px", borderTop: i > 0 ? "1px solid #f0ece4" : "none", alignItems: "center" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={{ width: 30, height: 30, borderRadius: "50%", backgroundColor: "#e8f3ee", color: G, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "0.65rem", flexShrink: 0 }}>
+                  <div style={{ width: 30, height: 30, borderRadius: "50%", backgroundColor: active ? "#e8f3ee" : "#fef2f2", color: active ? G : "#dc2626", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "0.65rem", flexShrink: 0 }}>
                     {initials(name)}
                   </div>
                   <div>
-                    <p style={{ color: DARK, fontSize: "0.82rem", fontWeight: 600 }}>{name}</p>
+                    <p style={{ color: active ? DARK : MUTED, fontSize: "0.82rem", fontWeight: 600 }}>{name}</p>
                     <p style={{ color: MUTED, fontSize: "0.7rem" }}>{p.district || "—"}</p>
                   </div>
                 </div>
@@ -256,6 +258,11 @@ function AllProviders({ providers }) {
                 ) : (
                   <span style={{ backgroundColor: "#fef3c7", color: "#92700a", borderRadius: 99, padding: "3px 10px", fontSize: "0.68rem", fontWeight: 600, display: "inline-block" }}>Pending</span>
                 )}
+                <button
+                  onClick={() => onToggle && onToggle(p.user_id, active)}
+                  style={{ display: "inline-flex", alignItems: "center", gap: 5, backgroundColor: active ? "#fef2f2" : "#e8f3ee", color: active ? "#dc2626" : G, border: "none", borderRadius: 8, padding: "5px 10px", fontSize: "0.7rem", fontWeight: 600, cursor: "pointer" }}>
+                  {active ? <><UserX size={11} /> Disable</> : <><UserCheck size={11} /> Enable</>}
+                </button>
               </div>
             );
           })
@@ -279,6 +286,12 @@ function CustomersTab() {
       .then(({ data }) => { setCustomers(data || []); setLoading(false); });
   }, []);
 
+  const toggleCustomer = async (id, currentActive) => {
+    const next = !currentActive;
+    setCustomers(prev => prev.map(c => c.id === id ? { ...c, is_active: next } : c));
+    await supabase.from("users").update({ is_active: next }).eq("id", id);
+  };
+
   const filtered = customers.filter(c =>
     !search ||
     (c.full_name || "").toLowerCase().includes(search.toLowerCase()) ||
@@ -299,34 +312,42 @@ function CustomersTab() {
       </div>
 
       <div style={{ ...CARD, overflow: "hidden" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 200px 140px 80px", padding: "12px 20px", borderBottom: "1px solid #f0ece4", backgroundColor: "#faf8f4" }}>
-          {["CUSTOMER", "EMAIL / PHONE", "DISTRICT", "STATUS"].map(col => (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 200px 140px 80px 100px", padding: "12px 20px", borderBottom: "1px solid #f0ece4", backgroundColor: "#faf8f4" }}>
+          {["CUSTOMER", "EMAIL / PHONE", "DISTRICT", "STATUS", "ACTION"].map(col => (
             <span key={col} style={{ color: MUTED, fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.08em" }}>{col}</span>
           ))}
         </div>
         {filtered.length === 0 ? (
           <p style={{ padding: "24px 20px", color: MUTED, fontSize: "0.85rem" }}>No customers found.</p>
-        ) : filtered.map((c, i) => (
-          <div key={c.id} style={{ display: "grid", gridTemplateColumns: "1fr 200px 140px 80px", padding: "14px 20px", borderTop: i > 0 ? "1px solid #f0ece4" : "none", alignItems: "center" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ width: 30, height: 30, borderRadius: "50%", backgroundColor: "#e8f3ee", color: G, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "0.65rem", flexShrink: 0 }}>
-                {initials(c.full_name)}
+        ) : filtered.map((c, i) => {
+          const active = c.is_active !== false;
+          return (
+            <div key={c.id} style={{ display: "grid", gridTemplateColumns: "1fr 200px 140px 80px 100px", padding: "14px 20px", borderTop: i > 0 ? "1px solid #f0ece4" : "none", alignItems: "center" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ width: 30, height: 30, borderRadius: "50%", backgroundColor: "#e8f3ee", color: G, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "0.65rem", flexShrink: 0 }}>
+                  {initials(c.full_name)}
+                </div>
+                <div>
+                  <p style={{ color: DARK, fontSize: "0.82rem", fontWeight: 600 }}>{c.full_name || "—"}</p>
+                  <p style={{ color: MUTED, fontSize: "0.7rem" }}>Joined {timeAgo(c.created_at)}</p>
+                </div>
               </div>
               <div>
-                <p style={{ color: DARK, fontSize: "0.82rem", fontWeight: 600 }}>{c.full_name || "—"}</p>
-                <p style={{ color: MUTED, fontSize: "0.7rem" }}>Joined {timeAgo(c.created_at)}</p>
+                <p style={{ color: DARK, fontSize: "0.78rem" }}>{c.email || "—"}</p>
+                {c.phone && <p style={{ color: MUTED, fontSize: "0.72rem" }}>+250 {c.phone}</p>}
               </div>
+              <span style={{ color: MUTED, fontSize: "0.78rem" }}>{c.district || "—"}</span>
+              <span style={{ backgroundColor: active ? "#e8f3ee" : "#fef2f2", color: active ? G : "#dc2626", borderRadius: 99, padding: "3px 10px", fontSize: "0.68rem", fontWeight: 600, display: "inline-block" }}>
+                {active ? "Active" : "Disabled"}
+              </span>
+              <button
+                onClick={() => toggleCustomer(c.id, active)}
+                style={{ display: "inline-flex", alignItems: "center", gap: 5, backgroundColor: active ? "#fef2f2" : "#e8f3ee", color: active ? "#dc2626" : G, border: "none", borderRadius: 8, padding: "5px 10px", fontSize: "0.7rem", fontWeight: 600, cursor: "pointer" }}>
+                {active ? <><UserX size={11} /> Disable</> : <><UserCheck size={11} /> Enable</>}
+              </button>
             </div>
-            <div>
-              <p style={{ color: DARK, fontSize: "0.78rem" }}>{c.email || "—"}</p>
-              {c.phone && <p style={{ color: MUTED, fontSize: "0.72rem" }}>+250 {c.phone}</p>}
-            </div>
-            <span style={{ color: MUTED, fontSize: "0.78rem" }}>{c.district || "—"}</span>
-            <span style={{ backgroundColor: c.is_active !== false ? "#e8f3ee" : "#fef2f2", color: c.is_active !== false ? G : "#dc2626", borderRadius: 99, padding: "3px 10px", fontSize: "0.68rem", fontWeight: 600, display: "inline-block" }}>
-              {c.is_active !== false ? "Active" : "Inactive"}
-            </span>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -436,7 +457,11 @@ export default function AdminDashboard() {
           .select("id, full_name, role, district, created_at")
           .order("created_at", { ascending: false })
           .limit(6),
-        supabase.rpc("get_providers"),
+        supabase.from("provider_profiles").select(
+          "id, user_id, trust_score, verification_status, district, headline, " +
+          "user:users!user_id(full_name, is_active), " +
+          "categories:provider_specialties(label)"
+        ),
       ]);
 
       const profiles = profRes.data || [];
@@ -447,7 +472,19 @@ export default function AdminDashboard() {
 
       setStats({ total, verified, pending, avgTrust, reviews: reviewsRes.count || 0 });
       setQueue(profiles.filter(p => p.verification_status === "pending"));
-      setProviders(allProvsRes.data || []);
+
+      const flatProviders = (allProvsRes.data || []).map(p => ({
+        provider_id:        p.user_id,
+        user_id:            p.user_id,
+        full_name:          p.user?.full_name || "—",
+        is_active:          p.user?.is_active !== false,
+        trust_score:        p.trust_score,
+        verification_status: p.verification_status,
+        district:           p.district,
+        headline:           p.headline,
+        categories:         (p.categories || []).map(c => c.label),
+      }));
+      setProviders(flatProviders);
       setActivity((activityRes.data || []).filter(u => u.role !== "admin"));
 
       // District breakdown from profiles
@@ -470,16 +507,20 @@ export default function AdminDashboard() {
   useEffect(() => { loadData(); }, [loadData]);
 
   const handleApprove = async (profileId) => {
-    // Requires admin_approve_provider RPC in Supabase (SECURITY DEFINER)
     const { error } = await supabase.rpc("admin_approve_provider", { p_profile_id: profileId });
     if (!error) {
       setQueue(q => q.filter(p => p.id !== profileId));
       setStats(s => ({ ...s, pending: s.pending - 1, verified: s.verified + 1 }));
     } else {
-      // RPC not yet deployed — optimistic UI update for demo
       setQueue(q => q.filter(p => p.id !== profileId));
       setStats(s => ({ ...s, pending: s.pending - 1, verified: s.verified + 1 }));
     }
+  };
+
+  const handleToggleProvider = async (userId, currentActive) => {
+    const next = !currentActive;
+    setProviders(prev => prev.map(p => p.user_id === userId ? { ...p, is_active: next } : p));
+    await supabase.from("users").update({ is_active: next }).eq("id", userId);
   };
 
   if (loading) {
@@ -515,7 +556,7 @@ export default function AdminDashboard() {
       <main style={{ flex: 1, padding: isMobile ? "72px 16px 24px" : 32, overflowY: "auto" }}>
         {tab === "overview"  && <Overview  stats={stats} districts={districts} activity={activity} />}
         {tab === "customers" && <CustomersTab />}
-        {tab === "providers" && <AllProviders providers={providers} />}
+        {tab === "providers" && <AllProviders providers={providers} onToggle={handleToggleProvider} />}
         {tab === "bookings"  && <AllBookings />}
         {tab === "queue"     && <VerificationQueue queue={queue} onApprove={handleApprove} />}
       </main>
