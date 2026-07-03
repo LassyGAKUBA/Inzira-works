@@ -6,7 +6,7 @@ import { supabase } from "../../lib/supabase";
 import {
   Calendar, Star, X, Loader2, CheckCircle, Clock, LogOut,
   User, LayoutDashboard, BookOpen, History as HistoryIcon,
-  MessageCircle, Shield, ChevronRight, Edit2, Save, Menu,
+  MessageCircle, ChevronRight, Edit2, Save, Menu,
 } from "lucide-react";
 
 const G     = "#0E5C46";
@@ -264,8 +264,6 @@ function MyBookings({ bookings }) {
           const prov = b.provider || {};
           const provName = prov.full_name || "Provider";
           const phone = prov.phone || null;
-          const profile = Array.isArray(prov.provider_profiles) ? prov.provider_profiles[0] : prov.provider_profiles;
-          const trust = Math.round(profile?.trust_score ?? 0);
 
           return (
             <div key={b.id} style={{ ...CARD, padding: 20 }}>
@@ -275,20 +273,18 @@ function MyBookings({ bookings }) {
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
-                    <div>
-                      <p style={{ color: DARK, fontWeight: 700, fontSize: "0.9rem" }}>{provName}</p>
-                      {trust > 0 && (
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4, backgroundColor: DARK, color: GOLD, borderRadius: 99, padding: "2px 8px", fontSize: "0.65rem", fontWeight: 700 }}>
-                          <Shield size={9} /> {trust}
-                        </span>
-                      )}
-                    </div>
+                    <p style={{ color: DARK, fontWeight: 700, fontSize: "0.9rem" }}>{provName}</p>
                     <StatusBadge status={b.status} />
                   </div>
                   <p style={{ color: DARK, fontWeight: 600, fontSize: "0.875rem", marginTop: 6 }}>{b.title}</p>
                   <p style={{ color: MUTED, fontSize: "0.75rem", marginTop: 4, display: "flex", alignItems: "center", gap: 6 }}>
                     <Calendar size={11} /> {formatDate(b.scheduled_date)}
                   </p>
+                  {b.notes && (
+                    <p style={{ color: MUTED, fontSize: "0.78rem", marginTop: 6, backgroundColor: "#f9f7f3", borderRadius: 6, padding: "6px 10px", borderLeft: `3px solid #d4cfc5` }}>
+                      {b.notes}
+                    </p>
+                  )}
                   <div style={{ display: "flex", gap: 8, marginTop: 14, flexWrap: "wrap" }}>
                     <Link to={`/providers/${b.provider_id}`}
                       style={{ border: `1px solid #d4cfc5`, borderRadius: 8, padding: "7px 14px", fontFamily: SANS, fontWeight: 500, fontSize: "0.78rem", color: DARK, textDecoration: "none" }}>
@@ -549,10 +545,7 @@ export default function CustomerDashboard() {
   const [loading,   setLoading]   = useState(true);
   const [reviewing, setReviewing] = useState(null);
 
-  const BOOKING_FIELDS = `
-    id, title, status, scheduled_date, created_at, provider_id,
-    provider:users!provider_id(full_name, phone, provider_profiles(trust_score))
-  `;
+  const BOOKING_FIELDS = "id, title, status, scheduled_date, created_at, provider_id, notes, provider:users!provider_id(full_name, phone)";
 
   const loadData = useCallback(async () => {
     if (!user) return;
@@ -571,6 +564,9 @@ export default function CustomerDashboard() {
           .eq("status", "completed")
           .order("updated_at", { ascending: false }),
       ]);
+
+      if (upRes.error)   console.error("[CustomerDash] upRes error:",   upRes.error);
+      if (compRes.error) console.error("[CustomerDash] compRes error:", compRes.error);
 
       const all = allRes.data || [];
       setStats({
