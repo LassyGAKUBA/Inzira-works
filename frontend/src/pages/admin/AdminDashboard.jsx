@@ -210,7 +210,7 @@ function VerificationQueue({ queue, onApprove }) {
 }
 
 // ── All providers tab ─────────────────────────────────────────────────────────
-function AllProviders({ providers, onToggle }) {
+function AllProviders({ providers, onToggle, onVerify }) {
   const verified = providers.filter((p) => p.verification_status === "verified").length;
 
   return (
@@ -223,8 +223,8 @@ function AllProviders({ providers, onToggle }) {
       </div>
 
       <div style={{ ...CARD, overflow: "hidden" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 150px 60px 90px 100px", padding: "12px 20px", borderBottom: "1px solid #f0ece4", backgroundColor: "#faf8f4" }}>
-          {["PROVIDER", "CATEGORY", "TRUST", "VERIFIED", "ACTION"].map((col) => (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 120px 55px 100px 100px", padding: "12px 20px", borderBottom: "1px solid #f0ece4", backgroundColor: "#faf8f4" }}>
+          {["PROVIDER", "CATEGORY", "TRUST", "VERIFY", "ACTIVE"].map((col) => (
             <span key={col} style={{ color: MUTED, fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.08em" }}>{col}</span>
           ))}
         </div>
@@ -238,7 +238,7 @@ function AllProviders({ providers, onToggle }) {
             const isVerified = p.verification_status === "verified";
             const active     = p.is_active !== false;
             return (
-              <div key={p.provider_id || p.user_id} style={{ display: "grid", gridTemplateColumns: "1fr 150px 60px 90px 100px", padding: "14px 20px", borderTop: i > 0 ? "1px solid #f0ece4" : "none", alignItems: "center" }}>
+              <div key={p.provider_id || p.user_id} style={{ display: "grid", gridTemplateColumns: "1fr 120px 55px 100px 100px", padding: "14px 20px", borderTop: i > 0 ? "1px solid #f0ece4" : "none", alignItems: "center" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <div style={{ width: 30, height: 30, borderRadius: "50%", backgroundColor: active ? "#e8f3ee" : "#fef2f2", color: active ? G : "#dc2626", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "0.65rem", flexShrink: 0 }}>
                     {initials(name)}
@@ -253,11 +253,11 @@ function AllProviders({ providers, onToggle }) {
                   <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: GOLD, display: "inline-block" }} />
                   {Math.round(p.trust_score || 0)}
                 </span>
-                {isVerified ? (
-                  <span style={{ backgroundColor: "#e8f3ee", color: G, borderRadius: 99, padding: "3px 10px", fontSize: "0.68rem", fontWeight: 600, display: "inline-block" }}>Verified</span>
-                ) : (
-                  <span style={{ backgroundColor: "#fef3c7", color: "#92700a", borderRadius: 99, padding: "3px 10px", fontSize: "0.68rem", fontWeight: 600, display: "inline-block" }}>Pending</span>
-                )}
+                <button
+                  onClick={() => onVerify && onVerify(p.user_id, isVerified)}
+                  style={{ display: "inline-flex", alignItems: "center", gap: 5, backgroundColor: isVerified ? "#e8f3ee" : "#fef3c7", color: isVerified ? G : "#92700a", border: "none", borderRadius: 8, padding: "5px 10px", fontSize: "0.7rem", fontWeight: 600, cursor: "pointer" }}>
+                  <ShieldCheck size={11} /> {isVerified ? "Verified" : "Verify"}
+                </button>
                 <button
                   onClick={() => onToggle && onToggle(p.user_id, active)}
                   style={{ display: "inline-flex", alignItems: "center", gap: 5, backgroundColor: active ? "#fef2f2" : "#e8f3ee", color: active ? "#dc2626" : G, border: "none", borderRadius: 8, padding: "5px 10px", fontSize: "0.7rem", fontWeight: 600, cursor: "pointer" }}>
@@ -523,6 +523,17 @@ export default function AdminDashboard() {
     await supabase.from("users").update({ is_active: next }).eq("id", userId);
   };
 
+  const handleToggleVerification = async (userId, currentlyVerified) => {
+    const next = currentlyVerified ? "pending" : "verified";
+    setProviders(prev => prev.map(p => p.user_id === userId ? { ...p, verification_status: next } : p));
+    await supabase.from("provider_profiles").update({ verification_status: next }).eq("user_id", userId);
+    setStats(s => ({
+      ...s,
+      verified: next === "verified" ? s.verified + 1 : s.verified - 1,
+      pending:  next === "pending"  ? s.pending  + 1 : s.pending  - 1,
+    }));
+  };
+
   if (loading) {
     return (
       <div style={{ display: "flex", minHeight: "100vh", fontFamily: SANS, backgroundColor: CREAM }}>
@@ -556,7 +567,7 @@ export default function AdminDashboard() {
       <main style={{ flex: 1, padding: isMobile ? "72px 16px 24px" : 32, overflowY: "auto" }}>
         {tab === "overview"  && <Overview  stats={stats} districts={districts} activity={activity} />}
         {tab === "customers" && <CustomersTab />}
-        {tab === "providers" && <AllProviders providers={providers} onToggle={handleToggleProvider} />}
+        {tab === "providers" && <AllProviders providers={providers} onToggle={handleToggleProvider} onVerify={handleToggleVerification} />}
         {tab === "bookings"  && <AllBookings />}
         {tab === "queue"     && <VerificationQueue queue={queue} onApprove={handleApprove} />}
       </main>

@@ -280,6 +280,7 @@ function BookingModal({ provider, user, providerPhone, onClose }) {
         title:          form.service,
         scheduled_date: form.date,
         notes:          notesText || null,
+        amount:         selectedService?.price ? Number(selectedService.price) : null,
         status:         "pending",
       });
 

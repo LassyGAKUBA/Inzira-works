@@ -44,6 +44,7 @@ function StatusBadge({ status }) {
     confirmed: { label: "Confirmed",      bg: "#e8f3ee", color: G,         border: G    },
     completed: { label: "Completed",      bg: "#f0ece4", color: MUTED,     border: "#c8c0b0" },
     rejected:  { label: "Declined",       bg: "#fef2f2", color: "#dc2626", border: "#fecaca" },
+    cancelled: { label: "Cancelled",      bg: "#f5f5f5", color: "#9ca3af", border: "#e5e7eb" },
   };
   const m = map[status] || map.pending;
   return (
@@ -235,7 +236,7 @@ function Overview({ stats, upcoming, completed, onTabChange }) {
   );
 }
 
-function MyBookings({ bookings }) {
+function MyBookings({ bookings, onCancel }) {
   if (bookings.length === 0) {
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
@@ -285,7 +286,7 @@ function MyBookings({ bookings }) {
                       {b.notes}
                     </p>
                   )}
-                  <div style={{ display: "flex", gap: 8, marginTop: 14, flexWrap: "wrap" }}>
+                  <div style={{ display: "flex", gap: 8, marginTop: 14, flexWrap: "wrap", alignItems: "center" }}>
                     <Link to={`/providers/${b.provider_id}`}
                       style={{ border: `1px solid #d4cfc5`, borderRadius: 8, padding: "7px 14px", fontFamily: SANS, fontWeight: 500, fontSize: "0.78rem", color: DARK, textDecoration: "none" }}>
                       View profile
@@ -295,6 +296,13 @@ function MyBookings({ bookings }) {
                         onClick={() => openWhatsApp(phone, `Hi ${provName.split(" ")[0]}, I'm following up on my booking for "${b.title}" scheduled on ${formatDate(b.scheduled_date)}.`)}
                         style={{ backgroundColor: "#25D366", color: "white", border: "none", borderRadius: 8, padding: "7px 14px", fontFamily: SANS, fontWeight: 600, fontSize: "0.78rem", cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}>
                         <MessageCircle size={12} /> WhatsApp
+                      </button>
+                    )}
+                    {["pending", "confirmed"].includes(b.status) && onCancel && (
+                      <button
+                        onClick={() => onCancel(b.id)}
+                        style={{ marginLeft: "auto", backgroundColor: "white", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 8, padding: "7px 14px", fontFamily: SANS, fontWeight: 500, fontSize: "0.78rem", cursor: "pointer" }}>
+                        Cancel booking
                       </button>
                     )}
                   </div>
@@ -584,6 +592,11 @@ export default function CustomerDashboard() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
+  const handleCancel = async (bookingId) => {
+    await supabase.from("bookings").update({ status: "cancelled" }).eq("id", bookingId);
+    await loadData();
+  };
+
   if (loading) {
     return (
       <div style={{ display: "flex", minHeight: "100vh", fontFamily: SANS, backgroundColor: CREAM }}>
@@ -616,7 +629,7 @@ export default function CustomerDashboard() {
       <Sidebar tab={tab} setTab={setTab} upcomingCount={upcoming.length} user={user} onLogout={handleLogout} isMobile={isMobile} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <main style={{ flex: 1, padding: isMobile ? "72px 16px 24px" : 32, overflowY: "auto" }}>
         {tab === "overview"  && <Overview stats={stats} upcoming={upcoming} completed={completed} onTabChange={setTab} />}
-        {tab === "bookings"  && <MyBookings bookings={upcoming} />}
+        {tab === "bookings"  && <MyBookings bookings={upcoming} onCancel={handleCancel} />}
         {tab === "history"   && <HistoryTab bookings={completed} onReviewClick={setReviewing} onRefresh={loadData} />}
         {tab === "profile"   && <ProfileTab user={user} />}
       </main>
