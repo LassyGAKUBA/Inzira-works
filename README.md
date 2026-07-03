@@ -1,215 +1,246 @@
-Inzira Works
+# Inzira Works
 
+**A Web-Based Platform for Enhancing Market Access and Professional Visibility of Skilled Women in Kigali City, Rwanda**
 
-A Web-Based platform for Enhacing Market Access and Professional Visibility of Skilled Women in Kigali City, Rwanda
+BSc Capstone Project · African Leadership University, Kigali  
+**Author:** GAKUBA Lassy Orlene  
+**GitHub:** https://github.com/LassyGAKUBA/Inzira-works  
+**Live Demo:** https://inzira-works.vercel.app  
+**Demo Video:** https://drive.google.com/drive/folders/1ZBIf25mPVLGW8tzZXzBKacZYYzgHwckY
 
+---
 
+## 1. Description
 
-BSc Capstone Project · Kigali, Rwanda
-Author: GAKUBA Lassy Orlene
-GitHub Repository: [https://github.com/LassyGAKUBA/Inzira-works]
-Demo video: [https://drive.google.com/drive/folders/1ZBIf25mPVLGW8tzZXzBKacZYYzgHwckY]
-
-
-1. Description
-
-Many skilled women in Kigali do excellent work but lack the digital visibility to reach new customers and prove their credibility. Inzira Works addresses this by giving each provider a professional profile, a portfolio, and a transparent Trust Score, while giving customers a trustworthy way to search, compare, and book services.
+Many skilled women in Kigali do excellent work but lack the digital visibility to reach new customers and prove their credibility. Inzira Works solves this by giving each provider a professional profile, a portfolio, and a transparent **Trust Score**, while giving customers a trustworthy way to search, compare, and book services.
 
 The platform has three user roles:
 
+- **Customer** — searches for providers, views profiles and trust scores, books services, cancels bookings, and leaves reviews.
+- **Service Provider** — creates a profile, lists services, uploads portfolio work, manages bookings (accept/decline/complete), and grows a Trust Score.
+- **Admin** — verifies providers, activates/deactivates accounts, manages the verification queue, and views platform analytics.
 
-Customer — searches for providers, views profiles and trust scores, books services, and leaves reviews.
-Service Provider — creates a profile, uploads portfolio work, manages bookings, and grows a Trust Score.
-Admin — verifies providers, moderates reviews, manages service categories, and views platform analytics.
+---
 
+## 2. Tech Stack
 
-A signature feature is the Trust Score — a transparent, data-driven credibility rating (0–100) calculated from customer ratings (40%), completed jobs (25%), profile completeness (15%), response rate (10%), and verification status (10%).
+| Layer | Technology |
+|---|---|
+| Frontend | React 18, Vite, Tailwind CSS, React Router v6 |
+| Backend & Database | Supabase (PostgreSQL + Auth + Row Level Security) |
+| Serverless Functions | Supabase Edge Functions (Deno) |
+| Email Notifications | Resend API |
+| Deployment | Vercel (frontend) · Supabase Cloud (backend/DB) |
+| Auth | Supabase Auth (email/password, JWT sessions) |
+| i18n | Custom LangContext — English / Kinyarwanda |
 
+---
 
-2. Tech Stack
+## 3. Functional Requirements — Implementation Status
 
-LayerTechnologyFrontendReact.js, Tailwind CSS, React RouterBackendNode.js, Express.jsDatabasePostgreSQL (hosted on Neon)AuthenticationJWT (JSON Web Tokens) + bcrypt password hashingValidationZodAPI StyleRESTDev EnvironmentGitHub Codespaces
+| # | Requirement | Status |
+|---|---|---|
+| FR1 | User registration with role selection (customer / provider) | ✅ Done |
+| FR2 | Login, logout, password reset via email | ✅ Done |
+| FR3 | Provider profiles with bio, portfolio, services, district | ✅ Done |
+| FR4 | Service listings per provider with pricing | ✅ Done |
+| FR5 | Booking workflow (request → confirm → complete) | ✅ Done |
+| FR6 | Review and rating system (1–5 stars, after completion) | ✅ Done |
+| FR7 | Provider directory with search by name, district, category | ✅ Done |
+| FR8 | Trust Score auto-calculation via PostgreSQL triggers | ✅ Done |
+| FR9 | Admin dashboard — analytics, verification queue, user management | ✅ Done |
+| FR10 | Account self-deletion, privacy policy (Rwanda Data Protection Law) | ✅ Done |
 
+**Non-Functional Requirements:**
 
-3. Current Status (Preliminary Version)
+| # | Requirement | Status |
+|---|---|---|
+| NFR1 | Responsive design — works on mobile and desktop | ✅ Done |
+| NFR2 | Row Level Security on all Supabase tables | ✅ Done |
+| NFR3 | Supabase serverless scales automatically | ✅ Done |
+| NFR4 | Bilingual UI — English and Kinyarwanda | ✅ Done |
+| NFR5 | Hosted on Vercel + Supabase Cloud (99.9% uptime SLA) | ✅ Done |
+| NFR6 | Privacy Policy page, account deletion, data minimisation | ✅ Done |
+| NFR7 | Email notifications via Resend API (booking alerts) | ✅ Done |
 
-This is the initial working version for the capstone milestone. What works end-to-end today:
+---
 
+## 4. Key Features
 
-* Responsive public pages: Landing, About, Contact
-* User registration (customer & provider) with role selection
-* Login / logout with JWT authentication
-* Session persistence (stays logged in across refresh)
-*Role-based, protected dashboards (customer vs provider)
-* Live user identity on dashboards (greeting, avatar, profile)
-* PostgreSQL database deployed on Neon with full schema + seed data
+### Trust Score (FR8)
+A transparent 0–100 credibility score calculated automatically by PostgreSQL triggers whenever relevant data changes:
 
+| Component | Weight |
+|---|---|
+| Average customer rating (1–5 stars) | 40% |
+| Completed bookings (50 jobs = 100%) | 30% |
+| Profile completeness (headline, bio, photo, services, district) | 20% |
+| Response rate (% of bookings acted on) | 10% |
 
-Planned for later iterations: live dashboard data (bookings, reviews, stats wired to the database), provider search API, booking workflow, reviews, admin dashboard, and portfolio image uploads.
+### Booking Workflow
+1. Customer finds a provider in the directory
+2. Selects a service, date, time, and optional notes
+3. Provider receives an **email notification** via Resend and sees the request on their dashboard
+4. Provider accepts or declines; customer is notified via status change on their dashboard
+5. Provider marks the job complete; customer can then leave a review
+6. Customer can cancel a pending or confirmed booking at any time
 
+### Email Notifications
+A Supabase Edge Function (`notify-booking`) fires on every new booking INSERT via a Database Webhook. It fetches provider and customer details and sends a styled HTML email to the provider with booking details and a direct link to their dashboard.
 
-4. Project Structure
+### Admin Tools
+- View all customers and providers with real-time stats
+- Activate / deactivate any user account
+- Verify / unverify provider profiles (controls directory visibility)
+- Verification queue for new provider sign-ups
+- Platform-wide analytics: total providers, verified count, average trust score, total reviews
 
+### WhatsApp Integration
+Customers can message providers directly on WhatsApp after booking is confirmed. Providers can also be contacted via WhatsApp from the public profile page.
+
+---
+
+## 5. Project Structure
+
+```
 inzira-works/
-├── frontend/                  # React + Vite + Tailwind
+├── frontend/                        # React + Vite app
 │   └── src/
-│       ├── api/               # API client + auth requests
-│       ├── context/           # AuthContext (login state)
-│       ├── components/shared/  # Navbar, ProtectedRoute, etc.
-│       ├── pages/
-│       │   ├── public/        # Home, About, Contact, Directory
-│       │   ├── auth/          # Login, Signup, RoleSelect
-│       │   ├── customer/      # Customer dashboard
-│       │   └── provider/      # Provider dashboard
-│       └── i18n/              # Language context (EN/RW/SW)
+│       ├── components/shared/       # Navbar, ProtectedRoute, PageTransition
+│       ├── context/                 # AuthContext (Supabase session)
+│       ├── i18n/                    # LangContext, EN/RW translations
+│       ├── lib/                     # Supabase client
+│       └── pages/
+│           ├── public/              # Home, About, Contact, Directory, ProviderProfile, Privacy
+│           ├── auth/                # Login, Signup, RoleSelect, ForgotPassword, ResetPassword
+│           ├── customer/            # CustomerDashboard
+│           ├── provider/            # ProviderDashboard
+│           └── admin/               # AdminDashboard
 │
-└── backend/                   # Node + Express REST API
-    └── src/
-        ├── config/            # env + database pool
-        ├── db/                # schema.sql, seed data, runners
-        ├── routes/            # API route definitions
-        ├── controllers/       # request/response handlers
-        ├── services/          # business logic
-        ├── repositories/      # SQL queries
-        ├── middleware/        # auth, role, validation
-        ├── validators/        # Zod schemas
-        └── utils/             # JWT, password hashing, errors
+└── supabase/
+    ├── functions/
+    │   └── notify-booking/          # Edge Function — email alert on booking
+    ├── trust_score_triggers.sql     # FR8: auto-recalculate trust score on data changes
+    └── delete_account_rpc.sql       # FR10: SECURITY DEFINER RPC for account self-deletion
+```
 
+---
 
-5. Setup & Installation
+## 6. Database Schema
 
-Prerequisites
+All tables live in Supabase PostgreSQL with Row Level Security enabled.
 
-
-Node.js v18+ and npm
-A PostgreSQL database (this project uses a free Neon cloud database)
-
-
-Step 1 — Clone the repository
-
-bashgit clone https://github.com/your-username/inzira-works.git
-cd inzira-works
-
-Step 2 — Backend setup
-
-bashcd backend
-npm install
-cp env.example .env
-
-Open .env and set:
-
-
-DATABASE_URL — your Neon connection string (append ?sslmode=require)
-JWT_SECRET — any long random string
-CLIENT_ORIGIN — your frontend URL (e.g. http://localhost:5173)
-
-
-Then create the tables and load demo data:
-
-bashnpm run db:schema     # creates all tables
-npm run db:seed       # loads demo users, providers, bookings
-npm run dev           # starts API on http://localhost:5000
-
-Verify it's running by visiting http://localhost:5000/api/health — you should see {"status":"ok"}.
-
-Step 3 — Frontend setup
-
-In a new terminal:
-
-bashcd frontend
-npm install
-
-Create a .env file in the frontend/ root:
-
-VITE_API_URL=http://localhost:5000
-
-Then start it:
-
-bashnpm run dev           # starts on http://localhost:5173
-
-Demo accounts (seeded)
-
-All seeded accounts use the password Password123:
-
-EmailRoleclarisse@example.comProvider (Trust Score 94)jean@example.comCustomeradmin@inzira.worksAdmin
-
-
-Note for GitHub Codespaces: the backend (port 5000) and frontend (port 5173) get forwarded URLs ending in .app.github.dev. Set both ports to Public in the PORTS tab, then put the forwarded backend URL in the frontend's VITE_API_URL, and the forwarded frontend URL in the backend's CLIENT_ORIGIN.
-
-
-
-
-6. API Endpoints (current)
-
-MethodEndpointDescriptionAuthGET/api/healthServer health check—POST/api/auth/registerRegister a customer or provider—POST/api/auth/loginLog in, returns JWT—GET/api/auth/meGet the current logged-in userJWT
-
-Planned: /api/providers, /api/bookings, /api/reviews, /api/admin/*.
-
-
-7. Database Schema
-
-The PostgreSQL schema models the full platform domain. Core tables and relationships:
-
-
-users — all accounts (customer / provider / admin)
-provider_profiles — 1:1 with provider users (headline, bio, trust score, verification)
-categories + provider_categories — service categories (many-to-many)
-provider_specialties — skill tags per provider
-services — services a provider offers
-portfolio_items — provider work samples
-bookings — customer ↔ provider bookings (status: pending → confirmed → completed)
-reviews — one review per completed booking (1–5 rating)
-saved_providers — customer bookmarks
-verification_requests — provider verification, reviewed by admin
-
-
+```
 users ──1:1── provider_profiles ──1:M── services
-  │                  │  ├──1:M── portfolio_items
-  │                  │  ├──1:M── provider_specialties
-  │                  │  └──M:M── categories
+  │                  │            ├──1:M── portfolio_items
+  │                  │            └──1:M── provider_specialties
+  │
   ├──1:M── bookings ──1:1── reviews
-  └──1:M── saved_providers
+  └── (auth.users via Supabase Auth trigger)
+```
 
-The full schema lives in backend/src/db/schema.sql.
+**Core tables:**
+
+| Table | Purpose |
+|---|---|
+| `users` | All accounts — customer, provider, admin |
+| `provider_profiles` | 1:1 with provider users — trust score, verification, bio, district |
+| `services` | Services a provider offers, with pricing |
+| `portfolio_items` | Provider work samples (images) |
+| `provider_specialties` | Skill/category tags per provider |
+| `bookings` | Customer ↔ provider bookings with status lifecycle |
+| `reviews` | One review per completed booking (1–5 stars + comment) |
+
+**Booking status lifecycle:**
+`pending` → `confirmed` → `completed`  
+`pending` / `confirmed` → `rejected` (by provider) or `cancelled` (by customer)
+
+---
+
+## 7. Setup & Local Development
+
+### Prerequisites
+- Node.js v18+
+- A Supabase project (free tier works)
+- A Resend account (free tier) for email notifications
+
+### Step 1 — Clone
+
+```bash
+git clone https://github.com/LassyGAKUBA/Inzira-works.git
+cd Inzira-works
+```
+
+### Step 2 — Frontend
+
+```bash
+cd frontend
+npm install
+```
+
+Create `frontend/.env`:
+
+```
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+```bash
+npm run dev        # starts on http://localhost:5173
+```
+
+### Step 3 — Database
+
+In **Supabase Dashboard → SQL Editor**, run in order:
+
+1. `supabase/trust_score_triggers.sql` — deploys Trust Score auto-calculation triggers
+2. `supabase/delete_account_rpc.sql` — deploys the account self-deletion RPC
+
+Then go to **Database → Webhooks** and create a hook:
+- Table: `bookings` · Event: `INSERT` · Type: Supabase Edge Function · Function: `notify-booking`
+
+### Step 4 — Edge Function
+
+Deploy the booking notification function:
+
+```bash
+npx supabase login
+npx supabase link --project-ref YOUR_PROJECT_REF
+npx supabase secrets set RESEND_API_KEY=your_resend_api_key
+npx supabase functions deploy notify-booking
+```
+
+---
+
+## 8. Demo Accounts
+
+| Email | Password | Role |
+|---|---|---|
+| alice@example.com | Password123 | Provider (verified) |
+| diane@example.com | Password123 | Provider (verified) |
+| clarisse@example.com | Password123 | Provider (verified) |
+| admin@inzira.works | Password123 | Admin |
 
 
-8. Deployment Plan
+---
 
-The application is currently developed and demonstrated in GitHub Codespaces. The production deployment plan is as follows:
+## 9. Deployment
 
-Frontend → Vercel
+| Service | Platform | Notes |
+|---|---|---|
+| Frontend | Vercel | Auto-deploys on push to `main`. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in Vercel environment variables. |
+| Database & Auth | Supabase Cloud | Fully managed PostgreSQL with Auth, RLS, and Edge Functions. |
+| Email | Resend | API key stored as a Supabase Edge Function secret. |
 
+Live URL: **https://inzira-works.vercel.app**
 
-Connect the GitHub repo to Vercel and select the frontend/ directory.
-Build command npm run build, output dist/.
-Set the environment variable VITE_API_URL to the deployed backend URL.
-Vercel provides automatic HTTPS, a global CDN, and redeploys on every push.
+---
 
+## 10. Compliance
 
-Backend → Render (Web Service)
+This platform is designed in accordance with the **Rwanda Law No. 058/2021 on the Protection of Personal Data and Privacy**:
 
-
-Create a Render Web Service from the backend/ directory.
-Build command npm install, start command npm start.
-Configure environment variables (DATABASE_URL, JWT_SECRET, CLIENT_ORIGIN = the Vercel URL).
-Render provides HTTPS and health-check-based restarts.
-
-
-Database → Neon (already cloud-hosted)
-
-
-The PostgreSQL database already runs on Neon's serverless platform.
-For production, use a dedicated Neon project/branch, run schema.sql once, and keep credentials only in the backend host's environment variables.
-
-
-CI/CD & configuration
-
-
-git push to the main branch triggers automatic redeploys on both Vercel and Render.
-Secrets are never committed (.env is gitignored); each host stores its own environment variables.
-After deploy: set the backend's CLIENT_ORIGIN to the Vercel domain so CORS allows the frontend.
-
-
-Why this stack
-
-Vercel, Render, and Neon all offer free tiers suitable for a pilot, require no server administration, and provide HTTPS out of the box — letting the project move from pilot to a publicly accessible URL with minimal cost and operational overhead.
+- Users can permanently delete their own account and all associated data at any time (Settings → Danger Zone)
+- A Privacy Policy is published at `/privacy` explaining data collected, retention periods, and user rights
+- No personal data is shared with third parties without consent
+- Passwords are never stored — authentication is delegated to Supabase Auth (bcrypt + JWT)
