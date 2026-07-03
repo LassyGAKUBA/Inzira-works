@@ -40,28 +40,28 @@ The platform has three user roles:
 
 | # | Requirement | Status |
 |---|---|---|
-| FR1 | User registration with role selection (customer / provider) | ✅ Done |
-| FR2 | Login, logout, password reset via email | ✅ Done |
-| FR3 | Provider profiles with bio, portfolio, services, district | ✅ Done |
-| FR4 | Service listings per provider with pricing | ✅ Done |
-| FR5 | Booking workflow (request → confirm → complete) | ✅ Done |
-| FR6 | Review and rating system (1–5 stars, after completion) | ✅ Done |
-| FR7 | Provider directory with search by name, district, category | ✅ Done |
-| FR8 | Trust Score auto-calculation via PostgreSQL triggers | ✅ Done |
-| FR9 | Admin dashboard — analytics, verification queue, user management | ✅ Done |
-| FR10 | Account self-deletion, privacy policy (Rwanda Data Protection Law) | ✅ Done |
+| FR1 | User registration with role selection (customer / provider) | Done |
+| FR2 | Login, logout, password reset via email | Done |
+| FR3 | Provider profiles with bio, portfolio, services, district | Done |
+| FR4 | Service listings per provider with pricing | Done |
+| FR5 | Booking workflow (request → confirm → complete) | Done |
+| FR6 | Review and rating system (1–5 stars, after completion) | Done |
+| FR7 | Provider directory with search by name, district, category | Done |
+| FR8 | Trust Score auto-calculation via PostgreSQL triggers | Done |
+| FR9 | Admin dashboard — analytics, verification queue, user management | Done |
+| FR10 | Account self-deletion, privacy policy (Rwanda Data Protection Law) | Done |
 
 **Non-Functional Requirements:**
 
 | # | Requirement | Status |
 |---|---|---|
-| NFR1 | Responsive design — works on mobile and desktop | ✅ Done |
-| NFR2 | Row Level Security on all Supabase tables | ✅ Done |
-| NFR3 | Supabase serverless scales automatically | ✅ Done |
-| NFR4 | Bilingual UI — English and Kinyarwanda | ✅ Done |
-| NFR5 | Hosted on Vercel + Supabase Cloud (99.9% uptime SLA) | ✅ Done |
-| NFR6 | Privacy Policy page, account deletion, data minimisation | ✅ Done |
-| NFR7 | Email notifications via Resend API (booking alerts) | ✅ Done |
+| NFR1 | Responsive design — works on mobile and desktop | Done |
+| NFR2 | Row Level Security on all Supabase tables | Done |
+| NFR3 | Supabase serverless scales automatically | Done |
+| NFR4 | Bilingual UI — English and Kinyarwanda | Done |
+| NFR5 | Hosted on Vercel + Supabase Cloud (99.9% uptime SLA) | Done |
+| NFR6 | Privacy Policy page, account deletion, data minimisation | Done |
+| NFR7 | Email notifications via Resend API (booking alerts) | Done |
 
 ---
 
