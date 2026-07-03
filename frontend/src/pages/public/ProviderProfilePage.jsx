@@ -253,7 +253,7 @@ function BookingModal({ provider, user, providerPhone, onClose }) {
 
   const validate = () => {
     const errs = {};
-    if (!form.service) errs.service = "Please select a service.";
+    if (!form.service.trim()) errs.service = provider.services.length > 0 ? "Please select a service." : "Please describe the service you need.";
     if (!form.date)    errs.date    = "Please select a date.";
     if (!form.time)    errs.time    = "Please select a time.";
     return errs;
@@ -397,17 +397,27 @@ function BookingModal({ provider, user, providerPhone, onClose }) {
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-medium text-slate-700">Service</label>
-                <select
-                  value={form.service}
-                  onChange={set("service")}
-                  className={`w-full px-4 py-3 rounded-xl border text-sm text-slate-800 outline-none transition-all bg-white
-                    ${errors.service ? "border-red-400" : "border-slate-200 focus:border-green-700"}`}
-                >
-                  {provider.services.length === 0 && <option value="">No services listed</option>}
-                  {provider.services.map((s) => (
-                    <option key={s.name} value={s.name}>{s.name} — {s.price}</option>
-                  ))}
-                </select>
+                {provider.services.length > 0 ? (
+                  <select
+                    value={form.service}
+                    onChange={set("service")}
+                    className={`w-full px-4 py-3 rounded-xl border text-sm text-slate-800 outline-none transition-all bg-white
+                      ${errors.service ? "border-red-400" : "border-slate-200 focus:border-green-700"}`}
+                  >
+                    {provider.services.map((s) => (
+                      <option key={s.name} value={s.name}>{s.name} — {s.price}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    value={form.service}
+                    onChange={set("service")}
+                    placeholder="Describe the service you need…"
+                    className={`w-full px-4 py-3 rounded-xl border text-sm text-slate-800 outline-none transition-all bg-white
+                      ${errors.service ? "border-red-400" : "border-slate-200 focus:border-green-700"}`}
+                  />
+                )}
                 {errors.service && <p className="text-xs text-red-500">{errors.service}</p>}
               </div>
 
