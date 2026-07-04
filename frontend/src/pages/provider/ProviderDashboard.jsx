@@ -776,12 +776,62 @@ function ReviewsTab({ userId }) {
   );
 }
 
+function PortfolioCard({ item, onRemove, onCaptionSave }) {
+  const [editing,  setEditing]  = useState(false);
+  const [caption,  setCaption]  = useState(item.caption || "");
+  const [imgFailed, setImgFailed] = useState(false);
+
+  const handleBlur = () => {
+    setEditing(false);
+    if (caption !== item.caption) onCaptionSave(item.id, caption);
+  };
+
+  return (
+    <div style={{ backgroundColor: "white", borderRadius: 14, border: "1px solid #e8e2d8", overflow: "hidden" }}>
+      {imgFailed || !item.image_url ? (
+        <div style={{ width: "100%", aspectRatio: "1", backgroundColor: "#f5f0e8", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <ImageIcon size={28} style={{ color: "#d4cfc5" }} />
+        </div>
+      ) : (
+        <img src={item.image_url} alt={item.caption || "Portfolio"} onError={() => setImgFailed(true)}
+          style={{ width: "100%", aspectRatio: "1", objectFit: "cover", display: "block" }} />
+      )}
+      <div style={{ padding: "10px 12px" }}>
+        {editing ? (
+          <input
+            autoFocus
+            value={caption}
+            onChange={e => setCaption(e.target.value)}
+            onBlur={handleBlur}
+            onKeyDown={e => e.key === "Enter" && handleBlur()}
+            style={{ width: "100%", padding: "4px 8px", border: "1px solid #e8e2d8", borderRadius: 6, fontFamily: SANS, fontSize: "0.78rem", color: DARK, outline: "none", boxSizing: "border-box" }}
+          />
+        ) : (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+            <p onClick={() => setEditing(true)} title="Click to edit caption"
+              style={{ color: caption ? DARK : MUTED, fontSize: "0.78rem", flex: 1, cursor: "text", fontStyle: caption ? "normal" : "italic" }}>
+              {caption || "Add caption…"}
+            </p>
+            <button onClick={() => onRemove(item.id)}
+              style={{ background: "none", border: "1px solid #e8e2d8", borderRadius: 6, padding: "3px 8px", color: "#e05c5c", fontFamily: SANS, fontSize: "0.7rem", cursor: "pointer", flexShrink: 0 }}>
+              Remove
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── Portfolio tab ─────────────────────────────────────────────────────────────
 function PortfolioTab({ profile, userId }) {
   const [items,     setItems]     = useState([]);
   const [loading,   setLoading]   = useState(true);
   const [uploading, setUploading] = useState(false);
   const [err,       setErr]       = useState("");
+  // pending: { file, previewUrl } waiting for caption before upload
+  const [pending,   setPending]   = useState(null);
+  const [pendingCaption, setPendingCaption] = useState("");
   const fileRef = useRef(null);
 
   useEffect(() => {
@@ -793,23 +843,40 @@ function PortfolioTab({ profile, userId }) {
       .then(({ data }) => { setItems(data || []); setLoading(false); });
   }, [profile?.id]);
 
-  const handleUpload = async (e) => {
+  const handleFileSelect = (e) => {
     const file = e.target.files?.[0];
-    if (!file || !profile?.id || !userId) return;
+    if (!file) return;
+    setPending({ file, previewUrl: URL.createObjectURL(file) });
+    setPendingCaption("");
+    if (fileRef.current) fileRef.current.value = "";
+  };
+
+  const handleUpload = async () => {
+    if (!pending?.file || !profile?.id || !userId) return;
     setUploading(true); setErr("");
     try {
-      const ext  = file.name.split(".").pop();
+      const ext  = pending.file.name.split(".").pop();
       const path = `${userId}/portfolio/${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: false });
-      if (upErr) throw upErr;
+      const { error: upErr } = await supabase.storage.from("avatars").upload(path, pending.file, { upsert: false });
+      if (upErr) throw new Error(upErr.message);
       const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
       const { data: inserted, error: insErr } = await supabase.from("portfolio_items")
-        .insert({ provider_id: profile.id, image_url: urlData.publicUrl, caption: "" })
+        .insert({ provider_id: profile.id, image_url: urlData.publicUrl, caption: pendingCaption.trim() })
         .select("id, image_url, caption").single();
-      if (insErr) throw insErr;
+      if (insErr) throw new Error(insErr.message);
       setItems(prev => [...prev, inserted]);
-    } catch { setErr("Upload failed. Check that the storage bucket exists."); }
-    finally { setUploading(false); if (fileRef.current) fileRef.current.value = ""; }
+      setPending(null);
+      setPendingCaption("");
+    } catch (e) {
+      setErr(e.message || "Upload failed.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleCaptionSave = async (id, caption) => {
+    await supabase.from("portfolio_items").update({ caption }).eq("id", id);
+    setItems(prev => prev.map(i => i.id === id ? { ...i, caption } : i));
   };
 
   const handleRemove = async (id) => {
@@ -827,17 +894,43 @@ function PortfolioTab({ profile, userId }) {
           <p style={{ color: MUTED, fontSize: "0.875rem", marginTop: 4 }}>Show your best work. Profiles with photos get 3× more bookings.</p>
         </div>
         <div>
-          <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleUpload} />
-          <button onClick={() => fileRef.current?.click()} disabled={uploading}
-            style={{ backgroundColor: G, color: "white", border: "none", borderRadius: 10, padding: "10px 20px", fontFamily: SANS, fontWeight: 600, fontSize: "0.85rem", cursor: uploading ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: 8 }}>
-            {uploading ? <><Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} /> Uploading…</> : <>+ Add photo</>}
+          <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleFileSelect} />
+          <button onClick={() => fileRef.current?.click()} disabled={uploading || !!pending}
+            style={{ backgroundColor: G, color: "white", border: "none", borderRadius: 10, padding: "10px 20px", fontFamily: SANS, fontWeight: 600, fontSize: "0.85rem", cursor: (uploading || !!pending) ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: 8, opacity: !!pending ? 0.5 : 1 }}>
+            + Add photo
           </button>
         </div>
       </div>
 
       {err && <p style={{ color: "#dc2626", backgroundColor: "#fef2f2", padding: "10px 14px", borderRadius: 10, fontSize: "0.85rem" }}>{err}</p>}
 
-      {items.length === 0 ? (
+      {/* Caption step before upload */}
+      {pending && (
+        <div style={{ ...CARD, padding: 20, display: "flex", gap: 16, alignItems: "flex-start" }}>
+          <img src={pending.previewUrl} alt="preview" style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 10, flexShrink: 0 }} />
+          <div style={{ flex: 1 }}>
+            <p style={{ color: DARK, fontWeight: 600, fontSize: "0.875rem", marginBottom: 8 }}>Add a caption for this photo</p>
+            <input
+              value={pendingCaption}
+              onChange={e => setPendingCaption(e.target.value)}
+              placeholder="e.g. Wedding dress collection"
+              style={{ width: "100%", padding: "8px 12px", border: "1px solid #e8e2d8", borderRadius: 8, fontFamily: SANS, fontSize: "0.875rem", color: DARK, outline: "none", boxSizing: "border-box", marginBottom: 12 }}
+            />
+            <div style={{ display: "flex", gap: 8 }}>
+              <button onClick={handleUpload} disabled={uploading}
+                style={{ backgroundColor: G, color: "white", border: "none", borderRadius: 8, padding: "8px 20px", fontFamily: SANS, fontWeight: 600, fontSize: "0.82rem", cursor: uploading ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+                {uploading ? <><Loader2 size={13} style={{ animation: "spin 1s linear infinite" }} /> Uploading…</> : "Upload"}
+              </button>
+              <button onClick={() => { setPending(null); setPendingCaption(""); }}
+                style={{ background: "none", border: "1px solid #e8e2d8", borderRadius: 8, padding: "8px 16px", fontFamily: SANS, fontSize: "0.82rem", color: MUTED, cursor: "pointer" }}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {items.length === 0 && !pending ? (
         <div style={{ ...CARD, padding: 48, textAlign: "center" }}>
           <ImageIcon size={36} style={{ color: "#d4cfc5", margin: "0 auto 12px" }} />
           <p style={{ color: MUTED, fontSize: "0.9rem", marginBottom: 16 }}>No portfolio photos yet.</p>
@@ -846,22 +939,13 @@ function PortfolioTab({ profile, userId }) {
             Upload your first photo
           </button>
         </div>
-      ) : (
+      ) : items.length > 0 ? (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
           {items.map(item => (
-            <div key={item.id} style={{ ...CARD, overflow: "hidden", position: "relative" }}>
-              <img src={item.image_url} alt={item.caption || "Portfolio"} style={{ width: "100%", aspectRatio: "1", objectFit: "cover", display: "block" }} />
-              <div style={{ padding: "10px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <p style={{ color: MUTED, fontSize: "0.75rem", flex: 1 }}>{item.caption || "No caption"}</p>
-                <button onClick={() => handleRemove(item.id)}
-                  style={{ background: "none", border: "1px solid #e8e2d8", borderRadius: 6, padding: "3px 8px", color: "#e05c5c", fontFamily: SANS, fontSize: "0.7rem", cursor: "pointer" }}>
-                  Remove
-                </button>
-              </div>
-            </div>
+            <PortfolioCard key={item.id} item={item} onRemove={handleRemove} onCaptionSave={handleCaptionSave} />
           ))}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
