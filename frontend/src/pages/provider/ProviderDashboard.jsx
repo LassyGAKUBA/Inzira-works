@@ -48,7 +48,7 @@ function InitialsCircle({ name = "", size = 36 }) {
 }
 
 // ── Sidebar ───────────────────────────────────────────────────────────────────
-function Sidebar({ tab, setTab, user, profile, pendingCount, onLogout, isMobile, isOpen, onClose }) {
+function Sidebar({ tab, setTab, user, profile, avatarUrl, pendingCount, onLogout, isMobile, isOpen, onClose }) {
   const { t } = useLang();
   const firstName = (user?.full_name || "Provider").split(" ")[0];
   const navItems = [
@@ -90,8 +90,10 @@ function Sidebar({ tab, setTab, user, profile, pendingCount, onLogout, isMobile,
 
       <div style={{ padding: 16, borderTop: "1px solid rgba(255,255,255,0.1)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", backgroundColor: "rgba(255,255,255,0.08)", borderRadius: 10, marginBottom: 12 }}>
-          <div style={{ width: 36, height: 36, borderRadius: "50%", border: "1.5px dashed rgba(255,255,255,0.4)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <ImageIcon size={14} style={{ color: "rgba(255,255,255,0.4)" }} />
+          <div style={{ width: 36, height: 36, borderRadius: "50%", overflow: "hidden", border: avatarUrl ? `1.5px solid ${G}` : "1.5px dashed rgba(255,255,255,0.4)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            {avatarUrl
+              ? <img src={avatarUrl} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              : <ImageIcon size={14} style={{ color: "rgba(255,255,255,0.4)" }} />}
           </div>
           <div>
             <p style={{ color: "white", fontSize: "0.8rem", fontWeight: 600 }}>{firstName}</p>
@@ -269,7 +271,7 @@ function Bookings({ pending, confirmed, onAccept, onDecline, onComplete }) {
 }
 
 // ── My profile tab ────────────────────────────────────────────────────────────
-function MyProfile({ user, profile, onSave }) {
+function MyProfile({ user, profile, onSave, onAvatarChange }) {
   const { logout } = useAuth();
   const navigate   = useNavigate();
   const [form, setForm] = useState({
@@ -343,6 +345,7 @@ function MyProfile({ user, profile, onSave }) {
       const publicUrl = urlData.publicUrl;
       await supabase.from("users").update({ avatar_url: publicUrl }).eq("id", user.id);
       setAvatarUrl(publicUrl);
+      if (onAvatarChange) onAvatarChange(publicUrl);
     } catch {
       setPhotoErr("Upload failed. Check bucket permissions.");
     } finally {
@@ -881,6 +884,13 @@ export default function ProviderDashboard() {
   const [pending,   setPending]   = useState([]);
   const [confirmed, setConfirmed] = useState([]);
   const [loading,   setLoading]   = useState(true);
+  const [avatarUrl, setAvatarUrl] = useState(null);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase.from("users").select("avatar_url").eq("id", user.id).single()
+      .then(({ data }) => { if (data?.avatar_url) setAvatarUrl(data.avatar_url); });
+  }, [user?.id]);
 
   const loadData = useCallback(async () => {
     if (!user) return;
@@ -985,14 +995,14 @@ export default function ProviderDashboard() {
         <div onClick={() => setSidebarOpen(false)} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", zIndex: 150 }} />
       )}
 
-      <Sidebar tab={tab} setTab={setTab} user={user} profile={profile} pendingCount={pending.length} onLogout={handleLogout} isMobile={isMobile} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Sidebar tab={tab} setTab={setTab} user={user} profile={profile} avatarUrl={avatarUrl} pendingCount={pending.length} onLogout={handleLogout} isMobile={isMobile} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <main style={{ flex: 1, padding: isMobile ? "72px 16px 24px" : 32, overflowY: "auto" }}>
         {tab === "overview"  && <Overview user={user} profile={profile} pending={pending} onAccept={handleAccept} onDecline={handleDecline} statsLoading={loading} />}
         {tab === "bookings"  && <Bookings pending={pending} confirmed={confirmed} onAccept={handleAccept} onDecline={handleDecline} onComplete={handleComplete} />}
         {tab === "history"   && <HistoryTab userId={user?.id} />}
         {tab === "reviews"   && <ReviewsTab userId={user?.id} />}
         {tab === "portfolio" && <PortfolioTab profile={profile} userId={user?.id} />}
-        {tab === "profile"   && <MyProfile user={user} profile={profile} onSave={setProfile} />}
+        {tab === "profile"   && <MyProfile user={user} profile={profile} onSave={setProfile} onAvatarChange={setAvatarUrl} />}
       </main>
     </div>
   );

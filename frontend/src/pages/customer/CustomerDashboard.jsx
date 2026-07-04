@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useLang } from "../../i18n/LangContext";
@@ -6,7 +6,7 @@ import { supabase } from "../../lib/supabase";
 import {
   Calendar, Star, X, Loader2, CheckCircle, Clock, LogOut,
   User, LayoutDashboard, BookOpen, History as HistoryIcon,
-  MessageCircle, ChevronRight, Edit2, Save, Menu,
+  MessageCircle, ChevronRight, Edit2, Save, Menu, Camera,
 } from "lucide-react";
 
 const G     = "#0E5C46";
@@ -107,7 +107,7 @@ function ReviewModal({ booking, onClose, onSubmitted }) {
   );
 }
 
-function Sidebar({ tab, setTab, upcomingCount, user, onLogout, isMobile, isOpen, onClose }) {
+function Sidebar({ tab, setTab, upcomingCount, user, avatarUrl, onLogout, isMobile, isOpen, onClose }) {
   const { t } = useLang();
   const firstName = (user?.full_name || "there").split(" ")[0];
   const navItems = [
@@ -129,8 +129,10 @@ function Sidebar({ tab, setTab, upcomingCount, user, onLogout, isMobile, isOpen,
       </div>
 
       <div style={{ padding: "20px 20px 8px", borderBottom: "1px solid rgba(255,255,255,0.1)", marginTop: 16 }}>
-        <div style={{ width: 38, height: 38, borderRadius: "50%", backgroundColor: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
-          <User size={18} style={{ color: "white" }} />
+        <div style={{ width: 38, height: 38, borderRadius: "50%", backgroundColor: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 8, overflow: "hidden", flexShrink: 0 }}>
+          {avatarUrl
+            ? <img src={avatarUrl} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            : <User size={18} style={{ color: "white" }} />}
         </div>
         <p style={{ color: "white", fontSize: "0.85rem", fontWeight: 600 }}>{firstName}</p>
         <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.7rem" }}>{t("dash_nav_customer")}</p>
@@ -401,13 +403,37 @@ function HistoryTab({ bookings, onReviewClick, onRefresh }) {
   );
 }
 
-function ProfileTab({ user }) {
+function ProfileTab({ user, avatarUrl, onAvatarChange }) {
   const { logout }   = useAuth();
   const navigate     = useNavigate();
   const [form, setForm] = useState({ full_name: "", phone: "", district: "" });
   const [loading, setLoading] = useState(true);
   const [saving,  setSaving]  = useState(false);
   const [msg,     setMsg]     = useState("");
+
+  const avatarFileRef      = useRef(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarErr,       setAvatarErr]       = useState("");
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !user?.id) return;
+    setAvatarUploading(true); setAvatarErr("");
+    try {
+      const ext  = file.name.split(".").pop();
+      const path = `${user.id}/avatar.${ext}`;
+      const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+      if (upErr) throw upErr;
+      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+      const publicUrl = urlData.publicUrl;
+      await supabase.from("users").update({ avatar_url: publicUrl }).eq("id", user.id);
+      onAvatarChange(publicUrl);
+    } catch {
+      setAvatarErr("Upload failed. Make sure the avatars bucket exists in Supabase Storage.");
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
 
   // Delete account state
   const [showDelete,   setShowDelete]   = useState(false);
@@ -458,6 +484,23 @@ function ProfileTab({ user }) {
       <div>
         <h1 style={{ fontFamily: SERIF, color: DARK, fontSize: "1.75rem", fontWeight: 700, letterSpacing: "-0.02em" }}>My Profile</h1>
         <p style={{ color: MUTED, fontSize: "0.875rem", marginTop: 4 }}>Update your personal information.</p>
+      </div>
+
+      <div style={{ ...CARD, padding: 24, maxWidth: 520, display: "flex", alignItems: "center", gap: 20 }}>
+        <input ref={avatarFileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleAvatarUpload} />
+        <div onClick={() => avatarFileRef.current?.click()}
+          style={{ width: 72, height: 72, borderRadius: "50%", overflow: "hidden", backgroundColor: "#e8f3ee", border: avatarUrl ? `2px solid ${G}` : "2px dashed #c8c0b0", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, position: "relative" }}>
+          {avatarUploading
+            ? <Loader2 size={20} style={{ color: G, animation: "spin 1s linear infinite" }} />
+            : avatarUrl
+              ? <img src={avatarUrl} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              : <Camera size={22} style={{ color: MUTED }} />}
+        </div>
+        <div>
+          <p style={{ color: DARK, fontWeight: 600, fontSize: "0.875rem" }}>Profile picture</p>
+          <p style={{ color: MUTED, fontSize: "0.75rem", marginTop: 3 }}>Click the circle to upload a photo</p>
+          {avatarErr && <p style={{ color: "#e05c5c", fontSize: "0.72rem", marginTop: 4 }}>{avatarErr}</p>}
+        </div>
       </div>
 
       <div style={{ ...CARD, padding: 28, maxWidth: 520 }}>
@@ -563,6 +606,13 @@ export default function CustomerDashboard() {
   const [completed, setCompleted] = useState([]);
   const [loading,   setLoading]   = useState(true);
   const [reviewing, setReviewing] = useState(null);
+  const [avatarUrl, setAvatarUrl] = useState(null);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase.from("users").select("avatar_url").eq("id", user.id).single()
+      .then(({ data }) => { if (data?.avatar_url) setAvatarUrl(data.avatar_url); });
+  }, [user?.id]);
 
   const BOOKING_FIELDS = "id, title, status, scheduled_date, created_at, provider_id, notes, provider:users!provider_id(full_name, phone)";
 
@@ -651,12 +701,12 @@ export default function CustomerDashboard() {
         <div onClick={() => setSidebarOpen(false)} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", zIndex: 150 }} />
       )}
 
-      <Sidebar tab={tab} setTab={setTab} upcomingCount={upcoming.length} user={user} onLogout={handleLogout} isMobile={isMobile} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Sidebar tab={tab} setTab={setTab} upcomingCount={upcoming.length} user={user} avatarUrl={avatarUrl} onLogout={handleLogout} isMobile={isMobile} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <main style={{ flex: 1, padding: isMobile ? "72px 16px 24px" : 32, overflowY: "auto" }}>
         {tab === "overview"  && <Overview stats={stats} upcoming={upcoming} completed={completed} onTabChange={setTab} onReviewClick={setReviewing} />}
         {tab === "bookings"  && <MyBookings bookings={upcoming} onCancel={handleCancel} />}
         {tab === "history"   && <HistoryTab bookings={completed} onReviewClick={setReviewing} onRefresh={loadData} />}
-        {tab === "profile"   && <ProfileTab user={user} />}
+        {tab === "profile"   && <ProfileTab user={user} avatarUrl={avatarUrl} onAvatarChange={setAvatarUrl} />}
       </main>
 
       {reviewing && (
