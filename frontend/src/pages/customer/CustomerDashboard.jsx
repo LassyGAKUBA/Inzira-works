@@ -178,7 +178,7 @@ function StatCard({ label, value, color, note }) {
   );
 }
 
-function Overview({ stats, upcoming, completed, onTabChange }) {
+function Overview({ stats, upcoming, completed, onTabChange, onReviewClick }) {
   const { t } = useLang();
   const recent = [...upcoming, ...completed]
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
@@ -217,14 +217,23 @@ function Overview({ stats, upcoming, completed, onTabChange }) {
           <div style={{ display: "flex", flexDirection: "column" }}>
             {recent.map((b, i) => {
               const prov = b.provider?.full_name || "Provider";
+              const isCompleted = b.status === "completed";
+              const hasReview = isCompleted && (b.reviews || []).length > 0;
               return (
                 <div key={b.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 0", borderTop: i > 0 ? "1px solid #f0ece4" : "none" }}>
-                  <div style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: b.status === "completed" ? G : b.status === "confirmed" ? "#3b82f6" : GOLD, flexShrink: 0 }} />
+                  <div style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: isCompleted ? G : b.status === "confirmed" ? "#3b82f6" : GOLD, flexShrink: 0 }} />
                   <div style={{ flex: 1 }}>
                     <p style={{ color: DARK, fontWeight: 600, fontSize: "0.875rem" }}>{b.title}</p>
                     <p style={{ color: MUTED, fontSize: "0.75rem", marginTop: 1 }}>with {prov} · {formatDate(b.scheduled_date)}</p>
                   </div>
-                  <StatusBadge status={b.status} />
+                  {isCompleted && !hasReview ? (
+                    <button onClick={() => onReviewClick(b)}
+                      style={{ backgroundColor: GOLD, color: "white", border: "none", borderRadius: 8, padding: "5px 12px", fontFamily: SANS, fontWeight: 600, fontSize: "0.72rem", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+                      <Star size={11} fill="white" /> Rate
+                    </button>
+                  ) : (
+                    <StatusBadge status={b.status} />
+                  )}
                 </div>
               );
             })}
@@ -287,10 +296,12 @@ function MyBookings({ bookings, onCancel }) {
                     </p>
                   )}
                   <div style={{ display: "flex", gap: 8, marginTop: 14, flexWrap: "wrap", alignItems: "center" }}>
-                    <Link to={`/providers/${b.provider_id}`}
-                      style={{ border: `1px solid #d4cfc5`, borderRadius: 8, padding: "7px 14px", fontFamily: SANS, fontWeight: 500, fontSize: "0.78rem", color: DARK, textDecoration: "none" }}>
-                      View profile
-                    </Link>
+                    {b.profile_id && (
+                      <Link to={`/providers/${b.profile_id}`}
+                        style={{ border: `1px solid #d4cfc5`, borderRadius: 8, padding: "7px 14px", fontFamily: SANS, fontWeight: 500, fontSize: "0.78rem", color: DARK, textDecoration: "none" }}>
+                        View profile
+                      </Link>
+                    )}
                     {phone && (
                       <button
                         onClick={() => openWhatsApp(phone, `Hi ${provName.split(" ")[0]}, I'm following up on my booking for "${b.title}" scheduled on ${formatDate(b.scheduled_date)}.`)}
@@ -583,8 +594,22 @@ export default function CustomerDashboard() {
         completed: all.filter(b => b.status === "completed").length,
         providers: new Set(all.map(b => b.provider_id).filter(Boolean)).size,
       });
-      setUpcoming(upRes.data   || []);
-      setCompleted(compRes.data || []);
+
+      // Fetch provider_profiles.id for each provider so View Profile links work.
+      // bookings.provider_id = users.id, but the profile page URL uses provider_profiles.id.
+      const providerUserIds = [...new Set(all.map(b => b.provider_id).filter(Boolean))];
+      let profileIdByUserId = {};
+      if (providerUserIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("provider_profiles")
+          .select("id, user_id")
+          .in("user_id", providerUserIds);
+        (profiles || []).forEach(p => { profileIdByUserId[p.user_id] = p.id; });
+      }
+
+      const attachProfileId = (b) => ({ ...b, profile_id: profileIdByUserId[b.provider_id] || null });
+      setUpcoming((upRes.data   || []).map(attachProfileId));
+      setCompleted((compRes.data || []).map(attachProfileId));
     } finally {
       setLoading(false);
     }
@@ -628,7 +653,7 @@ export default function CustomerDashboard() {
 
       <Sidebar tab={tab} setTab={setTab} upcomingCount={upcoming.length} user={user} onLogout={handleLogout} isMobile={isMobile} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <main style={{ flex: 1, padding: isMobile ? "72px 16px 24px" : 32, overflowY: "auto" }}>
-        {tab === "overview"  && <Overview stats={stats} upcoming={upcoming} completed={completed} onTabChange={setTab} />}
+        {tab === "overview"  && <Overview stats={stats} upcoming={upcoming} completed={completed} onTabChange={setTab} onReviewClick={setReviewing} />}
         {tab === "bookings"  && <MyBookings bookings={upcoming} onCancel={handleCancel} />}
         {tab === "history"   && <HistoryTab bookings={completed} onReviewClick={setReviewing} onRefresh={loadData} />}
         {tab === "profile"   && <ProfileTab user={user} />}

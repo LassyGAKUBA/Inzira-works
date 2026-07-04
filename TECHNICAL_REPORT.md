@@ -94,6 +94,7 @@ A `SECURITY DEFINER` PostgreSQL function (`delete_my_account`) deletes all user 
 | FR9 | Admin dashboard — analytics, verification, user management | Done |
 | FR10 | Account self-deletion + Privacy Policy (Rwanda data law) | Done |
 
+
 ### Non-Functional Requirements
 
 | # | Requirement | Status |
