@@ -74,7 +74,7 @@ function ReviewModal({ booking, onClose, onSubmitted }) {
       comment: comment.trim() || null,
     });
     setSaving(false);
-    if (error) { setErr("Could not submit. Please try again."); return; }
+    if (error) { setErr(error.message || "Could not submit. Please try again."); return; }
     onSubmitted();
     onClose();
   };
