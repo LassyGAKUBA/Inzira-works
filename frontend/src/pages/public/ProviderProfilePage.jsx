@@ -594,24 +594,24 @@ export default function ProviderProfilePage() {
           mapped.phone = u?.phone || null;
         }
         if (!cancelled) setProvider(mapped);
-
-        // Increment profile views (fire and forget)
-        supabase.rpc("increment_profile_views", { p_id: id }).catch(() => {});
-
-        // Load available_days
-        supabase.from("provider_profiles").select("available_days").eq("id", id).single()
-          .then(({ data: pp }) => { if (!cancelled && pp?.available_days) setAvailableDays(pp.available_days); });
-
-        // Check if this customer has saved this provider
-        if (user?.id && user?.role === "customer") {
-          supabase.from("saved_providers")
-            .select("id").eq("customer_id", user.id).eq("provider_profile_id", id).maybeSingle()
-            .then(({ data: row }) => { if (!cancelled) setSavedRowId(row?.id || null); });
-        }
       } catch {
         if (!cancelled) setNotFound(true);
       } finally {
         if (!cancelled) setLoading(false);
+      }
+
+      // These are best-effort — they must never affect the main loading flow.
+      supabase.rpc("increment_profile_views", { p_id: id }).catch(() => {});
+
+      supabase.from("provider_profiles").select("available_days").eq("id", id).maybeSingle()
+        .then(({ data: pp }) => { if (!cancelled && pp?.available_days?.length) setAvailableDays(pp.available_days); })
+        .catch(() => {});
+
+      if (user?.id && user?.role === "customer") {
+        supabase.from("saved_providers")
+          .select("id").eq("customer_id", user.id).eq("provider_profile_id", id).maybeSingle()
+          .then(({ data: row }) => { if (!cancelled) setSavedRowId(row?.id || null); })
+          .catch(() => {});
       }
 
       // Similar providers — best effort, ignore failures.

@@ -779,15 +779,12 @@ function HistoryTab({ userId }) {
           </div>
           {filtered.map((b, i) => (
             <div key={b.id} style={{ display: "grid", gridTemplateColumns: "1fr 150px 120px 90px 90px", padding: "14px 20px", borderTop: i > 0 ? "1px solid #f0ece4" : "none", alignItems: "center" }}>
-              <div>
-                <p style={{ color: DARK, fontWeight: 600, fontSize: "0.875rem" }}>{b.title}</p>
-                <p style={{ color: MUTED, fontSize: "0.72rem", marginTop: 1 }}>{b.customer?.full_name || "—"}</p>
-              </div>
+              <p style={{ color: DARK, fontWeight: 600, fontSize: "0.875rem" }}>{b.title}</p>
+              <p style={{ color: MUTED, fontSize: "0.82rem" }}>{b.customer?.full_name || "—"}</p>
               <p style={{ color: MUTED, fontSize: "0.78rem" }}>{formatDate(b.scheduled_date)}</p>
               <p style={{ color: DARK, fontSize: "0.82rem", fontVariantNumeric: "tabular-nums" }}>
                 {b.amount ? `RWF ${Number(b.amount).toLocaleString()}` : "—"}
               </p>
-              <p style={{ color: MUTED, fontSize: "0.78rem", fontVariantNumeric: "tabular-nums" }}>{formatDate(b.updated_at)}</p>
               <button onClick={() => handleTogglePaid(b.id, b.is_paid)}
                 style={{ backgroundColor: b.is_paid ? "#e8f3ee" : "#f5f5f5", color: b.is_paid ? G : MUTED, border: `1px solid ${b.is_paid ? "#b7d9c8" : "#e5e7eb"}`, borderRadius: 8, padding: "4px 10px", fontFamily: SANS, fontWeight: 600, fontSize: "0.7rem", cursor: "pointer" }}>
                 {b.is_paid ? "Paid" : "Mark paid"}
