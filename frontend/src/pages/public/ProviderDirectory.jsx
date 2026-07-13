@@ -321,11 +321,11 @@ export default function ProviderDirectory() {
   const handleToggleSave = async (profileId) => {
     if (!user?.id) { window.location.href = "/login"; return; }
     if (savedIds.has(profileId)) {
-      await supabase.from("saved_providers").delete().eq("customer_id", user.id).eq("provider_profile_id", profileId);
-      setSavedIds(prev => { const s = new Set(prev); s.delete(profileId); return s; });
+      const { error } = await supabase.from("saved_providers").delete().eq("customer_id", user.id).eq("provider_profile_id", profileId);
+      if (!error) setSavedIds(prev => { const s = new Set(prev); s.delete(profileId); return s; });
     } else {
-      await supabase.from("saved_providers").insert({ customer_id: user.id, provider_profile_id: profileId });
-      setSavedIds(prev => new Set([...prev, profileId]));
+      const { error } = await supabase.from("saved_providers").insert({ customer_id: user.id, provider_profile_id: profileId });
+      if (!error) setSavedIds(prev => new Set([...prev, profileId]));
     }
   };
 
