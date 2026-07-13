@@ -90,6 +90,7 @@ serve(async (req: Request) => {
 </body>
 </html>`;
 
+    console.log("Sending email to:", provider.email, "for booking:", booking.title);
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {

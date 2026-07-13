@@ -6,6 +6,7 @@ import { supabase } from "../../lib/supabase";
 import {
   Shield, CheckCircle, Banknote, MessageCircle,
   Calendar, MapPin, Image as ImageIcon, ExternalLink, Loader2, LogOut, Menu,
+  Download, TrendingUp, Filter, Star,
 } from "lucide-react";
 
 // ── Tokens ────────────────────────────────────────────────────────────────────
@@ -55,6 +56,7 @@ function Sidebar({ tab, setTab, user, profile, avatarUrl, pendingCount, onLogout
     { id: "overview",  label: t("prov_dash_overview"),  badge: null },
     { id: "bookings",  label: t("prov_dash_bookings"),  badge: pendingCount || null },
     { id: "history",   label: t("prov_dash_history"),   badge: null },
+    { id: "analytics", label: "Analytics",              badge: null },
     { id: "reviews",   label: t("prov_dash_reviews"),   badge: null },
     { id: "portfolio", label: t("prov_dash_portfolio"), badge: null },
     { id: "profile",   label: t("prov_dash_profile"),   badge: null },
@@ -644,51 +646,223 @@ function MyProfile({ user, profile, onSave, onAvatarChange }) {
 function HistoryTab({ userId }) {
   const [bookings, setBookings] = useState([]);
   const [loading,  setLoading]  = useState(true);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo,   setDateTo]   = useState("");
+  const [svcFilter, setSvcFilter] = useState("all");
 
   useEffect(() => {
     if (!userId) return;
     supabase.from("bookings")
-      .select("id, title, scheduled_date, updated_at, customer:users!customer_id(full_name)")
+      .select("id, title, scheduled_date, updated_at, amount, is_paid, customer:users!customer_id(full_name)")
       .eq("provider_id", userId)
       .eq("status", "completed")
       .order("updated_at", { ascending: false })
       .then(({ data }) => { setBookings(data || []); setLoading(false); });
   }, [userId]);
 
+  const handleTogglePaid = async (id, current) => {
+    await supabase.from("bookings").update({ is_paid: !current }).eq("id", id);
+    setBookings(prev => prev.map(b => b.id === id ? { ...b, is_paid: !current } : b));
+  };
+
+  const services = [...new Set(bookings.map(b => b.title).filter(Boolean))];
+
+  const filtered = bookings.filter(b => {
+    if (svcFilter !== "all" && b.title !== svcFilter) return false;
+    if (dateFrom && b.scheduled_date && b.scheduled_date < dateFrom) return false;
+    if (dateTo   && b.scheduled_date && b.scheduled_date > dateTo)   return false;
+    return true;
+  });
+
+  const totalEarned = filtered.filter(b => b.is_paid).reduce((s, b) => s + (Number(b.amount) || 0), 0);
+
+  const exportCSV = () => {
+    const rows = [
+      ["Service", "Customer", "Scheduled Date", "Completed On", "Amount (RWF)", "Paid"],
+      ...filtered.map(b => [
+        b.title || "—",
+        b.customer?.full_name || "—",
+        b.scheduled_date || "—",
+        b.updated_at ? new Date(b.updated_at).toLocaleDateString() : "—",
+        b.amount || "—",
+        b.is_paid ? "Yes" : "No",
+      ]),
+    ];
+    const csv = rows.map(r => r.map(c => `"${c}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href = url; a.download = "inzira-works-history.csv"; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const inp = { padding: "8px 12px", border: "1px solid #e8e2d8", borderRadius: 8, fontFamily: SANS, fontSize: "0.82rem", color: DARK, outline: "none", backgroundColor: "white" };
+
   if (loading) return <div style={{ display: "flex", justifyContent: "center", padding: 60 }}><Loader2 size={24} style={{ color: G, animation: "spin 1s linear infinite" }} /></div>;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-      <div>
-        <h1 style={{ fontFamily: SERIF, color: DARK, fontSize: "1.75rem", fontWeight: 700, letterSpacing: "-0.02em" }}>Completed Jobs</h1>
-        <p style={{ color: MUTED, fontSize: "0.875rem", marginTop: 4 }}>{bookings.length} job{bookings.length !== 1 ? "s" : ""} completed in total.</p>
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+        <div>
+          <h1 style={{ fontFamily: SERIF, color: DARK, fontSize: "1.75rem", fontWeight: 700, letterSpacing: "-0.02em" }}>Completed Jobs</h1>
+          <p style={{ color: MUTED, fontSize: "0.875rem", marginTop: 4 }}>{filtered.length} job{filtered.length !== 1 ? "s" : ""} · RWF {totalEarned.toLocaleString()} confirmed paid</p>
+        </div>
+        <button onClick={exportCSV}
+          style={{ backgroundColor: G, color: "white", border: "none", borderRadius: 10, padding: "9px 18px", fontFamily: SANS, fontWeight: 600, fontSize: "0.82rem", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+          <Download size={14} /> Export CSV
+        </button>
       </div>
 
-      {bookings.length === 0 ? (
+      {/* Filters */}
+      <div style={{ ...CARD, padding: "14px 18px", display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+        <Filter size={14} style={{ color: MUTED, flexShrink: 0 }} />
+        <select value={svcFilter} onChange={e => setSvcFilter(e.target.value)} style={inp}>
+          <option value="all">All services</option>
+          {services.map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
+        <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} style={inp} placeholder="From" />
+        <input type="date" value={dateTo}   onChange={e => setDateTo(e.target.value)}   style={inp} placeholder="To" />
+        {(svcFilter !== "all" || dateFrom || dateTo) && (
+          <button onClick={() => { setSvcFilter("all"); setDateFrom(""); setDateTo(""); }}
+            style={{ background: "none", border: "none", color: MUTED, fontSize: "0.78rem", cursor: "pointer", textDecoration: "underline" }}>
+            Clear filters
+          </button>
+        )}
+      </div>
+
+      {filtered.length === 0 ? (
         <div style={{ ...CARD, padding: 48, textAlign: "center", color: MUTED, fontSize: "0.9rem" }}>
-          No completed jobs yet. Accept bookings and mark them as completed to see them here.
+          No completed jobs match your filters.
         </div>
       ) : (
         <div style={{ ...CARD, overflow: "hidden" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 180px 160px", padding: "12px 20px", borderBottom: "1px solid #f0ece4", backgroundColor: "#faf8f4" }}>
-            {["SERVICE", "CUSTOMER", "COMPLETED ON"].map(col => (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 150px 120px 90px 90px", padding: "12px 20px", borderBottom: "1px solid #f0ece4", backgroundColor: "#faf8f4" }}>
+            {["SERVICE", "CUSTOMER", "DATE", "AMOUNT", "PAID"].map(col => (
               <span key={col} style={{ color: MUTED, fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.08em" }}>{col}</span>
             ))}
           </div>
-          {bookings.map((b, i) => (
-            <div key={b.id} style={{ display: "grid", gridTemplateColumns: "1fr 180px 160px", padding: "14px 20px", borderTop: i > 0 ? "1px solid #f0ece4" : "none", alignItems: "center" }}>
+          {filtered.map((b, i) => (
+            <div key={b.id} style={{ display: "grid", gridTemplateColumns: "1fr 150px 120px 90px 90px", padding: "14px 20px", borderTop: i > 0 ? "1px solid #f0ece4" : "none", alignItems: "center" }}>
               <div>
                 <p style={{ color: DARK, fontWeight: 600, fontSize: "0.875rem" }}>{b.title}</p>
-                <p style={{ color: MUTED, fontSize: "0.75rem", marginTop: 1 }}>
-                  <Calendar size={10} style={{ display: "inline", marginRight: 4 }} />{formatDate(b.scheduled_date)}
-                </p>
+                <p style={{ color: MUTED, fontSize: "0.72rem", marginTop: 1 }}>{b.customer?.full_name || "—"}</p>
               </div>
-              <p style={{ color: DARK, fontSize: "0.82rem" }}>{b.customer?.full_name || "—"}</p>
-              <p style={{ color: MUTED, fontSize: "0.78rem" }}>{formatDate(b.updated_at)}</p>
+              <p style={{ color: MUTED, fontSize: "0.78rem" }}>{formatDate(b.scheduled_date)}</p>
+              <p style={{ color: DARK, fontSize: "0.82rem", fontVariantNumeric: "tabular-nums" }}>
+                {b.amount ? `RWF ${Number(b.amount).toLocaleString()}` : "—"}
+              </p>
+              <p style={{ color: MUTED, fontSize: "0.78rem", fontVariantNumeric: "tabular-nums" }}>{formatDate(b.updated_at)}</p>
+              <button onClick={() => handleTogglePaid(b.id, b.is_paid)}
+                style={{ backgroundColor: b.is_paid ? "#e8f3ee" : "#f5f5f5", color: b.is_paid ? G : MUTED, border: `1px solid ${b.is_paid ? "#b7d9c8" : "#e5e7eb"}`, borderRadius: 8, padding: "4px 10px", fontFamily: SANS, fontWeight: 600, fontSize: "0.7rem", cursor: "pointer" }}>
+                {b.is_paid ? "Paid" : "Mark paid"}
+              </button>
             </div>
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+// ── Analytics tab ─────────────────────────────────────────────────────────────
+function AnalyticsTab({ userId }) {
+  const [bookings, setBookings] = useState([]);
+  const [loading,  setLoading]  = useState(true);
+
+  useEffect(() => {
+    if (!userId) return;
+    supabase.from("bookings")
+      .select("id, title, amount, is_paid, scheduled_date, status")
+      .eq("provider_id", userId)
+      .order("scheduled_date", { ascending: true })
+      .then(({ data }) => { setBookings(data || []); setLoading(false); });
+  }, [userId]);
+
+  if (loading) return <div style={{ display: "flex", justifyContent: "center", padding: 60 }}><Loader2 size={24} style={{ color: G, animation: "spin 1s linear infinite" }} /></div>;
+
+  const completed = bookings.filter(b => b.status === "completed");
+  const totalEarned = completed.filter(b => b.is_paid).reduce((s, b) => s + (Number(b.amount) || 0), 0);
+  const pendingPayment = completed.filter(b => !b.is_paid).reduce((s, b) => s + (Number(b.amount) || 0), 0);
+
+  // Top services
+  const svcCount = {};
+  completed.forEach(b => { if (b.title) svcCount[b.title] = (svcCount[b.title] || 0) + 1; });
+  const topServices = Object.entries(svcCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const maxCount = topServices[0]?.[1] || 1;
+
+  // Monthly earnings (last 6 months)
+  const monthlyMap = {};
+  completed.filter(b => b.is_paid && b.amount).forEach(b => {
+    const key = b.scheduled_date?.slice(0, 7);
+    if (key) monthlyMap[key] = (monthlyMap[key] || 0) + Number(b.amount);
+  });
+  const months = Object.entries(monthlyMap).sort((a, b) => a[0].localeCompare(b[0])).slice(-6);
+  const maxEarning = Math.max(...months.map(m => m[1]), 1);
+
+  const statCard = (label, value, sub, color = DARK) => (
+    <div style={{ ...CARD, padding: 20 }}>
+      <p style={{ color: MUTED, fontSize: "0.75rem", fontWeight: 500, marginBottom: 8 }}>{label}</p>
+      <p style={{ fontFamily: SERIF, color, fontSize: "1.75rem", fontWeight: 700, lineHeight: 1 }}>{value}</p>
+      {sub && <p style={{ color: MUTED, fontSize: "0.72rem", marginTop: 6 }}>{sub}</p>}
+    </div>
+  );
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      <div>
+        <h1 style={{ fontFamily: SERIF, color: DARK, fontSize: "1.75rem", fontWeight: 700, letterSpacing: "-0.02em" }}>Analytics</h1>
+        <p style={{ color: MUTED, fontSize: "0.875rem", marginTop: 4 }}>Your performance overview.</p>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+        {statCard("Total Jobs Done", completed.length, "completed bookings", G)}
+        {statCard("Confirmed Earnings", `RWF ${totalEarned.toLocaleString()}`, "from paid bookings", GOLD)}
+        {statCard("Pending Payment", `RWF ${pendingPayment.toLocaleString()}`, "completed but not marked paid", MUTED)}
+      </div>
+
+      {/* Top services */}
+      <div style={{ ...CARD, padding: 24 }}>
+        <p style={{ fontFamily: SERIF, color: DARK, fontSize: "1rem", fontWeight: 700, marginBottom: 18 }}>Most Booked Services</p>
+        {topServices.length === 0 ? (
+          <p style={{ color: MUTED, fontSize: "0.875rem" }}>No completed jobs yet.</p>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {topServices.map(([name, count]) => (
+              <div key={name}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                  <p style={{ color: DARK, fontSize: "0.82rem", fontWeight: 600 }}>{name}</p>
+                  <p style={{ color: MUTED, fontSize: "0.78rem" }}>{count} job{count !== 1 ? "s" : ""}</p>
+                </div>
+                <div style={{ height: 8, backgroundColor: "#f0ece4", borderRadius: 99, overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: `${(count / maxCount) * 100}%`, backgroundColor: G, borderRadius: 99, transition: "width 0.4s ease" }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Monthly earnings */}
+      <div style={{ ...CARD, padding: 24 }}>
+        <p style={{ fontFamily: SERIF, color: DARK, fontSize: "1rem", fontWeight: 700, marginBottom: 18 }}>Monthly Earnings (RWF)</p>
+        {months.length === 0 ? (
+          <p style={{ color: MUTED, fontSize: "0.875rem" }}>Mark bookings as paid to see earnings trends.</p>
+        ) : (
+          <div style={{ display: "flex", alignItems: "flex-end", gap: 10, height: 120 }}>
+            {months.map(([month, amount]) => {
+              const label = new Date(month + "-01").toLocaleDateString("en-US", { month: "short", year: "2-digit" });
+              const pct   = (amount / maxEarning) * 100;
+              return (
+                <div key={month} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                  <p style={{ color: MUTED, fontSize: "0.6rem" }}>RWF {(amount/1000).toFixed(0)}k</p>
+                  <div style={{ width: "100%", height: `${Math.max(pct, 4)}%`, backgroundColor: G, borderRadius: "4px 4px 0 0", minHeight: 4 }} />
+                  <p style={{ color: MUTED, fontSize: "0.62rem", whiteSpace: "nowrap" }}>{label}</p>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -1087,6 +1261,7 @@ export default function ProviderDashboard() {
         {tab === "reviews"   && <ReviewsTab userId={user?.id} />}
         {tab === "portfolio" && <PortfolioTab profile={profile} userId={user?.id} />}
         {tab === "profile"   && <MyProfile user={user} profile={profile} onSave={setProfile} onAvatarChange={setAvatarUrl} />}
+        {tab === "analytics" && <AnalyticsTab userId={user?.id} />}
       </main>
     </div>
   );
