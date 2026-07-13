@@ -310,6 +310,10 @@ function MyProfile({ user, profile, onSave, onAvatarChange }) {
   const [photoUploading, setPhotoUploading] = useState(false);
   const [photoErr,       setPhotoErr]       = useState("");
 
+  // Available days
+  const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  const [availableDays, setAvailableDays] = useState([]);
+
   // Specialties
   const [specialties, setSpecialties] = useState([]);
   const [tagInput,    setTagInput]    = useState("");
@@ -357,19 +361,21 @@ function MyProfile({ user, profile, onSave, onAvatarChange }) {
 
   const loadExtras = async () => {
     if (!profile?.id) return;
-    const [specRes, svcRes] = await Promise.all([
+    const [specRes, svcRes, ppRes] = await Promise.all([
       supabase.from("provider_specialties").select("id, label").eq("provider_id", profile.id),
       supabase.from("services").select("id, title, price, price_type").eq("provider_id", profile.id).eq("is_active", true).order("created_at"),
+      supabase.from("provider_profiles").select("available_days").eq("id", profile.id).single(),
     ]);
     setSpecialties(specRes.data || []);
     setServices(svcRes.data   || []);
+    setAvailableDays(ppRes.data?.available_days || []);
   };
 
   const handleSave = async () => {
     setSaving(true); setSaveMsg("");
     try {
       const { error } = await supabase.from("provider_profiles")
-        .update({ headline: form.business, bio: form.about, district: form.district })
+        .update({ headline: form.business, bio: form.about, district: form.district, available_days: availableDays })
         .eq("user_id", user.id);
       if (error) throw error;
       setSaveMsg("Saved!");
@@ -571,6 +577,22 @@ function MyProfile({ user, profile, onSave, onAvatarChange }) {
             )}
           </div>
 
+          {/* Availability */}
+          <div style={{ ...CARD, padding: 20 }}>
+            <p style={{ color: DARK, fontSize: "0.875rem", fontWeight: 700, marginBottom: 12 }}>Availability</p>
+            <p style={{ color: MUTED, fontSize: "0.75rem", marginBottom: 12 }}>Select the days you are available to take bookings.</p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {WEEKDAYS.map(day => {
+                const active = availableDays.includes(day);
+                return (
+                  <button key={day} onClick={() => setAvailableDays(prev => active ? prev.filter(d => d !== day) : [...prev, day])}
+                    style={{ padding: "6px 14px", borderRadius: 99, border: `1px solid ${active ? G : "#e8e2d8"}`, backgroundColor: active ? G : "white", color: active ? "white" : MUTED, fontFamily: SANS, fontSize: "0.78rem", fontWeight: active ? 600 : 400, cursor: "pointer", transition: "all 0.15s" }}>
+                    {day.slice(0, 3)}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
 
         {/* ── Right column ── */}
@@ -676,24 +698,38 @@ function HistoryTab({ userId }) {
 
   const totalEarned = filtered.filter(b => b.is_paid).reduce((s, b) => s + (Number(b.amount) || 0), 0);
 
-  const exportCSV = () => {
-    const rows = [
-      ["Service", "Customer", "Scheduled Date", "Completed On", "Amount (RWF)", "Paid"],
-      ...filtered.map(b => [
+  const exportPDF = async () => {
+    const { default: jsPDF } = await import("jspdf");
+    const { default: autoTable } = await import("jspdf-autotable");
+    const doc = new jsPDF();
+    doc.setFillColor(14, 92, 70);
+    doc.rect(0, 0, 210, 22, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(13);
+    doc.setFont(undefined, "bold");
+    doc.text("Inzira Works — Earnings Report", 14, 14);
+    doc.setTextColor(80, 80, 80);
+    doc.setFont(undefined, "normal");
+    doc.setFontSize(9);
+    doc.text(`Generated: ${new Date().toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" })}`, 14, 30);
+    doc.text(`${filtered.length} job${filtered.length !== 1 ? "s" : ""} · RWF ${totalEarned.toLocaleString()} confirmed paid`, 14, 37);
+    autoTable(doc, {
+      startY: 44,
+      head: [["Service", "Customer", "Date", "Amount (RWF)", "Paid"]],
+      body: filtered.map(b => [
         b.title || "—",
         b.customer?.full_name || "—",
         b.scheduled_date || "—",
-        b.updated_at ? new Date(b.updated_at).toLocaleDateString() : "—",
-        b.amount || "—",
+        b.amount ? Number(b.amount).toLocaleString() : "—",
         b.is_paid ? "Yes" : "No",
       ]),
-    ];
-    const csv = rows.map(r => r.map(c => `"${c}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement("a");
-    a.href = url; a.download = "inzira-works-history.csv"; a.click();
-    URL.revokeObjectURL(url);
+      headStyles: { fillColor: [14, 92, 70], fontSize: 9, fontStyle: "bold" },
+      bodyStyles: { fontSize: 9 },
+      alternateRowStyles: { fillColor: [249, 247, 243] },
+      columnStyles: { 3: { halign: "right" }, 4: { halign: "center" } },
+      margin: { left: 14, right: 14 },
+    });
+    doc.save("inzira-works-earnings.pdf");
   };
 
   const inp = { padding: "8px 12px", border: "1px solid #e8e2d8", borderRadius: 8, fontFamily: SANS, fontSize: "0.82rem", color: DARK, outline: "none", backgroundColor: "white" };
@@ -707,9 +743,9 @@ function HistoryTab({ userId }) {
           <h1 style={{ fontFamily: SERIF, color: DARK, fontSize: "1.75rem", fontWeight: 700, letterSpacing: "-0.02em" }}>Completed Jobs</h1>
           <p style={{ color: MUTED, fontSize: "0.875rem", marginTop: 4 }}>{filtered.length} job{filtered.length !== 1 ? "s" : ""} · RWF {totalEarned.toLocaleString()} confirmed paid</p>
         </div>
-        <button onClick={exportCSV}
+        <button onClick={exportPDF}
           style={{ backgroundColor: G, color: "white", border: "none", borderRadius: 10, padding: "9px 18px", fontFamily: SANS, fontWeight: 600, fontSize: "0.82rem", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-          <Download size={14} /> Export CSV
+          <Download size={14} /> Export PDF
         </button>
       </div>
 
@@ -766,16 +802,26 @@ function HistoryTab({ userId }) {
 
 // ── Analytics tab ─────────────────────────────────────────────────────────────
 function AnalyticsTab({ userId }) {
-  const [bookings, setBookings] = useState([]);
-  const [loading,  setLoading]  = useState(true);
+  const [bookings,     setBookings]     = useState([]);
+  const [profileViews, setProfileViews] = useState(0);
+  const [loading,      setLoading]      = useState(true);
 
   useEffect(() => {
     if (!userId) return;
-    supabase.from("bookings")
-      .select("id, title, amount, is_paid, scheduled_date, status")
-      .eq("provider_id", userId)
-      .order("scheduled_date", { ascending: true })
-      .then(({ data }) => { setBookings(data || []); setLoading(false); });
+    Promise.all([
+      supabase.from("bookings")
+        .select("id, title, amount, is_paid, scheduled_date, status")
+        .eq("provider_id", userId)
+        .order("scheduled_date", { ascending: true }),
+      supabase.from("provider_profiles")
+        .select("profile_views")
+        .eq("user_id", userId)
+        .single(),
+    ]).then(([bookRes, pvRes]) => {
+      setBookings(bookRes.data || []);
+      setProfileViews(pvRes.data?.profile_views || 0);
+      setLoading(false);
+    });
   }, [userId]);
 
   if (loading) return <div style={{ display: "flex", justifyContent: "center", padding: 60 }}><Loader2 size={24} style={{ color: G, animation: "spin 1s linear infinite" }} /></div>;
@@ -814,10 +860,11 @@ function AnalyticsTab({ userId }) {
         <p style={{ color: MUTED, fontSize: "0.875rem", marginTop: 4 }}>Your performance overview.</p>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
         {statCard("Total Jobs Done", completed.length, "completed bookings", G)}
         {statCard("Confirmed Earnings", `RWF ${totalEarned.toLocaleString()}`, "from paid bookings", GOLD)}
         {statCard("Pending Payment", `RWF ${pendingPayment.toLocaleString()}`, "completed but not marked paid", MUTED)}
+        {statCard("Profile Views", profileViews, "total page visits", "#3b82f6")}
       </div>
 
       {/* Top services */}

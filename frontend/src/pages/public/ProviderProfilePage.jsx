@@ -565,15 +565,17 @@ export default function ProviderProfilePage() {
   const { id } = useParams();
   const { user } = useAuth();
 
-  const [provider, setProvider] = useState(null);
-  const [similar, setSimilar] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
+  const [provider,      setProvider]      = useState(null);
+  const [similar,       setSimilar]       = useState([]);
+  const [loading,       setLoading]       = useState(true);
+  const [notFound,      setNotFound]      = useState(false);
+  const [availableDays, setAvailableDays] = useState([]);
+  const [savedRowId,    setSavedRowId]    = useState(null);
 
-  const [activeTab, setActiveTab] = useState("about");
+  const [activeTab,   setActiveTab]   = useState("about");
   const [showBooking, setShowBooking] = useState(false);
-  const [showShare, setShowShare] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [showShare,   setShowShare]   = useState(false);
+  const saved = savedRowId !== null;
 
   useEffect(() => {
     let cancelled = false;
@@ -592,6 +594,20 @@ export default function ProviderProfilePage() {
           mapped.phone = u?.phone || null;
         }
         if (!cancelled) setProvider(mapped);
+
+        // Increment profile views (fire and forget)
+        supabase.rpc("increment_profile_views", { p_id: id }).catch(() => {});
+
+        // Load available_days
+        supabase.from("provider_profiles").select("available_days").eq("id", id).single()
+          .then(({ data: pp }) => { if (!cancelled && pp?.available_days) setAvailableDays(pp.available_days); });
+
+        // Check if this customer has saved this provider
+        if (user?.id && user?.role === "customer") {
+          supabase.from("saved_providers")
+            .select("id").eq("customer_id", user.id).eq("provider_profile_id", id).maybeSingle()
+            .then(({ data: row }) => { if (!cancelled) setSavedRowId(row?.id || null); });
+        }
       } catch {
         if (!cancelled) setNotFound(true);
       } finally {
@@ -669,7 +685,17 @@ export default function ProviderProfilePage() {
 
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => setSaved(!saved)}
+                    onClick={async () => {
+                      if (!user?.id) { window.location.href = "/login"; return; }
+                      if (saved) {
+                        await supabase.from("saved_providers").delete().eq("id", savedRowId);
+                        setSavedRowId(null);
+                      } else {
+                        const { data: row } = await supabase.from("saved_providers")
+                          .insert({ customer_id: user.id, provider_profile_id: id }).select("id").single();
+                        setSavedRowId(row?.id || "saved");
+                      }
+                    }}
                     className="w-10 h-10 rounded-xl border border-slate-200 flex items-center justify-center transition-all hover:border-green-300"
                     aria-label={saved ? "Unsave" : "Save"}
                   >
@@ -772,6 +798,18 @@ export default function ProviderProfilePage() {
                       <p className="text-sm text-slate-700">{provider.memberSince}</p>
                     </div>
                   </div>
+                  {availableDays.length > 0 && (
+                    <div className="pt-2">
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">Available Days</p>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                        {availableDays.map(day => (
+                          <span key={day} style={{ backgroundColor: "#e8f3ee", color: "#0E5C46", borderRadius: 99, padding: "4px 12px", fontSize: "0.75rem", fontWeight: 600 }}>
+                            {day}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 

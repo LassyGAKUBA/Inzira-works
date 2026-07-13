@@ -7,6 +7,7 @@ import {
   Calendar, Star, X, Loader2, CheckCircle, Clock, LogOut,
   User, LayoutDashboard, BookOpen, History as HistoryIcon,
   MessageCircle, ChevronRight, Edit2, Save, Menu, Camera,
+  Heart, RefreshCw, MapPin, Shield,
 } from "lucide-react";
 
 const G     = "#0E5C46";
@@ -114,6 +115,7 @@ function Sidebar({ tab, setTab, upcomingCount, user, avatarUrl, onLogout, isMobi
     { id: "overview",  label: t("dash_nav_overview"), Icon: LayoutDashboard, badge: null },
     { id: "bookings",  label: t("dash_nav_bookings"), Icon: BookOpen,        badge: upcomingCount || null },
     { id: "history",   label: t("dash_nav_history"),  Icon: HistoryIcon,     badge: null },
+    { id: "saved",     label: "Saved",                Icon: Heart,           badge: null },
     { id: "profile",   label: t("dash_nav_profile"),  Icon: User,            badge: null },
   ];
   const handleNav = (id) => { setTab(id); if (isMobile && onClose) onClose(); };
@@ -393,12 +395,107 @@ function HistoryTab({ bookings, onReviewClick, onRefresh }) {
                       <CheckCircle size={12} /> Reviewed
                     </span>
                   )}
+                  {b.profile_id && (
+                    <Link to={`/providers/${b.profile_id}`}
+                      style={{ border: `1px solid ${G}`, borderRadius: 8, padding: "5px 12px", fontFamily: SANS, fontWeight: 600, fontSize: "0.72rem", color: G, textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}>
+                      <RefreshCw size={11} /> Book again
+                    </Link>
+                  )}
                 </div>
               </div>
             </div>
           );
         })}
       </div>
+    </div>
+  );
+}
+
+function SavedTab({ userId }) {
+  const [providers, setProviders] = useState([]);
+  const [loading,   setLoading]   = useState(true);
+
+  const load = async () => {
+    if (!userId) return;
+    const { data: saved } = await supabase.from("saved_providers").select("id, provider_profile_id").eq("customer_id", userId);
+    if (!saved || saved.length === 0) { setLoading(false); return; }
+
+    const ids = saved.map(s => s.provider_profile_id);
+    const { data: profiles } = await supabase.from("provider_profiles")
+      .select("id, user_id, trust_score, verification_status, headline, district").in("id", ids);
+    const userIds = (profiles || []).map(p => p.user_id);
+    const { data: users } = await supabase.from("users").select("id, full_name, avatar_url").in("id", userIds);
+    const userMap = Object.fromEntries((users || []).map(u => [u.id, u]));
+
+    setProviders((profiles || []).map(p => ({
+      savedId: saved.find(s => s.provider_profile_id === p.id)?.id,
+      id: p.id,
+      name: userMap[p.user_id]?.full_name || "Provider",
+      avatarUrl: userMap[p.user_id]?.avatar_url || null,
+      headline: p.headline || "Service Provider",
+      district: p.district || "—",
+      trustScore: Math.round(Number(p.trust_score) || 0),
+      verified: p.verification_status === "verified",
+    })));
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, [userId]);
+
+  const handleUnsave = async (savedId, providerId) => {
+    await supabase.from("saved_providers").delete().eq("id", savedId);
+    setProviders(prev => prev.filter(p => p.id !== providerId));
+  };
+
+  if (loading) return <div style={{ display: "flex", justifyContent: "center", padding: 60 }}><Loader2 size={24} style={{ color: G, animation: "spin 1s linear infinite" }} /></div>;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      <div>
+        <h1 style={{ fontFamily: SERIF, color: DARK, fontSize: "1.75rem", fontWeight: 700, letterSpacing: "-0.02em" }}>Saved Providers</h1>
+        <p style={{ color: MUTED, fontSize: "0.875rem", marginTop: 4 }}>{providers.length} provider{providers.length !== 1 ? "s" : ""} saved.</p>
+      </div>
+
+      {providers.length === 0 ? (
+        <div style={{ ...CARD, padding: 48, textAlign: "center", color: MUTED }}>
+          <Heart size={32} style={{ color: "#d4cfc5", margin: "0 auto 12px" }} />
+          <p style={{ fontSize: "0.9rem", marginBottom: 12 }}>No saved providers yet.</p>
+          <Link to="/providers" style={{ color: G, fontWeight: 600, fontSize: "0.875rem" }}>Browse providers →</Link>
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {providers.map(p => (
+            <div key={p.id} style={{ ...CARD, padding: 18, display: "flex", alignItems: "center", gap: 16 }}>
+              <div style={{ width: 48, height: 48, borderRadius: "50%", backgroundColor: "#e8f3ee", overflow: "hidden", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                {p.avatarUrl
+                  ? <img src={p.avatarUrl} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  : <span style={{ color: G, fontWeight: 700, fontSize: "0.9rem" }}>{p.name.split(" ").map(w => w[0]).slice(0,2).join("").toUpperCase()}</span>}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <p style={{ color: DARK, fontWeight: 700, fontSize: "0.9rem" }}>{p.name}</p>
+                  {p.verified && <CheckCircle size={13} style={{ color: G }} />}
+                </div>
+                <p style={{ color: MUTED, fontSize: "0.78rem", marginTop: 2 }}>{p.headline}</p>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 4 }}>
+                  <span style={{ color: MUTED, fontSize: "0.72rem", display: "flex", alignItems: "center", gap: 3 }}><MapPin size={10} /> {p.district}</span>
+                  <span style={{ color: MUTED, fontSize: "0.72rem", display: "flex", alignItems: "center", gap: 3 }}><Shield size={10} /> Trust {p.trustScore}</span>
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+                <Link to={`/providers/${p.id}`}
+                  style={{ backgroundColor: G, color: "white", borderRadius: 8, padding: "7px 16px", fontFamily: SANS, fontWeight: 600, fontSize: "0.78rem", textDecoration: "none" }}>
+                  Book
+                </Link>
+                <button onClick={() => handleUnsave(p.savedId, p.id)}
+                  style={{ border: "1px solid #e8e2d8", borderRadius: 8, padding: "7px 12px", backgroundColor: "white", cursor: "pointer", display: "flex", alignItems: "center" }}>
+                  <Heart size={14} fill={MUTED} style={{ color: MUTED }} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -706,6 +803,7 @@ export default function CustomerDashboard() {
         {tab === "overview"  && <Overview stats={stats} upcoming={upcoming} completed={completed} onTabChange={setTab} onReviewClick={setReviewing} />}
         {tab === "bookings"  && <MyBookings bookings={upcoming} onCancel={handleCancel} />}
         {tab === "history"   && <HistoryTab bookings={completed} onReviewClick={setReviewing} onRefresh={loadData} />}
+        {tab === "saved"     && <SavedTab userId={user?.id} />}
         {tab === "profile"   && <ProfileTab user={user} avatarUrl={avatarUrl} onAvatarChange={setAvatarUrl} />}
       </main>
 

@@ -4,10 +4,11 @@ import Navbar from "../../components/shared/Navbar";
 import PageTransition from "../../components/shared/PageTransition";
 import { useLang } from "../../i18n/LangContext";
 import { supabase } from "../../lib/supabase";
+import { useAuth } from "../../context/AuthContext";
 import {
   MapPin, Star, CheckCircle, Search,
   SlidersHorizontal, X, AlertTriangle,
-  Scissors, Sparkles, Package, ChefHat, Image as ImageIcon,
+  Scissors, Sparkles, Package, ChefHat, Image as ImageIcon, Heart,
 } from "lucide-react";
 
 // ── Tokens ────────────────────────────────────────────────────────────────────
@@ -65,7 +66,7 @@ function mapProvider(row) {
 }
 
 // ── Provider Card ──────────────────────────────────────────────────────────────
-function ProviderCard({ provider }) {
+function ProviderCard({ provider, saved, onToggleSave }) {
   const catLabel = provider.categories[0] || null;
   const stars    = Math.round(provider.rating);
 
@@ -133,12 +134,18 @@ function ProviderCard({ provider }) {
         <span style={{ color: MUTED, fontSize: "0.75rem", display: "flex", alignItems: "center", gap: 4 }}>
           <MapPin size={11} /> {provider.district}
         </span>
-        <Link
-          to={`/providers/${provider.id}`}
-          style={{ backgroundColor: G, color: "white", borderRadius: 8, padding: "7px 18px", fontSize: "0.78rem", fontWeight: 600, textDecoration: "none" }}
-        >
-          Book
-        </Link>
+        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          {onToggleSave && (
+            <button onClick={() => onToggleSave(provider.id)} aria-label={saved ? "Unsave" : "Save"}
+              style={{ width: 32, height: 32, borderRadius: 8, border: "1px solid #e8e2d8", backgroundColor: "white", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Heart size={14} fill={saved ? G : "none"} style={{ color: saved ? G : MUTED }} />
+            </button>
+          )}
+          <Link to={`/providers/${provider.id}`}
+            style={{ backgroundColor: G, color: "white", borderRadius: 8, padding: "7px 18px", fontSize: "0.78rem", fontWeight: 600, textDecoration: "none" }}>
+            Book
+          </Link>
+        </div>
       </div>
     </div>
   );
@@ -273,7 +280,8 @@ function FiltersSidebar({ filters, setFilters, onClose }) {
 
 // ── Page ───────────────────────────────────────────────────────────────────────
 export default function ProviderDirectory() {
-  const { t } = useLang();
+  const { t }    = useLang();
+  const { user } = useAuth();
   const [search,             setSearch]             = useState("");
   const [sortBy,             setSortBy]             = useState("trust");
   const [providers,          setProviders]          = useState([]);
@@ -281,6 +289,7 @@ export default function ProviderDirectory() {
   const [error,              setError]              = useState("");
   const [page,               setPage]               = useState(1);
   const [mobileFiltersOpen,  setMobileFiltersOpen]  = useState(false);
+  const [savedIds,           setSavedIds]           = useState(new Set());
   const [filters, setFilters] = useState({ categories: [], district: "all", minRating: 0, minTrust: 0, verifiedOnly: false });
 
   // Fetch from Supabase RPC
@@ -301,6 +310,24 @@ export default function ProviderDirectory() {
     })();
     return () => { cancelled = true; };
   }, []);
+
+  // Load saved provider IDs for the logged-in customer
+  useEffect(() => {
+    if (!user?.id || user?.role !== "customer") return;
+    supabase.from("saved_providers").select("provider_profile_id").eq("customer_id", user.id)
+      .then(({ data }) => { if (data) setSavedIds(new Set(data.map(r => r.provider_profile_id))); });
+  }, [user?.id]);
+
+  const handleToggleSave = async (profileId) => {
+    if (!user?.id) { window.location.href = "/login"; return; }
+    if (savedIds.has(profileId)) {
+      await supabase.from("saved_providers").delete().eq("customer_id", user.id).eq("provider_profile_id", profileId);
+      setSavedIds(prev => { const s = new Set(prev); s.delete(profileId); return s; });
+    } else {
+      await supabase.from("saved_providers").insert({ customer_id: user.id, provider_profile_id: profileId });
+      setSavedIds(prev => new Set([...prev, profileId]));
+    }
+  };
 
   // Reset page on filter/search change
   useEffect(() => { setPage(1); }, [search, sortBy, filters]);
@@ -325,10 +352,11 @@ export default function ProviderDirectory() {
     });
 
     result.sort((a, b) => {
-      if (sortBy === "trust")   return b.trustScore - a.trustScore;
-      if (sortBy === "rating")  return b.rating - a.rating;
-      if (sortBy === "reviews") return b.reviews  - a.reviews;
-      return 0;
+      const verifiedDiff = (b.verified ? 1 : 0) - (a.verified ? 1 : 0);
+      if (sortBy === "trust")   { const d = b.trustScore - a.trustScore; return d !== 0 ? d : verifiedDiff; }
+      if (sortBy === "rating")  { const d = b.rating - a.rating;         return d !== 0 ? d : verifiedDiff; }
+      if (sortBy === "reviews") { const d = b.reviews - a.reviews;       return d !== 0 ? d : verifiedDiff; }
+      return verifiedDiff;
     });
 
     return result;
@@ -497,7 +525,7 @@ export default function ProviderDirectory() {
                 </div>
               ) : paginated.length > 0 ? (
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
-                  {paginated.map((p) => <ProviderCard key={p.id} provider={p} />)}
+                  {paginated.map((p) => <ProviderCard key={p.id} provider={p} saved={savedIds.has(p.id)} onToggleSave={user?.role === "customer" ? handleToggleSave : null} />)}
                 </div>
               ) : (
                 <div style={{ backgroundColor: "white", borderRadius: 14, border: "1px solid #e8e2d8", padding: 48, textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
