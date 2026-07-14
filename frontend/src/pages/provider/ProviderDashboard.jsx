@@ -579,8 +579,16 @@ function MyProfile({ user, profile, onSave, onAvatarChange }) {
 
           {/* Availability */}
           <div style={{ ...CARD, padding: 20 }}>
-            <p style={{ color: DARK, fontSize: "0.875rem", fontWeight: 700, marginBottom: 12 }}>Availability</p>
-            <p style={{ color: MUTED, fontSize: "0.75rem", marginBottom: 12 }}>Select the days you are available to take bookings.</p>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+              <div>
+                <p style={{ color: DARK, fontSize: "0.875rem", fontWeight: 700 }}>Availability</p>
+                <p style={{ color: MUTED, fontSize: "0.75rem", marginTop: 2 }}>Days you are available for bookings.</p>
+              </div>
+              <button onClick={handleSave} disabled={saving}
+                style={{ backgroundColor: saving ? "#3d8a6e" : G, color: "white", border: "none", borderRadius: 8, padding: "7px 16px", fontFamily: SANS, fontWeight: 600, fontSize: "0.78rem", cursor: saving ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+                {saving ? "Saving…" : "Save"}
+              </button>
+            </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {WEEKDAYS.map(day => {
                 const active = availableDays.includes(day);
@@ -805,20 +813,20 @@ function AnalyticsTab({ userId }) {
 
   useEffect(() => {
     if (!userId) return;
-    Promise.all([
-      supabase.from("bookings")
-        .select("id, title, amount, is_paid, scheduled_date, status")
-        .eq("provider_id", userId)
-        .order("scheduled_date", { ascending: true }),
-      supabase.from("provider_profiles")
-        .select("profile_views")
-        .eq("user_id", userId)
-        .single(),
-    ]).then(([bookRes, pvRes]) => {
-      setBookings(bookRes.data || []);
-      setProfileViews(pvRes.data?.profile_views || 0);
-      setLoading(false);
-    });
+    supabase.from("bookings")
+      .select("id, title, amount, is_paid, scheduled_date, status")
+      .eq("provider_id", userId)
+      .order("scheduled_date", { ascending: true })
+      .then(({ data }) => { setBookings(data || []); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+
+    supabase.from("provider_profiles")
+      .select("profile_views")
+      .eq("user_id", userId)
+      .maybeSingle()
+      .then(({ data }) => { if (data?.profile_views != null) setProfileViews(data.profile_views); })
+      .catch(() => {});
   }, [userId]);
 
   if (loading) return <div style={{ display: "flex", justifyContent: "center", padding: 60 }}><Loader2 size={24} style={{ color: G, animation: "spin 1s linear infinite" }} /></div>;
