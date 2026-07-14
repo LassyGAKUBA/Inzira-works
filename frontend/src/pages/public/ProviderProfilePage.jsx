@@ -798,9 +798,9 @@ export default function ProviderProfilePage() {
                       <p className="text-sm text-slate-700">{provider.memberSince}</p>
                     </div>
                   </div>
-                  {availableDays.length > 0 && (
-                    <div className="pt-2">
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">Available Days</p>
+                  <div className="pt-2">
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">Available Days</p>
+                    {availableDays.length > 0 ? (
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                         {availableDays.map(day => (
                           <span key={day} style={{ backgroundColor: "#e8f3ee", color: "#0E5C46", borderRadius: 99, padding: "4px 12px", fontSize: "0.75rem", fontWeight: 600 }}>
@@ -808,8 +808,10 @@ export default function ProviderProfilePage() {
                           </span>
                         ))}
                       </div>
-                    </div>
-                  )}
+                    ) : (
+                      <p className="text-sm text-slate-400">Contact provider to confirm availability.</p>
+                    )}
+                  </div>
                 </div>
               )}
 
