@@ -14,7 +14,7 @@ import { useAuth } from "../../context/AuthContext";
 import {
   MapPin, Star, CheckCircle, ArrowRight,
   X, Heart, Share2, MessageCircle, Lock,
-  Search, Image as ImageIcon, Shield,
+  Search, Image as ImageIcon, Shield, CalendarDays,
 } from "lucide-react";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -756,6 +756,24 @@ export default function ProviderProfilePage() {
               ))}
             </div>
           )}
+
+          {/* Available days — always visible in header */}
+          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100">
+            <div className="flex items-center gap-1.5 text-slate-400 text-xs font-semibold uppercase tracking-wide mr-1">
+              <CalendarDays size={13} />
+              Available
+            </div>
+            {availableDays.length > 0 ? (
+              availableDays.map(day => (
+                <span key={day} style={{ backgroundColor: "#e8f3ee", color: "#0E5C46" }}
+                  className="text-xs font-semibold px-3 py-1 rounded-full">
+                  {day}
+                </span>
+              ))
+            ) : (
+              <span className="text-xs text-slate-400">Contact provider to confirm availability</span>
+            )}
+          </div>
 
         </div>
       </section>
