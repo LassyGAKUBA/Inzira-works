@@ -374,12 +374,16 @@ function MyProfile({ user, profile, onSave, onAvatarChange }) {
   const handleSave = async () => {
     setSaving(true); setSaveMsg("");
     try {
-      const { error } = await supabase.from("provider_profiles")
-        .update({ headline: form.business, bio: form.about, district: form.district, available_days: availableDays })
-        .eq("user_id", user.id);
+      const { data: saved, error } = await supabase.from("provider_profiles")
+        .upsert(
+          { user_id: user.id, headline: form.business, bio: form.about, district: form.district, available_days: availableDays },
+          { onConflict: "user_id" }
+        )
+        .select("id, headline, bio, district, trust_score, response_rate, verification_status, profile_completeness")
+        .single();
       if (error) throw error;
       setSaveMsg("Saved!");
-      if (onSave) onSave({ ...profile, headline: form.business, bio: form.about, district: form.district });
+      if (onSave) onSave({ ...profile, ...saved });
     } catch { setSaveMsg("Could not save. Please try again."); }
     finally { setSaving(false); setTimeout(() => setSaveMsg(""), 3000); }
   };
