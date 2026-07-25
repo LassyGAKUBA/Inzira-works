@@ -98,7 +98,7 @@ export default function PrivacyPolicyPage() {
               </ul>
               <p style={{ marginTop: 12 }}>
                 To exercise any of these rights, contact us at{" "}
-                <a href="mailto:privacy@inziraworks.rw" style={{ color: G, fontWeight: 600 }}>privacy@inziraworks.rw</a>.
+                <a href="mailto:lassyorlene@gmail.com" style={{ color: G, fontWeight: 600 }}>lassyorlene@gmail.com</a>.
                 We will respond within 30 days.
               </p>
             </Section>
@@ -137,7 +137,7 @@ export default function PrivacyPolicyPage() {
             <Section title="10. Contact">
               <p>
                 For any questions about this privacy policy or how we handle your data, contact us at{" "}
-                <a href="mailto:privacy@inziraworks.rw" style={{ color: G, fontWeight: 600 }}>privacy@inziraworks.rw</a>.
+                <a href="mailto:lassyorlene@gmail.com" style={{ color: G, fontWeight: 600 }}>lassyorlene@gmail.com</a>.
               </p>
             </Section>
 

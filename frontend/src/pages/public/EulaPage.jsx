@@ -290,7 +290,7 @@ export default function EulaPage() {
               <><strong>Platform:</strong> Inzira Works</>,
               <><strong>Operator:</strong> GAKUBA Lassy Orlene</>,
               <><strong>Institution:</strong> African Leadership University, Kigali, Rwanda</>,
-              <><strong>Email:</strong> <a href="mailto:t.kwizera@alustudent.com" style={{ color: G, fontWeight: 600 }}>t.kwizera@alustudent.com</a></>,
+              <><strong>Email:</strong> <a href="mailto:lassyorlene@gmail.com" style={{ color: G, fontWeight: 600 }}>lassyorlene@gmail.com</a></>,
               <><strong>Website:</strong> <a href="https://inzira-works.vercel.app" target="_blank" rel="noreferrer" style={{ color: G, fontWeight: 600 }}>inzira-works.vercel.app</a></>,
             ]} />
           </Section>
