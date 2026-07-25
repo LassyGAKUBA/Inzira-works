@@ -20,6 +20,7 @@ import AboutPage from "./pages/public/AboutPage";
 import ContactPage from "./pages/public/ContactPage";
 import ProviderProfilePage from "./pages/public/ProviderProfilePage";
 import PrivacyPolicyPage from "./pages/public/PrivacyPolicyPage";
+import EulaPage from "./pages/public/EulaPage";
 
 const router = createBrowserRouter([
   { path: "/", element: <HomePage /> },
@@ -62,6 +63,7 @@ const router = createBrowserRouter([
   { path: "/contact", element: <ContactPage /> },
   { path: "/providers/:id", element: <ProviderProfilePage /> },
   { path: "/privacy",       element: <PrivacyPolicyPage /> },
+  { path: "/eula",          element: <EulaPage /> },
 ]);
 
 export default function App() {

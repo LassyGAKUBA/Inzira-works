@@ -702,6 +702,10 @@ function Footer() {
               className="hover:opacity-70 transition-opacity">
               Privacy Policy
             </Link>
+            <Link to="/eula" style={{ color: MUTED, fontSize: "0.75rem", textDecoration: "none", borderBottom: "1px solid #c4bfb6" }}
+              className="hover:opacity-70 transition-opacity">
+              Terms of Use
+            </Link>
           </div>
         </div>
       </Container>
