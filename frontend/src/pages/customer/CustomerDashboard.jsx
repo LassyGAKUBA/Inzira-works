@@ -108,6 +108,59 @@ function ReviewModal({ booking, onClose, onSubmitted }) {
   );
 }
 
+function ComplaintModal({ booking, onClose }) {
+  const { user } = useAuth();
+  const provName = booking.provider?.full_name || "Provider";
+  const [message, setMessage] = useState("");
+  const [saving,  setSaving]  = useState(false);
+  const [done,    setDone]    = useState(false);
+  const [err,     setErr]     = useState("");
+
+  const submit = async () => {
+    if (!message.trim()) { setErr("Please describe your complaint."); return; }
+    setSaving(true); setErr("");
+    const { error } = await supabase.from("contact_messages").insert({
+      name:    user.user_metadata?.full_name || user.email,
+      email:   user.email,
+      subject: `Service Complaint: ${booking.title}`,
+      message: `Provider: ${provName}\nService: ${booking.title}\nDate: ${booking.scheduled_date || "—"}\n\n${message.trim()}`,
+    });
+    setSaving(false);
+    if (error) { setErr(error.message || "Could not submit. Please try again."); return; }
+    setDone(true);
+  };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(23,36,32,0.55)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50, padding: 16 }}>
+      <div style={{ ...CARD, width: "100%", maxWidth: 460, padding: 28, position: "relative" }}>
+        <button onClick={onClose} style={{ position: "absolute", top: 16, right: 16, background: "none", border: "none", cursor: "pointer", color: MUTED }}><X size={18} /></button>
+        {done ? (
+          <div style={{ textAlign: "center", padding: "16px 0" }}>
+            <CheckCircle size={40} style={{ color: G, margin: "0 auto 16px" }} />
+            <h2 style={{ fontFamily: SERIF, color: DARK, fontSize: "1.2rem", fontWeight: 700, marginBottom: 8 }}>Complaint submitted</h2>
+            <p style={{ color: MUTED, fontSize: "0.875rem", marginBottom: 24 }}>We've received your complaint and will follow up at <strong>{user.email}</strong>.</p>
+            <button onClick={onClose} style={{ backgroundColor: G, color: "white", border: "none", borderRadius: 10, padding: "10px 28px", fontFamily: SANS, fontWeight: 600, fontSize: "0.875rem", cursor: "pointer" }}>Close</button>
+          </div>
+        ) : (
+          <>
+            <h2 style={{ fontFamily: SERIF, color: DARK, fontSize: "1.25rem", fontWeight: 700, marginBottom: 4 }}>File a complaint</h2>
+            <p style={{ color: MUTED, fontSize: "0.8rem", marginBottom: 20 }}>for {provName} · {booking.title}</p>
+            <textarea value={message} onChange={e => setMessage(e.target.value)} rows={5}
+              placeholder="Describe what went wrong with the service you received…"
+              style={{ width: "100%", padding: "10px 14px", border: "1px solid #e8e2d8", borderRadius: 10, fontFamily: SANS, fontSize: "0.875rem", color: DARK, outline: "none", resize: "vertical", boxSizing: "border-box", marginBottom: 16 }} />
+            {err && <p style={{ color: "#e05c5c", fontSize: "0.8rem", marginBottom: 10 }}>{err}</p>}
+            <button onClick={submit} disabled={saving}
+              style={{ width: "100%", backgroundColor: G, color: "white", border: "none", borderRadius: 10, padding: "12px 0", fontFamily: SANS, fontWeight: 700, fontSize: "0.9rem", cursor: saving ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+              {saving && <Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} />}
+              {saving ? "Submitting…" : "Submit complaint"}
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function Sidebar({ tab, setTab, upcomingCount, user, avatarUrl, onLogout, isMobile, isOpen, onClose }) {
   const { t } = useLang();
   const firstName = (user?.full_name || "there").split(" ")[0];
@@ -331,7 +384,7 @@ function MyBookings({ bookings, onCancel }) {
   );
 }
 
-function HistoryTab({ bookings, onReviewClick, onRefresh }) {
+function HistoryTab({ bookings, onReviewClick, onDisputeClick, onRefresh }) {
   if (bookings.length === 0) {
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
@@ -401,6 +454,10 @@ function HistoryTab({ bookings, onReviewClick, onRefresh }) {
                       <RefreshCw size={11} /> Book again
                     </Link>
                   )}
+                  <button onClick={() => onDisputeClick(b)}
+                    style={{ background: "none", border: "1px solid #e05c5c", borderRadius: 8, padding: "5px 12px", fontFamily: SANS, fontWeight: 600, fontSize: "0.72rem", color: "#e05c5c", cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
+                    <MessageCircle size={11} /> Dispute
+                  </button>
                 </div>
               </div>
             </div>
@@ -703,6 +760,7 @@ export default function CustomerDashboard() {
   const [completed, setCompleted] = useState([]);
   const [loading,   setLoading]   = useState(true);
   const [reviewing, setReviewing] = useState(null);
+  const [disputing, setDisputing] = useState(null);
   const [avatarUrl, setAvatarUrl] = useState(null);
 
   useEffect(() => {
@@ -802,7 +860,7 @@ export default function CustomerDashboard() {
       <main style={{ flex: 1, padding: isMobile ? "72px 16px 24px" : 32, overflowY: "auto" }}>
         {tab === "overview"  && <Overview stats={stats} upcoming={upcoming} completed={completed} onTabChange={setTab} onReviewClick={setReviewing} />}
         {tab === "bookings"  && <MyBookings bookings={upcoming} onCancel={handleCancel} />}
-        {tab === "history"   && <HistoryTab bookings={completed} onReviewClick={setReviewing} onRefresh={loadData} />}
+        {tab === "history"   && <HistoryTab bookings={completed} onReviewClick={setReviewing} onDisputeClick={setDisputing} onRefresh={loadData} />}
         {tab === "saved"     && <SavedTab userId={user?.id} />}
         {tab === "profile"   && <ProfileTab user={user} avatarUrl={avatarUrl} onAvatarChange={setAvatarUrl} />}
       </main>
@@ -812,6 +870,12 @@ export default function CustomerDashboard() {
           booking={reviewing}
           onClose={() => setReviewing(null)}
           onSubmitted={loadData}
+        />
+      )}
+      {disputing && (
+        <ComplaintModal
+          booking={disputing}
+          onClose={() => setDisputing(null)}
         />
       )}
     </div>
