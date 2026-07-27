@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useLang } from "../../i18n/LangContext";
 import { supabase } from "../../lib/supabase";
+import NotificationBell from "../../components/shared/NotificationBell";
 import {
   Shield, CheckCircle, Banknote, MessageCircle,
   Calendar, MapPin, Image as ImageIcon, ExternalLink, Loader2, LogOut, Menu,
@@ -98,10 +99,11 @@ function Sidebar({ tab, setTab, user, profile, avatarUrl, pendingCount, onLogout
               ? <img src={avatarUrl} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               : <ImageIcon size={14} style={{ color: "rgba(255,255,255,0.4)" }} />}
           </div>
-          <div>
+          <div style={{ flex: 1 }}>
             <p style={{ color: "white", fontSize: "0.8rem", fontWeight: 600 }}>{firstName}</p>
             {profile && <p style={{ color: GOLD, fontSize: "0.7rem", fontWeight: 500 }}>Trust {Math.round(profile.trust_score ?? 0)}</p>}
           </div>
+          <NotificationBell userId={user?.id} role="provider" />
         </div>
         <button onClick={onLogout}
           style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "9px 12px", borderRadius: 8, border: "none", cursor: "pointer", backgroundColor: "transparent", color: "rgba(255,255,255,0.55)", fontFamily: SANS, fontSize: "0.825rem", fontWeight: 500, marginTop: 4 }}
@@ -230,13 +232,13 @@ function Bookings({ pending, confirmed, onAccept, onDecline, onComplete }) {
         ) : (
           <div style={{ display: "flex", flexDirection: "column" }}>
             {pending.map((b, i) => (
-              <div key={b.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 0", borderTop: i > 0 ? "1px solid #f0ece4" : "none" }}>
+              <div key={b.id} className="booking-row" style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 0", borderTop: i > 0 ? "1px solid #f0ece4" : "none" }}>
                 <InitialsCircle name={b.customer_name} size={34} />
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ color: DARK, fontWeight: 600, fontSize: "0.875rem" }}>{b.title}</p>
                   <p style={{ color: MUTED, fontSize: "0.75rem", marginTop: 2 }}>{b.customer_name} · {formatDate(b.scheduled_date)}</p>
                 </div>
-                <div style={{ display: "flex", gap: 8 }}>
+                <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
                   <button onClick={() => onAccept(b.id)} style={{ backgroundColor: G, color: "white", border: "none", borderRadius: 8, padding: "7px 18px", fontFamily: SANS, fontWeight: 600, fontSize: "0.8rem", cursor: "pointer" }}>Accept</button>
                   <button onClick={() => onDecline(b.id)} style={{ backgroundColor: "white", color: DARK, border: "1px solid #e8e2d8", borderRadius: 8, padding: "7px 18px", fontFamily: SANS, fontWeight: 500, fontSize: "0.8rem", cursor: "pointer" }}>Decline</button>
                 </div>
@@ -441,7 +443,7 @@ function MyProfile({ user, profile, onSave, onAvatarChange }) {
         </Link>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 280px", gap: 16 }}>
+      <div className="profile-grid" style={{ display: "grid", gridTemplateColumns: "1fr 280px", gap: 16 }}>
         {/* ── Left column ── */}
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
 
@@ -785,25 +787,29 @@ function HistoryTab({ userId }) {
         </div>
       ) : (
         <div style={{ ...CARD, overflow: "hidden" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 150px 120px 90px 90px", padding: "12px 20px", borderBottom: "1px solid #f0ece4", backgroundColor: "#faf8f4" }}>
-            {["SERVICE", "CUSTOMER", "DATE", "AMOUNT", "PAID"].map(col => (
-              <span key={col} style={{ color: MUTED, fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.08em" }}>{col}</span>
-            ))}
-          </div>
-          {filtered.map((b, i) => (
-            <div key={b.id} style={{ display: "grid", gridTemplateColumns: "1fr 150px 120px 90px 90px", padding: "14px 20px", borderTop: i > 0 ? "1px solid #f0ece4" : "none", alignItems: "center" }}>
-              <p style={{ color: DARK, fontWeight: 600, fontSize: "0.875rem" }}>{b.title}</p>
-              <p style={{ color: MUTED, fontSize: "0.82rem" }}>{b.customer?.full_name || "—"}</p>
-              <p style={{ color: MUTED, fontSize: "0.78rem" }}>{formatDate(b.scheduled_date)}</p>
-              <p style={{ color: DARK, fontSize: "0.82rem", fontVariantNumeric: "tabular-nums" }}>
-                {b.amount ? `RWF ${Number(b.amount).toLocaleString()}` : "—"}
-              </p>
-              <button onClick={() => handleTogglePaid(b.id, b.is_paid)}
-                style={{ backgroundColor: b.is_paid ? "#e8f3ee" : "#f5f5f5", color: b.is_paid ? G : MUTED, border: `1px solid ${b.is_paid ? "#b7d9c8" : "#e5e7eb"}`, borderRadius: 8, padding: "4px 10px", fontFamily: SANS, fontWeight: 600, fontSize: "0.7rem", cursor: "pointer" }}>
-                {b.is_paid ? "Paid" : "Mark paid"}
-              </button>
+          <div className="data-table">
+            <div style={{ minWidth: 560 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 150px 120px 90px 90px", padding: "12px 20px", borderBottom: "1px solid #f0ece4", backgroundColor: "#faf8f4" }}>
+                {["SERVICE", "CUSTOMER", "DATE", "AMOUNT", "PAID"].map(col => (
+                  <span key={col} style={{ color: MUTED, fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.08em" }}>{col}</span>
+                ))}
+              </div>
+              {filtered.map((b, i) => (
+                <div key={b.id} style={{ display: "grid", gridTemplateColumns: "1fr 150px 120px 90px 90px", padding: "14px 20px", borderTop: i > 0 ? "1px solid #f0ece4" : "none", alignItems: "center" }}>
+                  <p style={{ color: DARK, fontWeight: 600, fontSize: "0.875rem" }}>{b.title}</p>
+                  <p style={{ color: MUTED, fontSize: "0.82rem" }}>{b.customer?.full_name || "—"}</p>
+                  <p style={{ color: MUTED, fontSize: "0.78rem" }}>{formatDate(b.scheduled_date)}</p>
+                  <p style={{ color: DARK, fontSize: "0.82rem", fontVariantNumeric: "tabular-nums" }}>
+                    {b.amount ? `RWF ${Number(b.amount).toLocaleString()}` : "—"}
+                  </p>
+                  <button onClick={() => handleTogglePaid(b.id, b.is_paid)}
+                    style={{ backgroundColor: b.is_paid ? "#e8f3ee" : "#f5f5f5", color: b.is_paid ? G : MUTED, border: `1px solid ${b.is_paid ? "#b7d9c8" : "#e5e7eb"}`, borderRadius: 8, padding: "4px 10px", fontFamily: SANS, fontWeight: 600, fontSize: "0.7rem", cursor: "pointer" }}>
+                    {b.is_paid ? "Paid" : "Mark paid"}
+                  </button>
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
         </div>
       )}
     </div>
@@ -870,7 +876,7 @@ function AnalyticsTab({ userId }) {
         <p style={{ color: MUTED, fontSize: "0.875rem", marginTop: 4 }}>Your performance overview.</p>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+      <div className="stat-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
         {statCard("Total Jobs Done", completed.length, "completed bookings", G)}
         {statCard("Confirmed Earnings", `RWF ${totalEarned.toLocaleString()}`, "from paid bookings", GOLD)}
         {statCard("Pending Payment", `RWF ${pendingPayment.toLocaleString()}`, "completed but not marked paid", MUTED)}
@@ -954,7 +960,7 @@ function ReviewsTab({ userId }) {
       </div>
 
       {reviews.length > 0 && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+        <div className="stat-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
           {[
             { label: "Average Rating", value: avgRating.toFixed(1), sub: "out of 5.0" },
             { label: "Total Reviews",  value: reviews.length,       sub: "all time" },
@@ -1348,7 +1354,7 @@ export default function ProviderDashboard() {
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", fontFamily: SANS, backgroundColor: CREAM }}>
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } } @media(max-width:640px){.stat-grid{grid-template-columns:repeat(2,1fr)!important}}`}</style>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}@media(max-width:640px){.stat-grid{grid-template-columns:repeat(2,1fr)!important}.profile-grid{grid-template-columns:1fr!important}.booking-row{flex-wrap:wrap!important;align-items:flex-start!important}.data-table{overflow-x:auto}}`}</style>
 
       {isMobile && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: 56, backgroundColor: G, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", zIndex: 100, boxSizing: "border-box" }}>
@@ -1356,7 +1362,7 @@ export default function ProviderDashboard() {
             <Menu size={22} />
           </button>
           <span style={{ fontFamily: SERIF, color: "white", fontWeight: 700, fontSize: "1rem" }}>Inzira Works</span>
-          <div style={{ width: 30 }} />
+          <NotificationBell userId={user?.id} role="provider" />
         </div>
       )}
       {isMobile && sidebarOpen && (

@@ -8,7 +8,7 @@ import { useAuth } from "../../context/AuthContext";
 import {
   MapPin, Star, CheckCircle, Search,
   SlidersHorizontal, X, AlertTriangle,
-  Scissors, Sparkles, Package, ChefHat, Image as ImageIcon, Heart,
+  Scissors, Sparkles, Package, ChefHat, Image as ImageIcon, Heart, Clock,
 } from "lucide-react";
 
 // ── Tokens ────────────────────────────────────────────────────────────────────
@@ -31,6 +31,17 @@ const CATEGORIES = [
 const DISTRICTS = ["Gasabo", "Kicukiro", "Nyarugenge"];
 const PER_PAGE  = 9;
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function formatResponseTime(mins) {
+  const m = Number(mins);
+  if (!m || m <= 0) return null;
+  if (m < 60)   return "< 1 hr";
+  if (m < 120)  return "~1 hr";
+  if (m < 1440) return `~${Math.round(m / 60)} hrs`;
+  if (m < 2880) return "~1 day";
+  return null;
+}
+
 // ── Data mapping ───────────────────────────────────────────────────────────────
 function inferCategories(headline = "", skills = []) {
   const text = [headline, ...skills].join(" ");
@@ -51,17 +62,18 @@ function mapProvider(row) {
   const categories = dbCats.length > 0 ? dbCats : inferCategories(row.headline || "", skills);
 
   return {
-    id:         row.provider_id,
-    name:       row.full_name,
-    headline:   row.headline || "Service Provider",
-    district:   row.district || "—",
+    id:           row.provider_id,
+    name:         row.full_name,
+    headline:     row.headline || "Service Provider",
+    district:     row.district || "—",
     trustScore,
     rating,
     reviews,
     verified,
     skills,
     categories,
-    avatarUrl:  row.avatar_url || null,
+    avatarUrl:    row.avatar_url || null,
+    responseTime: formatResponseTime(row.avg_response_minutes),
   };
 }
 
@@ -129,11 +141,20 @@ function ProviderCard({ provider, saved, onToggleSave }) {
         </div>
       )}
 
-      {/* Footer: district + CTA */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 10, borderTop: "1px solid #f0ece4", marginTop: "auto" }}>
-        <span style={{ color: MUTED, fontSize: "0.75rem", display: "flex", alignItems: "center", gap: 4 }}>
+      {/* Response time + district */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+        <span style={{ color: MUTED, fontSize: "0.72rem", display: "flex", alignItems: "center", gap: 4 }}>
           <MapPin size={11} /> {provider.district}
         </span>
+        {provider.responseTime && (
+          <span style={{ color: MUTED, fontSize: "0.72rem", display: "flex", alignItems: "center", gap: 4 }}>
+            <Clock size={11} /> Responds {provider.responseTime}
+          </span>
+        )}
+      </div>
+
+      {/* Footer: CTA */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", paddingTop: 10, borderTop: "1px solid #f0ece4", marginTop: "auto" }}>
         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
           {onToggleSave && (
             <button onClick={() => onToggleSave(provider.id)} aria-label={saved ? "Unsave" : "Save"}

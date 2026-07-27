@@ -5,7 +5,7 @@ import { useLang } from "../../i18n/LangContext";
 import { supabase } from "../../lib/supabase";
 import {
   Users, ShieldCheck, Clock, Star, FileText, Loader2, MapPin, LogOut, Menu,
-  UserX, UserCheck,
+  UserX, UserCheck, MessageCircle, CheckCircle, AlertTriangle,
 } from "lucide-react";
 
 // ── Tokens ────────────────────────────────────────────────────────────────────
@@ -40,8 +40,9 @@ function Sidebar({ tab, setTab, queueCount, onLogout, isMobile, isOpen, onClose 
     { id: "overview",  label: t("admin_overview"),  badge: null },
     { id: "customers", label: t("admin_customers"), badge: null },
     { id: "providers", label: t("admin_providers"), badge: null },
-    { id: "bookings",  label: t("admin_bookings"),  badge: null },
-    { id: "queue",     label: t("admin_queue"),     badge: queueCount || null },
+    { id: "bookings",    label: t("admin_bookings"),  badge: null },
+    { id: "complaints", label: "Complaints",         badge: null },
+    { id: "queue",      label: t("admin_queue"),     badge: queueCount || null },
   ];
   const handleNav = (id) => { setTab(id); if (isMobile && onClose) onClose(); };
   return (
@@ -108,7 +109,7 @@ function Overview({ stats, districts, activity }) {
         ))}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 280px", gap: 16 }}>
+      <div className="two-col-grid" style={{ display: "grid", gridTemplateColumns: "1fr 280px", gap: 16 }}>
         <div style={{ ...CARD, padding: 20 }}>
           <h2 style={{ color: DARK, fontSize: "0.95rem", fontWeight: 700, marginBottom: 16 }}>Recent sign-ups</h2>
           {activity.length === 0 ? (
@@ -223,50 +224,49 @@ function AllProviders({ providers, onToggle, onVerify }) {
       </div>
 
       <div style={{ ...CARD, overflow: "hidden" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 120px 55px 100px 100px", padding: "12px 20px", borderBottom: "1px solid #f0ece4", backgroundColor: "#faf8f4" }}>
-          {["PROVIDER", "CATEGORY", "TRUST", "VERIFY", "ACTIVE"].map((col) => (
-            <span key={col} style={{ color: MUTED, fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.08em" }}>{col}</span>
-          ))}
-        </div>
-
-        {providers.length === 0 ? (
-          <p style={{ padding: "24px 20px", color: MUTED, fontSize: "0.85rem" }}>No providers yet.</p>
-        ) : (
-          providers.map((p, i) => {
-            const name       = p.full_name || "—";
-            const category   = (p.categories || [])[0] || "—";
-            const isVerified = p.verification_status === "verified";
-            const active     = p.is_active !== false;
-            return (
-              <div key={p.provider_id || p.user_id} style={{ display: "grid", gridTemplateColumns: "1fr 120px 55px 100px 100px", padding: "14px 20px", borderTop: i > 0 ? "1px solid #f0ece4" : "none", alignItems: "center" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={{ width: 30, height: 30, borderRadius: "50%", backgroundColor: active ? "#e8f3ee" : "#fef2f2", color: active ? G : "#dc2626", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "0.65rem", flexShrink: 0 }}>
-                    {initials(name)}
+        <div className="data-table">
+          <div style={{ minWidth: 520 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 120px 55px 100px 100px", padding: "12px 20px", borderBottom: "1px solid #f0ece4", backgroundColor: "#faf8f4" }}>
+              {["PROVIDER", "CATEGORY", "TRUST", "VERIFY", "ACTIVE"].map((col) => (
+                <span key={col} style={{ color: MUTED, fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.08em" }}>{col}</span>
+              ))}
+            </div>
+            {providers.length === 0 ? (
+              <p style={{ padding: "24px 20px", color: MUTED, fontSize: "0.85rem" }}>No providers yet.</p>
+            ) : providers.map((p, i) => {
+              const name       = p.full_name || "—";
+              const category   = (p.categories || [])[0] || "—";
+              const isVerified = p.verification_status === "verified";
+              const active     = p.is_active !== false;
+              return (
+                <div key={p.provider_id || p.user_id} style={{ display: "grid", gridTemplateColumns: "1fr 120px 55px 100px 100px", padding: "14px 20px", borderTop: i > 0 ? "1px solid #f0ece4" : "none", alignItems: "center" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{ width: 30, height: 30, borderRadius: "50%", backgroundColor: active ? "#e8f3ee" : "#fef2f2", color: active ? G : "#dc2626", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "0.65rem", flexShrink: 0 }}>
+                      {initials(name)}
+                    </div>
+                    <div>
+                      <p style={{ color: active ? DARK : MUTED, fontSize: "0.82rem", fontWeight: 600 }}>{name}</p>
+                      <p style={{ color: MUTED, fontSize: "0.7rem" }}>{p.district || "—"}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p style={{ color: active ? DARK : MUTED, fontSize: "0.82rem", fontWeight: 600 }}>{name}</p>
-                    <p style={{ color: MUTED, fontSize: "0.7rem" }}>{p.district || "—"}</p>
-                  </div>
+                  <span style={{ color: MUTED, fontSize: "0.78rem" }}>{category}</span>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: GOLD, fontSize: "0.78rem", fontWeight: 700 }}>
+                    <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: GOLD, display: "inline-block" }} />
+                    {Math.round(p.trust_score || 0)}
+                  </span>
+                  <button onClick={() => onVerify && onVerify(p.user_id, isVerified)}
+                    style={{ display: "inline-flex", alignItems: "center", gap: 5, backgroundColor: isVerified ? "#e8f3ee" : "#fef3c7", color: isVerified ? G : "#92700a", border: "none", borderRadius: 8, padding: "5px 10px", fontSize: "0.7rem", fontWeight: 600, cursor: "pointer" }}>
+                    <ShieldCheck size={11} /> {isVerified ? "Verified" : "Verify"}
+                  </button>
+                  <button onClick={() => onToggle && onToggle(p.user_id, active)}
+                    style={{ display: "inline-flex", alignItems: "center", gap: 5, backgroundColor: active ? "#fef2f2" : "#e8f3ee", color: active ? "#dc2626" : G, border: "none", borderRadius: 8, padding: "5px 10px", fontSize: "0.7rem", fontWeight: 600, cursor: "pointer" }}>
+                    {active ? <><UserX size={11} /> Disable</> : <><UserCheck size={11} /> Enable</>}
+                  </button>
                 </div>
-                <span style={{ color: MUTED, fontSize: "0.78rem" }}>{category}</span>
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: GOLD, fontSize: "0.78rem", fontWeight: 700 }}>
-                  <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: GOLD, display: "inline-block" }} />
-                  {Math.round(p.trust_score || 0)}
-                </span>
-                <button
-                  onClick={() => onVerify && onVerify(p.user_id, isVerified)}
-                  style={{ display: "inline-flex", alignItems: "center", gap: 5, backgroundColor: isVerified ? "#e8f3ee" : "#fef3c7", color: isVerified ? G : "#92700a", border: "none", borderRadius: 8, padding: "5px 10px", fontSize: "0.7rem", fontWeight: 600, cursor: "pointer" }}>
-                  <ShieldCheck size={11} /> {isVerified ? "Verified" : "Verify"}
-                </button>
-                <button
-                  onClick={() => onToggle && onToggle(p.user_id, active)}
-                  style={{ display: "inline-flex", alignItems: "center", gap: 5, backgroundColor: active ? "#fef2f2" : "#e8f3ee", color: active ? "#dc2626" : G, border: "none", borderRadius: 8, padding: "5px 10px", fontSize: "0.7rem", fontWeight: 600, cursor: "pointer" }}>
-                  {active ? <><UserX size={11} /> Disable</> : <><UserCheck size={11} /> Enable</>}
-                </button>
-              </div>
-            );
-          })
-        )}
+              );
+            })}
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -302,52 +302,56 @@ function CustomersTab() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div className="search-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
         <div>
           <h1 style={{ fontFamily: SERIF, color: DARK, fontSize: "1.75rem", fontWeight: 700, letterSpacing: "-0.02em" }}>Customers</h1>
           <p style={{ color: MUTED, fontSize: "0.875rem", marginTop: 4 }}>{customers.length} registered customers.</p>
         </div>
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name or email…"
+          className="search-input"
           style={{ padding: "9px 14px", border: "1px solid #e8e2d8", borderRadius: 10, fontFamily: SANS, fontSize: "0.875rem", color: DARK, outline: "none", width: 220 }} />
       </div>
 
       <div style={{ ...CARD, overflow: "hidden" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 200px 140px 80px 100px", padding: "12px 20px", borderBottom: "1px solid #f0ece4", backgroundColor: "#faf8f4" }}>
-          {["CUSTOMER", "EMAIL / PHONE", "DISTRICT", "STATUS", "ACTION"].map(col => (
-            <span key={col} style={{ color: MUTED, fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.08em" }}>{col}</span>
-          ))}
-        </div>
-        {filtered.length === 0 ? (
-          <p style={{ padding: "24px 20px", color: MUTED, fontSize: "0.85rem" }}>No customers found.</p>
-        ) : filtered.map((c, i) => {
-          const active = c.is_active !== false;
-          return (
-            <div key={c.id} style={{ display: "grid", gridTemplateColumns: "1fr 200px 140px 80px 100px", padding: "14px 20px", borderTop: i > 0 ? "1px solid #f0ece4" : "none", alignItems: "center" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ width: 30, height: 30, borderRadius: "50%", backgroundColor: "#e8f3ee", color: G, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "0.65rem", flexShrink: 0 }}>
-                  {initials(c.full_name)}
-                </div>
-                <div>
-                  <p style={{ color: DARK, fontSize: "0.82rem", fontWeight: 600 }}>{c.full_name || "—"}</p>
-                  <p style={{ color: MUTED, fontSize: "0.7rem" }}>Joined {timeAgo(c.created_at)}</p>
-                </div>
-              </div>
-              <div>
-                <p style={{ color: DARK, fontSize: "0.78rem" }}>{c.email || "—"}</p>
-                {c.phone && <p style={{ color: MUTED, fontSize: "0.72rem" }}>+250 {c.phone}</p>}
-              </div>
-              <span style={{ color: MUTED, fontSize: "0.78rem" }}>{c.district || "—"}</span>
-              <span style={{ backgroundColor: active ? "#e8f3ee" : "#fef2f2", color: active ? G : "#dc2626", borderRadius: 99, padding: "3px 10px", fontSize: "0.68rem", fontWeight: 600, display: "inline-block" }}>
-                {active ? "Active" : "Disabled"}
-              </span>
-              <button
-                onClick={() => toggleCustomer(c.id, active)}
-                style={{ display: "inline-flex", alignItems: "center", gap: 5, backgroundColor: active ? "#fef2f2" : "#e8f3ee", color: active ? "#dc2626" : G, border: "none", borderRadius: 8, padding: "5px 10px", fontSize: "0.7rem", fontWeight: 600, cursor: "pointer" }}>
-                {active ? <><UserX size={11} /> Disable</> : <><UserCheck size={11} /> Enable</>}
-              </button>
+        <div className="data-table">
+          <div style={{ minWidth: 580 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 200px 140px 80px 100px", padding: "12px 20px", borderBottom: "1px solid #f0ece4", backgroundColor: "#faf8f4" }}>
+              {["CUSTOMER", "EMAIL / PHONE", "DISTRICT", "STATUS", "ACTION"].map(col => (
+                <span key={col} style={{ color: MUTED, fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.08em" }}>{col}</span>
+              ))}
             </div>
-          );
-        })}
+            {filtered.length === 0 ? (
+              <p style={{ padding: "24px 20px", color: MUTED, fontSize: "0.85rem" }}>No customers found.</p>
+            ) : filtered.map((c, i) => {
+              const active = c.is_active !== false;
+              return (
+                <div key={c.id} style={{ display: "grid", gridTemplateColumns: "1fr 200px 140px 80px 100px", padding: "14px 20px", borderTop: i > 0 ? "1px solid #f0ece4" : "none", alignItems: "center" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{ width: 30, height: 30, borderRadius: "50%", backgroundColor: "#e8f3ee", color: G, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "0.65rem", flexShrink: 0 }}>
+                      {initials(c.full_name)}
+                    </div>
+                    <div>
+                      <p style={{ color: DARK, fontSize: "0.82rem", fontWeight: 600 }}>{c.full_name || "—"}</p>
+                      <p style={{ color: MUTED, fontSize: "0.7rem" }}>Joined {timeAgo(c.created_at)}</p>
+                    </div>
+                  </div>
+                  <div>
+                    <p style={{ color: DARK, fontSize: "0.78rem" }}>{c.email || "—"}</p>
+                    {c.phone && <p style={{ color: MUTED, fontSize: "0.72rem" }}>+250 {c.phone}</p>}
+                  </div>
+                  <span style={{ color: MUTED, fontSize: "0.78rem" }}>{c.district || "—"}</span>
+                  <span style={{ backgroundColor: active ? "#e8f3ee" : "#fef2f2", color: active ? G : "#dc2626", borderRadius: 99, padding: "3px 10px", fontSize: "0.68rem", fontWeight: 600, display: "inline-block" }}>
+                    {active ? "Active" : "Disabled"}
+                  </span>
+                  <button onClick={() => toggleCustomer(c.id, active)}
+                    style={{ display: "inline-flex", alignItems: "center", gap: 5, backgroundColor: active ? "#fef2f2" : "#e8f3ee", color: active ? "#dc2626" : G, border: "none", borderRadius: 8, padding: "5px 10px", fontSize: "0.7rem", fontWeight: 600, cursor: "pointer" }}>
+                    {active ? <><UserX size={11} /> Disable</> : <><UserCheck size={11} /> Enable</>}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -386,7 +390,7 @@ function AllBookings() {
         <p style={{ color: MUTED, fontSize: "0.875rem", marginTop: 4 }}>{bookings.length} bookings on the platform.</p>
       </div>
 
-      <div style={{ display: "flex", gap: 8 }}>
+      <div className="filter-row" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         {[["all", "All", bookings.length], ["pending","Pending",counts.pending], ["confirmed","Confirmed",counts.confirmed], ["completed","Completed",counts.completed]].map(([id, label, count]) => (
           <button key={id} onClick={() => setFilter(id)}
             style={{ backgroundColor: filter === id ? DARK : "white", color: filter === id ? "white" : MUTED, border: "1px solid #e8e2d8", borderRadius: 8, padding: "6px 14px", fontFamily: SANS, fontWeight: 600, fontSize: "0.78rem", cursor: "pointer" }}>
@@ -396,30 +400,157 @@ function AllBookings() {
       </div>
 
       <div style={{ ...CARD, overflow: "hidden" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 160px 160px 120px 100px", padding: "12px 20px", borderBottom: "1px solid #f0ece4", backgroundColor: "#faf8f4" }}>
-          {["SERVICE", "CUSTOMER", "PROVIDER", "DATE", "STATUS"].map(col => (
-            <span key={col} style={{ color: MUTED, fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.08em" }}>{col}</span>
-          ))}
-        </div>
-        {filtered.length === 0 ? (
-          <p style={{ padding: "24px 20px", color: MUTED, fontSize: "0.85rem" }}>No bookings found.</p>
-        ) : filtered.map((b, i) => {
-          const sc = statusColors[b.status] || statusColors.pending;
-          return (
-            <div key={b.id} style={{ display: "grid", gridTemplateColumns: "1fr 160px 160px 120px 100px", padding: "13px 20px", borderTop: i > 0 ? "1px solid #f0ece4" : "none", alignItems: "center" }}>
-              <p style={{ color: DARK, fontSize: "0.82rem", fontWeight: 600 }}>{b.title}</p>
-              <p style={{ color: MUTED, fontSize: "0.78rem" }}>{b.customer?.full_name || "—"}</p>
-              <p style={{ color: MUTED, fontSize: "0.78rem" }}>{b.provider?.full_name || "—"}</p>
-              <p style={{ color: MUTED, fontSize: "0.75rem" }}>
-                {b.scheduled_date ? new Date(b.scheduled_date).toLocaleDateString("en-US", { day: "numeric", month: "short" }) : "—"}
-              </p>
-              <span style={{ backgroundColor: sc.bg, color: sc.color, borderRadius: 99, padding: "3px 10px", fontSize: "0.68rem", fontWeight: 600, display: "inline-block", textTransform: "capitalize" }}>
-                {b.status}
-              </span>
+        <div className="data-table">
+          <div style={{ minWidth: 600 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 160px 160px 120px 100px", padding: "12px 20px", borderBottom: "1px solid #f0ece4", backgroundColor: "#faf8f4" }}>
+              {["SERVICE", "CUSTOMER", "PROVIDER", "DATE", "STATUS"].map(col => (
+                <span key={col} style={{ color: MUTED, fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.08em" }}>{col}</span>
+              ))}
             </div>
-          );
-        })}
+            {filtered.length === 0 ? (
+              <p style={{ padding: "24px 20px", color: MUTED, fontSize: "0.85rem" }}>No bookings found.</p>
+            ) : filtered.map((b, i) => {
+              const sc = statusColors[b.status] || statusColors.pending;
+              return (
+                <div key={b.id} style={{ display: "grid", gridTemplateColumns: "1fr 160px 160px 120px 100px", padding: "13px 20px", borderTop: i > 0 ? "1px solid #f0ece4" : "none", alignItems: "center" }}>
+                  <p style={{ color: DARK, fontSize: "0.82rem", fontWeight: 600 }}>{b.title}</p>
+                  <p style={{ color: MUTED, fontSize: "0.78rem" }}>{b.customer?.full_name || "—"}</p>
+                  <p style={{ color: MUTED, fontSize: "0.78rem" }}>{b.provider?.full_name || "—"}</p>
+                  <p style={{ color: MUTED, fontSize: "0.75rem" }}>
+                    {b.scheduled_date ? new Date(b.scheduled_date).toLocaleDateString("en-US", { day: "numeric", month: "short" }) : "—"}
+                  </p>
+                  <span style={{ backgroundColor: sc.bg, color: sc.color, borderRadius: 99, padding: "3px 10px", fontSize: "0.68rem", fontWeight: 600, display: "inline-block", textTransform: "capitalize" }}>
+                    {b.status}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
+    </div>
+  );
+}
+
+// ── Complaints tab ────────────────────────────────────────────────────────────
+function AdminComplaintsTab() {
+  const [complaints, setComplaints] = useState([]);
+  const [loading,    setLoading]    = useState(true);
+  const [filter,     setFilter]     = useState("all");
+  const [saving,     setSaving]     = useState(null);
+
+  const load = () => {
+    supabase.from("complaints")
+      .select("id, subject, message, status, admin_note, created_at, customer:users!customer_id(full_name), provider:users!provider_id(full_name)")
+      .order("created_at", { ascending: false })
+      .then(({ data }) => { setComplaints(data || []); setLoading(false); });
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const updateStatus = async (id, status) => {
+    setSaving(id);
+    await supabase.from("complaints").update({ status }).eq("id", id);
+    setComplaints(prev => prev.map(c => c.id === id ? { ...c, status } : c));
+    setSaving(null);
+  };
+
+  const saveNote = async (id, note) => {
+    setSaving(id);
+    await supabase.from("complaints").update({ admin_note: note }).eq("id", id);
+    setComplaints(prev => prev.map(c => c.id === id ? { ...c, admin_note: note } : c));
+    setSaving(null);
+  };
+
+  const statusColors = {
+    pending:      { bg: "#fef9ec", color: GOLD,      label: "Pending" },
+    investigating:{ bg: "#e8edf7", color: "#3b5bdb", label: "Investigating" },
+    resolved:     { bg: "#e8f3ee", color: G,         label: "Resolved" },
+  };
+
+  const filtered = filter === "all" ? complaints : complaints.filter(c => c.status === filter);
+  const counts = ["pending","investigating","resolved"].reduce((acc, s) => ({ ...acc, [s]: complaints.filter(c => c.status === s).length }), {});
+
+  if (loading) return <div style={{ display: "flex", justifyContent: "center", padding: 60 }}><Loader2 size={24} style={{ color: G, animation: "spin 1s linear infinite" }} /></div>;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      <div>
+        <h1 style={{ fontFamily: SERIF, color: DARK, fontSize: "1.75rem", fontWeight: 700, letterSpacing: "-0.02em" }}>Customer Complaints</h1>
+        <p style={{ color: MUTED, fontSize: "0.875rem", marginTop: 4 }}>{complaints.length} complaint{complaints.length !== 1 ? "s" : ""} received.</p>
+      </div>
+
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        {[["all","All",complaints.length],["pending","Pending",counts.pending],["investigating","Investigating",counts.investigating],["resolved","Resolved",counts.resolved]].map(([id, label, count]) => (
+          <button key={id} onClick={() => setFilter(id)}
+            style={{ backgroundColor: filter === id ? DARK : "white", color: filter === id ? "white" : MUTED, border: "1px solid #e8e2d8", borderRadius: 8, padding: "6px 14px", fontFamily: SANS, fontWeight: 600, fontSize: "0.78rem", cursor: "pointer" }}>
+            {label} ({count})
+          </button>
+        ))}
+      </div>
+
+      {filtered.length === 0 ? (
+        <div style={{ ...CARD, padding: 48, textAlign: "center" }}>
+          <MessageCircle size={32} style={{ color: "#d4cfc5", margin: "0 auto 12px" }} />
+          <p style={{ color: MUTED, fontSize: "0.9rem" }}>No complaints in this category.</p>
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {filtered.map(c => {
+            const sc = statusColors[c.status] || statusColors.pending;
+            return (
+              <div key={c.id} style={{ ...CARD, padding: 22 }}>
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6, flexWrap: "wrap" }}>
+                      <p style={{ color: DARK, fontWeight: 700, fontSize: "0.875rem" }}>{c.subject}</p>
+                      <span style={{ backgroundColor: sc.bg, color: sc.color, borderRadius: 99, padding: "2px 10px", fontSize: "0.68rem", fontWeight: 600 }}>{sc.label}</span>
+                    </div>
+                    <p style={{ color: MUTED, fontSize: "0.75rem", marginBottom: 8 }}>
+                      From <strong style={{ color: DARK }}>{c.customer?.full_name || "Customer"}</strong>
+                      {" · "}about provider <strong style={{ color: DARK }}>{c.provider?.full_name || "Provider"}</strong>
+                      {" · "}{timeAgo(c.created_at)}
+                    </p>
+                    <p style={{ color: MUTED, fontSize: "0.825rem", lineHeight: 1.65, marginBottom: 14 }}>{c.message}</p>
+
+                    <div style={{ marginBottom: 12 }}>
+                      <p style={{ color: DARK, fontSize: "0.75rem", fontWeight: 600, marginBottom: 6 }}>Admin note</p>
+                      <AdminNoteField complaint={c} onSave={saveNote} saving={saving === c.id} />
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
+                    {["pending","investigating","resolved"].map(s => (
+                      <button key={s} onClick={() => updateStatus(c.id, s)} disabled={c.status === s || saving === c.id}
+                        style={{ backgroundColor: c.status === s ? statusColors[s].bg : "white", color: c.status === s ? statusColors[s].color : MUTED, border: `1px solid ${c.status === s ? statusColors[s].color : "#e8e2d8"}`, borderRadius: 8, padding: "6px 14px", fontFamily: SANS, fontWeight: 600, fontSize: "0.72rem", cursor: c.status === s ? "default" : "pointer", opacity: saving === c.id ? 0.6 : 1, textTransform: "capitalize" }}>
+                        {statusColors[s].label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AdminNoteField({ complaint, onSave, saving }) {
+  const [note, setNote] = useState(complaint.admin_note || "");
+  const dirty = note !== (complaint.admin_note || "");
+  return (
+    <div style={{ display: "flex", gap: 8 }}>
+      <textarea value={note} onChange={e => setNote(e.target.value)} rows={2}
+        placeholder="Add a note visible only to admins…"
+        style={{ flex: 1, padding: "8px 12px", border: "1px solid #e8e2d8", borderRadius: 8, fontFamily: SANS, fontSize: "0.8rem", color: DARK, resize: "vertical", outline: "none" }} />
+      {dirty && (
+        <button onClick={() => onSave(complaint.id, note)} disabled={saving}
+          style={{ backgroundColor: G, color: "white", border: "none", borderRadius: 8, padding: "6px 14px", fontFamily: SANS, fontWeight: 600, fontSize: "0.78rem", cursor: "pointer", alignSelf: "flex-start", opacity: saving ? 0.6 : 1 }}>
+          {saving ? "…" : "Save"}
+        </button>
+      )}
     </div>
   );
 }
@@ -548,7 +679,7 @@ export default function AdminDashboard() {
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", fontFamily: SANS, backgroundColor: CREAM }}>
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } } @media(max-width:640px){.stat-grid{grid-template-columns:repeat(2,1fr)!important}.data-table{overflow-x:auto}}`}</style>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}@media(max-width:640px){.stat-grid{grid-template-columns:repeat(2,1fr)!important}.two-col-grid{grid-template-columns:1fr!important}.data-table{overflow-x:auto}.filter-row{flex-wrap:wrap!important}.search-header{flex-direction:column!important;align-items:flex-start!important}.search-input{width:100%!important;box-sizing:border-box!important}}`}</style>
 
       {isMobile && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: 56, backgroundColor: G_ADMIN, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", zIndex: 100, boxSizing: "border-box" }}>
@@ -568,8 +699,9 @@ export default function AdminDashboard() {
         {tab === "overview"  && <Overview  stats={stats} districts={districts} activity={activity} />}
         {tab === "customers" && <CustomersTab />}
         {tab === "providers" && <AllProviders providers={providers} onToggle={handleToggleProvider} onVerify={handleToggleVerification} />}
-        {tab === "bookings"  && <AllBookings />}
-        {tab === "queue"     && <VerificationQueue queue={queue} onApprove={handleApprove} />}
+        {tab === "bookings"    && <AllBookings />}
+        {tab === "complaints"  && <AdminComplaintsTab />}
+        {tab === "queue"       && <VerificationQueue queue={queue} onApprove={handleApprove} />}
       </main>
     </div>
   );

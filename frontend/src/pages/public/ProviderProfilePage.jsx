@@ -104,6 +104,7 @@ function mapProvider(d) {
       name: s.title,
       description: s.description || "",
       price: formatPrice(s.price, s.price_type),
+      rawPrice: Number(s.price) || null,
     })),
     portfolio: (d.portfolio || []).map((it) => ({
       id: it.id,
@@ -280,7 +281,7 @@ function BookingModal({ provider, user, providerPhone, onClose }) {
         title:          form.service,
         scheduled_date: form.date,
         notes:          notesText || null,
-        amount:         selectedService?.price ? Number(selectedService.price) : null,
+        amount:         selectedService?.rawPrice ?? null,
         status:         "pending",
       });
 

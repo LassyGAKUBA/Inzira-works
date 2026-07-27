@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useLang } from "../../i18n/LangContext";
 import { supabase } from "../../lib/supabase";
+import NotificationBell from "../../components/shared/NotificationBell";
 import {
   Calendar, Star, X, Loader2, CheckCircle, Clock, LogOut,
   User, LayoutDashboard, BookOpen, History as HistoryIcon,
@@ -190,8 +191,13 @@ function Sidebar({ tab, setTab, upcomingCount, user, avatarUrl, onLogout, isMobi
             ? <img src={avatarUrl} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             : <User size={18} style={{ color: "white" }} />}
         </div>
-        <p style={{ color: "white", fontSize: "0.85rem", fontWeight: 600 }}>{firstName}</p>
-        <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.7rem" }}>{t("dash_nav_customer")}</p>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div>
+            <p style={{ color: "white", fontSize: "0.85rem", fontWeight: 600 }}>{firstName}</p>
+            <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.7rem" }}>{t("dash_nav_customer")}</p>
+          </div>
+          <NotificationBell userId={user?.id} role="customer" />
+        </div>
       </div>
 
       <p style={{ color: "#9ed3bf", fontSize: "0.6rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", padding: "16px 20px 8px" }}>MENU</p>
@@ -850,7 +856,7 @@ export default function CustomerDashboard() {
             <Menu size={22} />
           </button>
           <span style={{ fontFamily: "Spectral, serif", color: "white", fontWeight: 700, fontSize: "1rem" }}>Inzira Works</span>
-          <div style={{ width: 30 }} />
+          <NotificationBell userId={user?.id} role="customer" />
         </div>
       )}
       {isMobile && sidebarOpen && (
