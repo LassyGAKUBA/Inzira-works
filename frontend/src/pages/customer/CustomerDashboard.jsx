@@ -119,11 +119,12 @@ function ComplaintModal({ booking, onClose }) {
   const submit = async () => {
     if (!message.trim()) { setErr("Please describe your complaint."); return; }
     setSaving(true); setErr("");
-    const { error } = await supabase.from("contact_messages").insert({
-      name:    user.user_metadata?.full_name || user.email,
-      email:   user.email,
-      subject: `Service Complaint: ${booking.title}`,
-      message: `Provider: ${provName}\nService: ${booking.title}\nDate: ${booking.scheduled_date || "—"}\n\n${message.trim()}`,
+    const { error } = await supabase.from("complaints").insert({
+      customer_id: user.id,
+      provider_id: booking.provider_id,
+      booking_id:  booking.id,
+      subject:     `Service Complaint: ${booking.title}`,
+      message:     message.trim(),
     });
     setSaving(false);
     if (error) { setErr(error.message || "Could not submit. Please try again."); return; }

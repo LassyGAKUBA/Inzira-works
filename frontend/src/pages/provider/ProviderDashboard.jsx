@@ -57,9 +57,10 @@ function Sidebar({ tab, setTab, user, profile, avatarUrl, pendingCount, onLogout
     { id: "bookings",  label: t("prov_dash_bookings"),  badge: pendingCount || null },
     { id: "history",   label: t("prov_dash_history"),   badge: null },
     { id: "analytics", label: "Analytics",              badge: null },
-    { id: "reviews",   label: t("prov_dash_reviews"),   badge: null },
-    { id: "portfolio", label: t("prov_dash_portfolio"), badge: null },
-    { id: "profile",   label: t("prov_dash_profile"),   badge: null },
+    { id: "reviews",    label: t("prov_dash_reviews"),   badge: null },
+    { id: "complaints", label: "Complaints",             badge: null },
+    { id: "portfolio",  label: t("prov_dash_portfolio"), badge: null },
+    { id: "profile",    label: t("prov_dash_profile"),   badge: null },
   ];
   const handleNav = (id) => { setTab(id); if (isMobile && onClose) onClose(); };
 
@@ -1006,6 +1007,59 @@ function ReviewsTab({ userId }) {
   );
 }
 
+function ComplaintsTab({ userId }) {
+  const [complaints, setComplaints] = useState([]);
+  const [loading,    setLoading]    = useState(true);
+
+  useEffect(() => {
+    if (!userId) return;
+    supabase.from("complaints")
+      .select("id, subject, message, created_at, customer:users!customer_id(full_name)")
+      .eq("provider_id", userId)
+      .order("created_at", { ascending: false })
+      .then(({ data }) => { setComplaints(data || []); setLoading(false); });
+  }, [userId]);
+
+  if (loading) return <div style={{ display: "flex", justifyContent: "center", padding: 60 }}><Loader2 size={24} style={{ color: G, animation: "spin 1s linear infinite" }} /></div>;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      <div>
+        <h1 style={{ fontFamily: SERIF, color: DARK, fontSize: "1.75rem", fontWeight: 700, letterSpacing: "-0.02em" }}>Customer Complaints</h1>
+        <p style={{ color: MUTED, fontSize: "0.875rem", marginTop: 4 }}>
+          {complaints.length === 0
+            ? "No complaints received — keep up the great work!"
+            : `${complaints.length} complaint${complaints.length !== 1 ? "s" : ""} received. Use these to improve your service.`}
+        </p>
+      </div>
+      {complaints.length === 0 ? (
+        <div style={{ ...CARD, padding: 48, textAlign: "center" }}>
+          <MessageCircle size={32} style={{ color: "#d4cfc5", margin: "0 auto 12px" }} />
+          <p style={{ color: MUTED, fontSize: "0.9rem" }}>No complaints yet.</p>
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {complaints.map(c => (
+            <div key={c.id} style={{ ...CARD, padding: 20 }}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+                <InitialsCircle name={c.customer?.full_name || "C"} size={38} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+                    <p style={{ color: DARK, fontWeight: 700, fontSize: "0.875rem" }}>{c.customer?.full_name || "Customer"}</p>
+                    <span style={{ color: MUTED, fontSize: "0.72rem" }}>{timeAgo(c.created_at)}</span>
+                  </div>
+                  <p style={{ color: "#e05c5c", fontSize: "0.75rem", fontWeight: 600, marginTop: 4 }}>{c.subject}</p>
+                  <p style={{ color: MUTED, fontSize: "0.825rem", marginTop: 8, lineHeight: 1.65 }}>{c.message}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function PortfolioCard({ item, onRemove, onCaptionSave }) {
   const [editing,  setEditing]  = useState(false);
   const [caption,  setCaption]  = useState(item.caption || "");
@@ -1314,8 +1368,9 @@ export default function ProviderDashboard() {
         {tab === "overview"  && <Overview user={user} profile={profile} pending={pending} onAccept={handleAccept} onDecline={handleDecline} statsLoading={loading} />}
         {tab === "bookings"  && <Bookings pending={pending} confirmed={confirmed} onAccept={handleAccept} onDecline={handleDecline} onComplete={handleComplete} />}
         {tab === "history"   && <HistoryTab userId={user?.id} />}
-        {tab === "reviews"   && <ReviewsTab userId={user?.id} />}
-        {tab === "portfolio" && <PortfolioTab profile={profile} userId={user?.id} />}
+        {tab === "reviews"    && <ReviewsTab userId={user?.id} />}
+        {tab === "complaints" && <ComplaintsTab userId={user?.id} />}
+        {tab === "portfolio"  && <PortfolioTab profile={profile} userId={user?.id} />}
         {tab === "profile"   && <MyProfile user={user} profile={profile} onSave={setProfile} onAvatarChange={setAvatarUrl} />}
         {tab === "analytics" && <AnalyticsTab userId={user?.id} />}
       </main>
