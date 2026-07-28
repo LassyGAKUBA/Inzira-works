@@ -320,12 +320,17 @@ function MyProfile({ user, profile, onSave, onAvatarChange }) {
   // Specialties
   const [specialties, setSpecialties] = useState([]);
   const [tagInput,    setTagInput]    = useState("");
+  const [tagFlash,    setTagFlash]    = useState(false);
 
   // Services
   const [services,     setServices]     = useState([]);
   const [showSvcForm,  setShowSvcForm]  = useState(false);
   const [svcForm,      setSvcForm]      = useState({ title: "", price: "", price_type: "fixed" });
   const [svcSaving,    setSvcSaving]    = useState(false);
+  const [svcMsg,       setSvcMsg]       = useState("");
+
+  // Availability
+  const [daysSaved,    setDaysSaved]    = useState(false);
 
   useEffect(() => {
     if (profile) {
@@ -386,16 +391,23 @@ function MyProfile({ user, profile, onSave, onAvatarChange }) {
         .single();
       if (error) throw error;
       setSaveMsg("Saved!");
+      setDaysSaved(true);
       if (onSave) onSave({ ...profile, ...saved });
     } catch { setSaveMsg("Could not save. Please try again."); }
-    finally { setSaving(false); setTimeout(() => setSaveMsg(""), 3000); }
+    finally { setSaving(false); setTimeout(() => { setSaveMsg(""); setDaysSaved(false); }, 3000); }
   };
 
+  const tagInputRef = useRef(null);
   const addTag = async () => {
     const label = tagInput.trim();
     if (!label || !profile?.id) return;
     const { data, error } = await supabase.from("provider_specialties").insert({ provider_id: profile.id, label }).select("id, label").single();
-    if (!error && data) { setSpecialties(s => [...s, data]); setTagInput(""); }
+    if (!error && data) {
+      setSpecialties(s => [...s, data]);
+      setTagInput("");
+      setTagFlash(true);
+      setTimeout(() => { setTagFlash(false); tagInputRef.current?.focus(); }, 1500);
+    }
   };
 
   const removeTag = async (id) => {
@@ -417,6 +429,8 @@ function MyProfile({ user, profile, onSave, onAvatarChange }) {
       setServices(s => [...s, data]);
       setSvcForm({ title: "", price: "", price_type: "fixed" });
       setShowSvcForm(false);
+      setSvcMsg("Service added!");
+      setTimeout(() => setSvcMsg(""), 2500);
     }
   };
 
@@ -514,14 +528,15 @@ function MyProfile({ user, profile, onSave, onAvatarChange }) {
             </div>
             <div style={{ display: "flex", gap: 8 }}>
               <input
+                ref={tagInputRef}
                 value={tagInput}
                 onChange={e => setTagInput(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && (e.preventDefault(), addTag())}
                 placeholder="e.g. Wedding dresses, Agaseke…"
                 style={{ ...inputStyle, flex: 1, padding: "8px 12px" }}
               />
-              <button onClick={addTag} style={{ backgroundColor: G, color: "white", border: "none", borderRadius: 10, padding: "8px 16px", fontFamily: SANS, fontWeight: 600, fontSize: "0.8rem", cursor: "pointer", flexShrink: 0 }}>
-                Add
+              <button onClick={addTag} style={{ backgroundColor: tagFlash ? "#22c55e" : G, color: "white", border: "none", borderRadius: 10, padding: "8px 16px", fontFamily: SANS, fontWeight: 600, fontSize: "0.8rem", cursor: "pointer", flexShrink: 0, transition: "background-color 0.2s" }}>
+                {tagFlash ? "Added ✓" : "Add"}
               </button>
             </div>
           </div>
@@ -560,6 +575,12 @@ function MyProfile({ user, profile, onSave, onAvatarChange }) {
               </div>
             )}
 
+            {svcMsg && (
+              <p style={{ color: G, fontSize: "0.8rem", fontWeight: 600, marginBottom: 10, display: "flex", alignItems: "center", gap: 5 }}>
+                ✓ {svcMsg}
+              </p>
+            )}
+
             {services.length === 0 ? (
               <p style={{ color: MUTED, fontSize: "0.8rem" }}>No services yet. Add one so customers can book you.</p>
             ) : (
@@ -592,8 +613,8 @@ function MyProfile({ user, profile, onSave, onAvatarChange }) {
                 <p style={{ color: MUTED, fontSize: "0.75rem", marginTop: 2 }}>Days you are available for bookings.</p>
               </div>
               <button onClick={handleSave} disabled={saving}
-                style={{ backgroundColor: saving ? "#3d8a6e" : G, color: "white", border: "none", borderRadius: 8, padding: "7px 16px", fontFamily: SANS, fontWeight: 600, fontSize: "0.78rem", cursor: saving ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-                {saving ? "Saving…" : "Save"}
+                style={{ backgroundColor: daysSaved ? "#22c55e" : saving ? "#3d8a6e" : G, color: "white", border: "none", borderRadius: 8, padding: "7px 16px", fontFamily: SANS, fontWeight: 600, fontSize: "0.78rem", cursor: saving ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: 6, transition: "background-color 0.2s" }}>
+                {saving ? "Saving…" : daysSaved ? "Saved ✓" : "Save"}
               </button>
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
@@ -607,6 +628,14 @@ function MyProfile({ user, profile, onSave, onAvatarChange }) {
                 );
               })}
             </div>
+            {availableDays.length > 0 && (
+              <p style={{ color: MUTED, fontSize: "0.75rem", marginTop: 10 }}>
+                Available: <strong style={{ color: DARK }}>{availableDays.join(", ")}</strong>
+              </p>
+            )}
+            {availableDays.length === 0 && (
+              <p style={{ color: "#e05c5c", fontSize: "0.75rem", marginTop: 10 }}>No days selected — customers won't see your availability.</p>
+            )}
           </div>
         </div>
 
