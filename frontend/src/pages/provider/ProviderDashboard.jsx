@@ -397,11 +397,28 @@ function MyProfile({ user, profile, onSave, onAvatarChange }) {
     finally { setSaving(false); setTimeout(() => { setSaveMsg(""); setDaysSaved(false); }, 3000); }
   };
 
+  // Returns the provider_profiles.id (UUID), creating the row if it doesn't exist yet.
+  const getProfileId = async () => {
+    if (profile?.id) return profile.id;
+    const { data } = await supabase
+      .from("provider_profiles")
+      .upsert(
+        { user_id: user.id, trust_score: 0, profile_completeness: 0, response_rate: 0, repeat_rate: 0 },
+        { onConflict: "user_id" }
+      )
+      .select("id, headline, bio, district, trust_score, response_rate, verification_status, profile_completeness")
+      .single();
+    if (data) onSave?.(data);
+    return data?.id || null;
+  };
+
   const tagInputRef = useRef(null);
   const addTag = async () => {
     const label = tagInput.trim();
-    if (!label || !profile?.id) return;
-    const { data, error } = await supabase.from("provider_specialties").insert({ provider_id: profile.id, label }).select("id, label").single();
+    if (!label) return;
+    const profileId = await getProfileId();
+    if (!profileId) return;
+    const { data, error } = await supabase.from("provider_specialties").insert({ provider_id: profileId, label }).select("id, label").single();
     if (!error && data) {
       setSpecialties(s => [...s, data]);
       setTagInput("");
@@ -416,10 +433,12 @@ function MyProfile({ user, profile, onSave, onAvatarChange }) {
   };
 
   const addService = async () => {
-    if (!svcForm.title.trim() || !profile?.id) return;
+    if (!svcForm.title.trim()) return;
     setSvcSaving(true);
+    const profileId = await getProfileId();
+    if (!profileId) { setSvcSaving(false); return; }
     const { data, error } = await supabase.from("services").insert({
-      provider_id: profile.id,
+      provider_id: profileId,
       title:       svcForm.title.trim(),
       price:       svcForm.price ? Number(svcForm.price) : null,
       price_type:  svcForm.price_type,
